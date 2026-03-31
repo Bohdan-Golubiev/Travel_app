@@ -26,6 +26,7 @@ fun HomeScreen(
     user: FirebaseUser,
     onSignOut: () -> Unit
 ) {
+    val mainNav = rememberNavController()
     var currentDestination by remember { mutableStateOf(AppDestinations.PROFILE) }
 
     NavigationSuiteScaffold(
@@ -55,7 +56,11 @@ fun HomeScreen(
             ) {
                 when (currentDestination) {
                     AppDestinations.CREATE -> CreateScreen()
-                    AppDestinations.PROFILE -> ProfileScreen(user = user, onSignOut = onSignOut)
+
+                    AppDestinations.PROFILE -> ProfileScreen(
+                        user = user,
+                        onSignOut = onSignOut,
+                        nav = mainNav)
                 }
             }
         }
