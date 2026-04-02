@@ -21,15 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.travelapp.model.dataclasses.Route
 
-// ─── Тестові дані ─────────────────────────────────────────────────────────────
 val sampleRoutes = listOf(
     Route(1, "Route name 1", "created at"),
     Route(2, "Route name 2", "created at"),
     Route(3, "Route name 3", "created at"),
     Route(4, "Route name 4", "created at"),
 )
-
-// ─── Екран ────────────────────────────────────────────────────────────────────
 
 @Composable
 fun RoutesScreen(onOpen: (Route) -> Unit) {

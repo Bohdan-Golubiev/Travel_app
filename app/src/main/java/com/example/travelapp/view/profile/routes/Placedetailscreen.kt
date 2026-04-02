@@ -45,7 +45,7 @@ fun PlaceDetailScreen(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp) // щоб список не ховався під кнопкою
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
 
             item {

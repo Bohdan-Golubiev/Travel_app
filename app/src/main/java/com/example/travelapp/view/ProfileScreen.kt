@@ -23,87 +23,35 @@ import com.example.travelapp.view.profile.routes.RouteDetailScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
 import com.google.firebase.auth.FirebaseUser
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     user: FirebaseUser,
     onSignOut: () -> Unit,
-    nav: NavHostController
+    nav: NavHostController,
+    onTitleChange: (String) -> Unit
 ) {
-    val backStackEntry by nav.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
-
-    val showTopBar = currentRoute != ProfileNavigation.Profile.route
-    val canGoBack = nav.previousBackStackEntry != null
-
-    var topBarTitle by remember { mutableStateOf("") }
-
-    Scaffold(
-        containerColor = Color(0xFF0D1B2A),
-        contentWindowInsets = WindowInsets(0),
-        topBar = {
-            if (showTopBar) {
-                TopAppBar(
-                    modifier = Modifier.height(64.dp),
-                    windowInsets = WindowInsets(0),
-                    title = {
-                        Row(
-                            modifier = Modifier.fillMaxHeight(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = topBarTitle,
-                                color = Color.Black
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        if (canGoBack) {
-                            IconButton(
-                                modifier = Modifier.fillMaxHeight(),
-                                onClick = { nav.popBackStack() }
-                            ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = Color.Black
-                                )
-                            }
-                        }
-                    }
-                )
-            }
+    NavHost(
+        navController = nav,
+        startDestination = ProfileNavigation.Profile.route,
+    ) {
+        composable(ProfileNavigation.Profile.route) {
+            ProfileContent(user = user, onSignOut = onSignOut, nav = nav)
         }
-    ) { padding ->
-        NavHost(
-            navController = nav,
-            startDestination = ProfileNavigation.Profile.route,
-            modifier = Modifier.padding(padding)
-        ) {
 
-            composable(ProfileNavigation.Profile.route) {
-                ProfileContent(
-                    user = user,
-                    onSignOut = onSignOut,
-                    nav = nav
-                )
-            }
-
-            composable(ProfileNavigation.ListOfRoutes.route) {
-                LaunchedEffect(Unit) { topBarTitle = "My routes" }
-                RoutesScreen(
-                    onOpen = { route ->
-                        nav.navigate(ProfileNavigation.Route.createRoute(route.id, route.name))
-                    }
-                )
-            }
-
+        composable(ProfileNavigation.ListOfRoutes.route) {
+            LaunchedEffect(Unit) { onTitleChange("My routes") }
+            RoutesScreen(
+                onOpen = { route ->
+                    nav.navigate(ProfileNavigation.Route.createRoute(route.id, route.name))
+                }
+            )
+        }
             composable(
                 route = ProfileNavigation.Route.route,
                 arguments = ProfileNavigation.Route.navArguments
             ) { backStack ->
                 val routeName = backStack.arguments?.getString("routeName") ?: ""
-                LaunchedEffect(routeName) { topBarTitle = routeName }
+                LaunchedEffect(routeName) { onTitleChange(routeName) }
                 RouteDetailScreen(
                     onNext = { place ->
                         nav.navigate(ProfileNavigation.Place.createRoute(place.id, place.name))
@@ -117,14 +65,14 @@ fun ProfileScreen(
             ) { backStack ->
                 val placeId = backStack.arguments?.getInt("placeId") ?: 0
                 val placeName = backStack.arguments?.getString("placeName") ?: ""
-                LaunchedEffect(placeName) { topBarTitle = placeName }
+                LaunchedEffect(placeName) { onTitleChange(placeName) }
                 PlaceDetailScreen(
                     placeId = placeId
                 )
             }
 
             composable(ProfileNavigation.Booking.route) {
-                LaunchedEffect(Unit) { topBarTitle = "My Bookings" }
+                LaunchedEffect(Unit) { onTitleChange("My Bookings") }
                 BookingScreen(
                     onOpen = { booking ->
                         nav.navigate(ProfileNavigation.BookingDetail.createRoute(booking.id, booking.name))
@@ -138,23 +86,22 @@ fun ProfileScreen(
             ) { backStack ->
                 val bookingId = backStack.arguments?.getInt("bookingId") ?: 0
                 val bookingName = backStack.arguments?.getString("bookingName") ?: ""
-                LaunchedEffect(bookingName) { topBarTitle = bookingName }
+                LaunchedEffect(bookingName) { onTitleChange(bookingName) }
                 BookingDetailScreen(
                     bookingId = bookingId,
                 )
             }
             composable(ProfileNavigation.Payment.route) {
-                LaunchedEffect(Unit) { topBarTitle = "My Payments" }
+                LaunchedEffect(Unit) { onTitleChange("My Payments") }
                 PaymentsScreen()
             }
 
             composable(ProfileNavigation.Review.route) {
-                LaunchedEffect(Unit) { topBarTitle = "My Reviews" }
+                LaunchedEffect(Unit) { onTitleChange("My Reviews") }
                 ReviewsScreen()
             }
         }
     }
-}
 
 @Composable
 fun ProfileContent(
