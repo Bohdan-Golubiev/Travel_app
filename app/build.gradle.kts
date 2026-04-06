@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,11 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
 android {
     namespace = "com.example.travelapp"
     compileSdk {
@@ -19,6 +26,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties["MAPS_API_KEY"]?.toString() ?: ""
     }
 
     buildTypes {
@@ -39,6 +47,10 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    buildTypes.forEach {
+        it.buildConfigField("String", "MAPS_API_KEY", "\"${localProperties["MAPS_API_KEY"]}\"")
     }
 }
 
@@ -69,4 +81,8 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+
+    implementation("com.google.android.libraries.places:places:3.4.0")
+    implementation("sh.calvin.reorderable:reorderable:2.4.0")
+
 }
