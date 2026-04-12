@@ -6,14 +6,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// ─── Тестові дані ─────────────────────────────────────────────────────────────
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.viewmodel.profile.PlaceDetailViewModel
 
 data class Review(
     val id: Int,
@@ -29,25 +32,22 @@ val sampleReviews = listOf(
     Review(3, "User", "Rating n/N", "Review text", "created at"),
 )
 
-// ─── Екран ────────────────────────────────────────────────────────────────────
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceDetailScreen(
-    placeId: Int,
+    placeId: String,
+    routeId: String,
     onAddReview: () -> Unit = {},
+    viewModel: PlaceDetailViewModel = viewModel()
 ) {
-    val place = samplePlaces.find { it.id == placeId }
+    LaunchedEffect(placeId) { viewModel.loadPlace(placeId, routeId) }
+    val place by viewModel.place.collectAsState()
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-
             item {
                 Column(
                     modifier = Modifier
@@ -56,13 +56,25 @@ fun PlaceDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = place?.name ?: "Place name",
+                        text = place?.name ?: "",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
                     Text(
-                        text = place?.location ?: "Info",
+                        text = place?.location ?: "",
+                        fontSize = 14.sp,
+                        color = Color(0xFFB0BEC5)
+                    )
+                    if (!place?.visitDate.isNullOrEmpty()) {
+                        Text(
+                            text = "Visit date: ${place?.visitDate}",
+                            fontSize = 14.sp,
+                            color = Color(0xFFB0BEC5)
+                        )
+                    }
+                    Text(
+                        text = "Order in route: ${(place?.orderInRoute?.plus(1)) ?: ""}",
                         fontSize = 14.sp,
                         color = Color(0xFFB0BEC5)
                     )
@@ -83,7 +95,7 @@ fun PlaceDetailScreen(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
         ) {
             Text("Add review")
         }

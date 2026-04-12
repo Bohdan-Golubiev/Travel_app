@@ -30,6 +30,7 @@ private val SuggestionBackground = Color(0xFFFFFFFF)
 
 @Composable
 fun SearchPlaces(
+    userId: String,
     onSaveRoute: (String) -> Unit,
     viewModel: SearchPlacesViewModel = viewModel()
 ) {
@@ -78,7 +79,6 @@ fun SearchPlaces(
             )
 
             val lazyListState = rememberLazyListState()
-
             val reorderableLazyListState = rememberReorderableLazyListState(
                 lazyListState = lazyListState
             ) { from, to ->
@@ -97,7 +97,7 @@ fun SearchPlaces(
                             number = index + 1,
                             place = place,
                             onRemove = { viewModel.removePlace(index) },
-                            onDateChange = { date -> viewModel.updatePlaceDate(index, date) }, // додати
+                            onDateChange = { date -> viewModel.updatePlaceDate(index, date) },
                             dragHandle = {
                                 Icon(
                                     imageVector = Icons.Default.Menu,
@@ -116,14 +116,25 @@ fun SearchPlaces(
 
             if (state.routeName.isNotBlank() && state.places.isNotEmpty()) {
                 Button(
-                    onClick = { onSaveRoute(state.routeName) },
+                    onClick = {
+                        viewModel.saveRoute(userId) { onSaveRoute(state.routeName) }
+                    },
+                    enabled = !state.isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
                 ) {
-                    Text(text = "Save", fontSize = 18.sp)
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(text = "Save", fontSize = 18.sp)
+                    }
                 }
             }
         }

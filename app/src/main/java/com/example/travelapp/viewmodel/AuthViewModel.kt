@@ -20,7 +20,6 @@ class AuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(AuthModel())
     val uiState: StateFlow<AuthModel> = _uiState.asStateFlow()
 
-    // ─── UI events ────────────────────────────────────────────────────────────
 
     fun onNameChange(value: String) {
         _uiState.update { it.copy(name = value, errorMessage = null) }
@@ -45,8 +44,6 @@ class AuthViewModel : ViewModel() {
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
-
-    // ─── Auth actions ─────────────────────────────────────────────────────────
 
     fun signInOrRegister(onSuccess: (FirebaseUser) -> Unit) {
         val state = _uiState.value
@@ -96,8 +93,6 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
-
-    // ─── Helper ───────────────────────────────────────────────────────────────
 
     private fun parseFirebaseError(message: String?): String = when {
         message == null -> "Authentication failed"

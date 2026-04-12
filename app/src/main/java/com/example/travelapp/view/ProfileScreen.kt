@@ -2,8 +2,6 @@ package com.example.travelapp.view
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,35 +39,43 @@ fun ProfileScreen(
         composable(ProfileNavigation.ListOfRoutes.route) {
             LaunchedEffect(Unit) { onTitleChange("My routes") }
             RoutesScreen(
+                userId = user.uid,
                 onOpen = { route ->
                     nav.navigate(ProfileNavigation.Route.createRoute(route.id, route.name))
                 }
             )
         }
-            composable(
-                route = ProfileNavigation.Route.route,
-                arguments = ProfileNavigation.Route.navArguments
-            ) { backStack ->
-                val routeName = backStack.arguments?.getString("routeName") ?: ""
-                LaunchedEffect(routeName) { onTitleChange(routeName) }
-                RouteDetailScreen(
-                    onNext = { place ->
-                        nav.navigate(ProfileNavigation.Place.createRoute(place.id, place.name))
-                    }
-                )
-            }
+        composable(
+            route = ProfileNavigation.Route.route,
+            arguments = ProfileNavigation.Route.navArguments
+        ) { backStack ->
+            val routeId = backStack.arguments?.getString("routeId") ?: ""
+            val routeName = backStack.arguments?.getString("routeName") ?: ""
+            LaunchedEffect(routeName) { onTitleChange(routeName) }
+            RouteDetailScreen(
+                routeId = routeId,
+                routeName = routeName,
+                userId = user.uid,
+                onTitleChange = onTitleChange,
+                onNext = { place ->
+                    nav.navigate(ProfileNavigation.Place.createRoute(routeId, place.id, place.name))
+                }
+            )
+        }
 
-            composable(
-                route = ProfileNavigation.Place.route,
-                arguments = ProfileNavigation.Place.navArguments
-            ) { backStack ->
-                val placeId = backStack.arguments?.getInt("placeId") ?: 0
-                val placeName = backStack.arguments?.getString("placeName") ?: ""
-                LaunchedEffect(placeName) { onTitleChange(placeName) }
-                PlaceDetailScreen(
-                    placeId = placeId
-                )
-            }
+        composable(
+            route = ProfileNavigation.Place.route,
+            arguments = ProfileNavigation.Place.navArguments
+        ) { backStack ->
+            val routeId = backStack.arguments?.getString("routeId") ?: ""
+            val placeId = backStack.arguments?.getString("placeId") ?: ""
+            val placeName = backStack.arguments?.getString("placeName") ?: ""
+            LaunchedEffect(placeName) { onTitleChange(placeName) }
+            PlaceDetailScreen(
+                placeId = placeId,
+                routeId = routeId
+            )
+        }
 
             composable(ProfileNavigation.Booking.route) {
                 LaunchedEffect(Unit) { onTitleChange("My Bookings") }

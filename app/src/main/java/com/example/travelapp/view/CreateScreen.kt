@@ -24,6 +24,7 @@ import com.example.travelapp.view.create.FindHotelScreen
 import com.example.travelapp.view.create.FindVehicleScreen
 import com.example.travelapp.view.create.RouteCreatedScreen
 import com.example.travelapp.view.create.SearchPlaces
+import com.google.firebase.auth.FirebaseUser
 
 
 sealed class CreateNavigation(val route: String) {
@@ -43,7 +44,7 @@ sealed class CreateNavigation(val route: String) {
 
 
 @Composable
-fun CreateScreen(nav: NavHostController) {
+fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
     NavHost(
         navController = nav,
         startDestination = CreateNavigation.Create.route
@@ -58,9 +59,10 @@ fun CreateScreen(nav: NavHostController) {
 
         composable(CreateNavigation.CreateRoute.route) {
             SearchPlaces(
-            onSaveRoute = { routeName ->
-                nav.navigate(CreateNavigation.SaveRoute.withArgs(routeName))
-            }
+                userId = currentUser.uid,
+                onSaveRoute = { routeName ->
+                    nav.navigate(CreateNavigation.SaveRoute.withArgs(routeName))
+                }
             )
         }
 

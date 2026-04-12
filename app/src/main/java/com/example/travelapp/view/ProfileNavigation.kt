@@ -7,12 +7,12 @@ sealed class ProfileNavigation(val route: String) {
     data object ListOfRoutes : ProfileNavigation("list")
 
     data object Route : ProfileNavigation("route/{routeId}/{routeName}") {
-        fun createRoute(routeId: Int, routeName: String) =
+        fun createRoute(routeId: String, routeName: String) =
             "route/$routeId/${routeName}"
 
         val navArguments = listOf(
             androidx.navigation.navArgument("routeId") {
-                type = androidx.navigation.NavType.IntType
+                type = androidx.navigation.NavType.StringType
             },
             androidx.navigation.navArgument("routeName") {
                 type = androidx.navigation.NavType.StringType
@@ -20,13 +20,16 @@ sealed class ProfileNavigation(val route: String) {
         )
     }
 
-    data object Place : ProfileNavigation("place/{placeId}/{placeName}") {
-        fun createRoute(placeId: Int, placeName: String) =
-            "place/$placeId/${placeName}"
+    data object Place : ProfileNavigation("place/{routeId}/{placeId}/{placeName}") {
+        fun createRoute(routeId: String, placeId: String, placeName: String) =
+            "place/$routeId/$placeId/$placeName"
 
         val navArguments = listOf(
+            androidx.navigation.navArgument("routeId") {
+                type = androidx.navigation.NavType.StringType
+            },
             androidx.navigation.navArgument("placeId") {
-                type = androidx.navigation.NavType.IntType
+                type = androidx.navigation.NavType.StringType
             },
             androidx.navigation.navArgument("placeName") {
                 type = androidx.navigation.NavType.StringType

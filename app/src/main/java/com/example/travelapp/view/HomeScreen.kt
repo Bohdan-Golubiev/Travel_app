@@ -120,7 +120,10 @@ fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     .padding(innerPadding)
             ) {
                 when (currentDestination) {
-                    AppDestinations.CREATE -> CreateScreen(nav = createNav)
+                    AppDestinations.CREATE -> CreateScreen(
+                        currentUser = user,
+                        nav = createNav
+                    )
 
                     AppDestinations.PROFILE -> ProfileScreen(
                         user = user,
