@@ -1,7 +1,9 @@
 package com.example.travelapp.view.create
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,19 +17,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.travelapp.viewmodel.FindVehicleViewModel
+import com.example.travelapp.model.dataclasses.Airport
+import com.example.travelapp.viewmodel.create.FindVehicleViewModel
+import androidx.compose.ui.platform.LocalContext
 
-data class BookingOption( //затичка
+data class BookingOption(
     val name: String,
     val time: String,
+    val date: String,
     val cost: String
-)
-
-val bookingOptions = listOf(
-    BookingOption("Booking option", "time", "cost"),
-    BookingOption("Booking option", "time", "cost"),
-    BookingOption("Booking option", "time", "cost"),
-    BookingOption("Booking option", "time", "cost"),
 )
 val transportOptions = listOf("Plane", "Train", "Bus", "Without")
 private val CardBackground   = Color(0xFFCED4DA)
@@ -36,7 +34,9 @@ private val ButtonBackground = Color(0xFFD9D9D9)
 @Composable
 fun FindVehicleScreen(
     onNextClick: () -> Unit = {},
-    viewModel: FindVehicleViewModel = viewModel()
+    viewModel: FindVehicleViewModel = viewModel(
+        factory = FindVehicleViewModel.factory(LocalContext.current)
+    )
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -58,51 +58,47 @@ fun FindVehicleScreen(
                     modifier = Modifier.weight(1f).height(48.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (isSelected) ButtonBackground.copy(alpha = 0.6f) else ButtonBackground,
-                        contentColor = Color.Black
+                        containerColor = if (isSelected) Color(0x00000000) else ButtonBackground,
                     ),
-                    border = androidx.compose.foundation.BorderStroke(
+                    border = BorderStroke(
                         width = if (isSelected) 2.dp else 0.dp,
                         color  = if (isSelected) Color.White else Color.Transparent
                     ),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(text = option, fontSize = 13.sp, fontWeight = FontWeight.Normal)
+                    Text(text = option,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = if(isSelected) Color.White else Color.Black
+                    )
                 }
             }
         }
 
-        OutlinedTextField(
+        PlaceInputWithSuggestions(
             value = state.startPlace,
+            placeholder = "Start place (city)",
+            suggestions = state.startSuggestions,
             onValueChange = viewModel::onStartPlaceChange,
-            placeholder = { Text("Start place", color = Color.Gray) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(CardBackground, RoundedCornerShape(10.dp)),
-            shape = RoundedCornerShape(10.dp),
-            singleLine = true,
-            colors = vehicleTextFieldColors()
+            onAirportSelected = viewModel::onStartAirportSelected
         )
 
-        OutlinedTextField(
+        PlaceInputWithSuggestions(
             value = state.endPlace,
+            placeholder = "End place (city)",
+            suggestions = state.endSuggestions,
             onValueChange = viewModel::onEndPlaceChange,
-            placeholder = { Text("End place", color = Color.Gray) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(CardBackground, RoundedCornerShape(10.dp)),
-            shape = RoundedCornerShape(10.dp),
-            singleLine = true,
-            colors = vehicleTextFieldColors()
+            onAirportSelected = viewModel::onEndAirportSelected
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        )
+        {
             Button(
-                onClick = { /* TODO */ },
-                modifier = Modifier.weight(1f).height(52.dp),
+                onClick = { viewModel.onSearchClick() },
+                modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonBackground,
@@ -113,7 +109,7 @@ fun FindVehicleScreen(
 
             Button(
                 onClick = onNextClick,
-                modifier = Modifier.weight(1f).height(52.dp),
+                modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonBackground,
@@ -127,11 +123,61 @@ fun FindVehicleScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(bookingOptions) { option ->
-                BookingOptionItem(
-                    option = option,
-                    onAddClick = { viewModel.onAddClick(option) }
-                )
+
+            if (state.selectedServices.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Selected",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
+
+                items(state.selectedServices) { option ->
+                    BookingOptionItem(
+                        option = option,
+                        isSelected = true,
+                        onAddClick = { viewModel.onAddClick(option) }
+                    )
+                }
+            }
+
+            if (state.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                            .background(CardBackground, RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            } else {
+                if (state.results.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Search results",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                items(state.results) { option ->
+                    val isSelected = state.selectedServices.any {
+                        it.name == option.name && it.time == option.time
+                    }
+
+                    BookingOptionItem(
+                        option = option,
+                        isSelected = isSelected,
+                        onAddClick = { viewModel.onAddClick(option) }
+                    )
+                }
             }
         }
     }
@@ -140,12 +186,21 @@ fun FindVehicleScreen(
 @Composable
 private fun BookingOptionItem(
     option: BookingOption,
+    isSelected: Boolean,
     onAddClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(CardBackground, RoundedCornerShape(10.dp))
+            .background(
+                if (isSelected) CardBackground.copy(alpha = 0.6f) else CardBackground,
+                RoundedCornerShape(10.dp)
+            )
+            .border(
+                width = if (isSelected) 1.5.dp else 0.dp,
+                color = if (isSelected) Color.DarkGray else Color.Transparent,
+                shape = RoundedCornerShape(10.dp)
+            )
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -161,23 +216,77 @@ private fun BookingOptionItem(
             modifier = Modifier.padding(end = 12.dp)
         ) {
             Text(text = option.time, fontSize = 13.sp, color = Color.Black)
+            Text(text = option.date, fontSize = 13.sp, color = Color.Black)
             Text(text = option.cost, fontSize = 13.sp, color = Color.Black)
         }
 
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(ButtonBackground, RoundedCornerShape(8.dp))
+                .background(
+                    if (isSelected) Color.DarkGray else ButtonBackground,
+                    RoundedCornerShape(8.dp)
+                )
                 .border(1.dp, Color.Gray.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = onAddClick, modifier = Modifier.fillMaxSize()) {
-                Text(text = "+", fontSize = 22.sp, color = Color.Black)
+                Text(
+                    text = if (isSelected) "✓" else "+",
+                    fontSize = 22.sp,
+                    color = if (isSelected) Color.White else Color.Black
+                )
             }
         }
     }
 }
+@Composable
+private fun PlaceInputWithSuggestions(
+    value: String,
+    placeholder: String,
+    suggestions: List<Airport>,
+    onValueChange: (String) -> Unit,
+    onAirportSelected: (Airport) -> Unit
+) {
+    Box {
+        Column {
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = { Text(placeholder, color = Color.Gray) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(CardBackground, RoundedCornerShape(10.dp)),
+                shape = RoundedCornerShape(10.dp),
+                singleLine = true,
+                colors = vehicleTextFieldColors()
+            )
+        }
 
+        if (suggestions.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 60.dp)
+                    .background(CardBackground, RoundedCornerShape(10.dp))
+                    .border(1.dp, Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+            ) {
+                suggestions.forEach { airport ->
+                    Text(
+                        text = "${airport.city} (${airport.iata}) — ${airport.name}",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onAirportSelected(airport) }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        fontSize = 13.sp,
+                        color = Color.Black
+                    )
+                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+                }
+            }
+        }
+    }
+}
 @Composable
 private fun vehicleTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor   = CardBackground,

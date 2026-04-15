@@ -28,6 +28,12 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["MAPS_API_KEY"] = localProperties["MAPS_API_KEY"]?.toString() ?: ""
+
+        buildConfigField(
+            "String",
+            "AVIATIONSTACK_KEY",
+            "\"${project.findProperty("AVIATIONSTACK_KEY")}\""
+        )
     }
 
     ksp {
@@ -56,6 +62,8 @@ android {
     }
     buildTypes.forEach {
         it.buildConfigField("String", "MAPS_API_KEY", "\"${localProperties["MAPS_API_KEY"]}\"")
+        it.buildConfigField("String", "AVIATIONSTACK_KEY", "\"${localProperties["AVIATIONSTACK_KEY"]}\"")
+
     }
 }
 
@@ -99,4 +107,10 @@ dependencies {
 
     //SyncWorker
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    //retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }

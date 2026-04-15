@@ -17,9 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.travelapp.viewmodel.FindHotelViewModel
-import com.example.travelapp.viewmodel.HotelItemState
-import com.example.travelapp.viewmodel.hotelOptions
+import com.example.travelapp.viewmodel.create.FindHotelViewModel
+import com.example.travelapp.viewmodel.create.HotelItemState
+import com.example.travelapp.viewmodel.create.hotelOptions
 
 private val CardBackground   = Color(0xFFCED4DA)
 private val ButtonBackground = Color(0xFFD9D9D9)

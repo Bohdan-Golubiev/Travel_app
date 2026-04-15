@@ -1,4 +1,4 @@
-package com.example.travelapp.viewmodel
+package com.example.travelapp.viewmodel.create
 
 import androidx.lifecycle.ViewModel
 import com.example.travelapp.view.create.HotelOption

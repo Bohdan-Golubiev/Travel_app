@@ -1,4 +1,4 @@
-package com.example.travelapp.viewmodel
+package com.example.travelapp.viewmodel.create
 
 import android.app.Application
 import android.content.Context
@@ -22,6 +22,7 @@ import com.example.travelapp.BuildConfig
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
+import kotlinx.coroutines.CancellationException
 import java.util.UUID
 
 data class PlaceItem(
@@ -104,7 +105,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                     )
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) return@launch
+                if (e is CancellationException) return@launch
                 _uiState.update {
                     it.copy(
                         suggestions = emptyList(),

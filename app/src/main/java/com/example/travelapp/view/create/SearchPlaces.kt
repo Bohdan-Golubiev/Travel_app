@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.travelapp.viewmodel.PlaceItem
-import com.example.travelapp.viewmodel.SearchPlacesViewModel
+import com.example.travelapp.viewmodel.create.PlaceItem
+import com.example.travelapp.viewmodel.create.SearchPlacesViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
