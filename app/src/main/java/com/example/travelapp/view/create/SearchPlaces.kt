@@ -31,7 +31,7 @@ private val SuggestionBackground = Color(0xFFFFFFFF)
 @Composable
 fun SearchPlaces(
     userId: String,
-    onSaveRoute: (String) -> Unit,
+    onSaveRoute: (String, String) -> Unit,
     viewModel: SearchPlacesViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -117,7 +117,9 @@ fun SearchPlaces(
             if (state.routeName.isNotBlank() && state.places.isNotEmpty()) {
                 Button(
                     onClick = {
-                        viewModel.saveRoute(userId) { onSaveRoute(state.routeName) }
+                        viewModel.saveRoute(userId) { routeId ->
+                            onSaveRoute(state.routeName, routeId)
+                        }
                     },
                     enabled = !state.isLoading,
                     modifier = Modifier

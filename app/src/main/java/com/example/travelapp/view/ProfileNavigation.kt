@@ -1,5 +1,8 @@
 package com.example.travelapp.view
 
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+
 sealed class ProfileNavigation(val route: String) {
 
     data object Profile : ProfileNavigation("profile")
@@ -8,15 +11,11 @@ sealed class ProfileNavigation(val route: String) {
 
     data object Route : ProfileNavigation("route/{routeId}/{routeName}") {
         fun createRoute(routeId: String, routeName: String) =
-            "route/$routeId/${routeName}"
+            "route/$routeId/$routeName"
 
         val navArguments = listOf(
-            androidx.navigation.navArgument("routeId") {
-                type = androidx.navigation.NavType.StringType
-            },
-            androidx.navigation.navArgument("routeName") {
-                type = androidx.navigation.NavType.StringType
-            }
+            navArgument("routeId") { type = NavType.StringType },
+            navArgument("routeName") { type = NavType.StringType }
         )
     }
 
@@ -25,31 +24,22 @@ sealed class ProfileNavigation(val route: String) {
             "place/$routeId/$placeId/$placeName"
 
         val navArguments = listOf(
-            androidx.navigation.navArgument("routeId") {
-                type = androidx.navigation.NavType.StringType
-            },
-            androidx.navigation.navArgument("placeId") {
-                type = androidx.navigation.NavType.StringType
-            },
-            androidx.navigation.navArgument("placeName") {
-                type = androidx.navigation.NavType.StringType
-            }
+            navArgument("routeId") { type = NavType.StringType },
+            navArgument("placeId") { type = NavType.StringType },
+            navArgument("placeName") { type = NavType.StringType }
         )
     }
 
     data object Booking : ProfileNavigation("booking")
 
     data object BookingDetail : ProfileNavigation("booking_detail/{bookingId}/{bookingName}") {
-        fun createRoute(bookingId: Int, bookingName: String) =
-            "booking_detail/$bookingId/${bookingName}"
+
+        fun createRoute(bookingId: String, bookingName: String) =
+            "booking_detail/$bookingId/$bookingName"
 
         val navArguments = listOf(
-            androidx.navigation.navArgument("bookingId") {
-                type = androidx.navigation.NavType.IntType
-            },
-            androidx.navigation.navArgument("bookingName") {
-                type = androidx.navigation.NavType.StringType
-            }
+            navArgument("bookingId") { type = NavType.StringType },
+            navArgument("bookingName") { type = NavType.StringType }
         )
     }
 

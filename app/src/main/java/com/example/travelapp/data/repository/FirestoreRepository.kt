@@ -1,5 +1,6 @@
 package com.example.travelapp.data.repository
 
+import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.entity.UserEntity
@@ -114,8 +115,45 @@ class FirestoreRepository {
             .await()
     }
 
-    // конверт
+    // Bookings
+    suspend fun saveBookings(userId: String, bookings: List<BookingEntity>) {
+        if (bookings.isEmpty()) return
+        val batch = db.batch()
+        bookings.forEach { booking ->
+            val ref = db.collection("users")
+                .document(userId)
+                .collection("routes")
+                .document(booking.routeId)
+                .collection("bookings")
+                .document(booking.id)
+            batch.set(ref, booking.toMap(), SetOptions.merge())
+        }
+        batch.commit().await()
+    }
 
+    suspend fun getBookings(userId: String, routeId: String): List<BookingEntity> {
+        val snap = db.collection("users")
+            .document(userId)
+            .collection("routes")
+            .document(routeId)
+            .collection("bookings")
+            .get()
+            .await()
+        return snap.documents.mapNotNull { it.toBookingEntity(userId, routeId) }
+    }
+
+    suspend fun deleteBooking(userId: String, routeId: String, bookingId: String) {
+        db.collection("users")
+            .document(userId)
+            .collection("routes")
+            .document(routeId)
+            .collection("bookings")
+            .document(bookingId)
+            .delete()
+            .await()
+    }
+
+    // конверт
     private fun UserEntity.toMap() = mapOf(
         "id" to id,
         "name" to name,
@@ -138,6 +176,22 @@ class FirestoreRepository {
         "location" to location,
         "orderInRoute" to orderInRoute,
         "visitDate" to visitDate
+    )
+
+    private fun BookingEntity.toMap() = mapOf(
+        "id"            to id,
+        "userId"        to userId,
+        "routeId"       to routeId,
+        "type"          to type,
+        "name"          to name,
+        "departureTime" to departureTime,
+        "arrivalTime"   to arrivalTime,
+        "date"          to date,
+        "from"          to from,
+        "to"            to to,
+        "createdAt"     to createdAt,
+        "cost"          to cost,
+        "status"        to status
     )
 
     private fun DocumentSnapshot.toUserEntity() = UserEntity(
@@ -164,5 +218,25 @@ class FirestoreRepository {
         orderInRoute = getLong("orderInRoute")?.toInt() ?: 0,
         visitDate = getString("visitDate") ?: "",
         isSynced = true
+    )
+
+    private fun DocumentSnapshot.toBookingEntity(
+        userId: String,
+        routeId: String
+    ) = BookingEntity(
+        id            = getString("id") ?: id,
+        userId        = userId,
+        routeId       = routeId,
+        type          = getString("type") ?: "",
+        name          = getString("name") ?: "",
+        departureTime = getString("departureTime") ?: "",
+        arrivalTime   = getString("arrivalTime") ?: "",
+        date          = getString("date") ?: "",
+        from          = getString("from") ?: "",
+        to            = getString("to") ?: "",
+        createdAt     = getLong("createdAt") ?: 0L,
+        cost          = getDouble("cost") ?: 0.0,
+        status        = getString("status") ?: "",
+        isSynced      = true
     )
 }

@@ -15,6 +15,9 @@ import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.repository.BookingRepository
+import com.example.travelapp.db.TravelDB
 
 data class FindVehicleUiState(
     val selectedTransport: String? = null,
@@ -32,7 +35,8 @@ data class FindVehicleUiState(
 
 class FindVehicleViewModel(
     private val airTransportRepository: AirTransportRepository = AirTransportRepository(),
-    private val airportRepository: AirportRepository
+    private val airportRepository: AirportRepository,
+    private val bookingRepository: BookingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FindVehicleUiState())
@@ -101,15 +105,82 @@ class FindVehicleViewModel(
             initializer {
                 FindVehicleViewModel(
                     airTransportRepository = AirTransportRepository(),
-                    airportRepository = AirportRepository(context)
+                    airportRepository      = AirportRepository(context),
+                    bookingRepository      = BookingRepository(
+                        db      = TravelDB.getInstance(context),
+                        context = context
+                    )
                 )
             }
         }
     }
 
+    fun onNextClick(
+        userId: String,
+        routeId: String,
+        onDone: () -> Unit
+    ) {
+        val services = _uiState.value.selectedServices
+        if (services.isEmpty()) {
+            onDone()
+            return
+        }
+
+        viewModelScope.launch {
+            val bookings = services.map { option ->
+                option.toBookingEntity(
+                    userId  = userId,
+                    routeId = routeId,
+                    type    = when (_uiState.value.selectedTransport) {
+                        "Plane" -> "Pl"
+                        "Train" -> "Tr"
+                        "Bus"   -> "Bs"
+                        else    -> "Pl"
+                    },
+                    from = _uiState.value.startPlace,
+                    to = _uiState.value.endPlace
+                )
+            }
+            bookingRepository.saveBookings(bookings, userId)
+            onDone()
+        }
+    }
+
+    fun BookingOption.toBookingEntity(
+        userId: String,
+        routeId: String,
+        type: String,
+        from: String,
+        to: String,
+    ): BookingEntity {
+        val times = time.split("→").map { it.trim() }
+        val flightCode = name.substringAfterLast("·").trim()
+
+        return BookingEntity(
+            id            = "${type}_${flightCode}_${date}".uppercase()
+                .replace(" ", "")
+                .replace("·", ""),
+            userId        = userId,
+            routeId       = routeId,
+            type          = type,
+            name          = name,
+            departureTime = times.getOrElse(0) { "" },
+            arrivalTime   = times.getOrElse(1) { "" },
+            date          = date,
+            from          = from,
+            to            = to,
+            createdAt     = System.currentTimeMillis(),
+            cost          = 100.0,
+            status        = cost,
+            isSynced      = false
+        )
+    }
+
     fun onAddClick(option: BookingOption) {
         _uiState.update { currentState ->
-            val alreadyAdded = currentState.selectedServices.any { it.name == option.name && it.time == option.time }
+            val alreadyAdded = currentState.selectedServices.any { it.name == option.name &&
+                    it.time == option.time &&
+                    it.date == option.date }
             if (alreadyAdded) {
                 currentState.copy(
                     selectedServices = currentState.selectedServices - option

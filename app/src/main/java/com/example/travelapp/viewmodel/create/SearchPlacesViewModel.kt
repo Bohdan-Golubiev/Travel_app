@@ -162,7 +162,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    fun saveRoute(userId: String, onSuccess: () -> Unit) {
+    fun saveRoute(userId: String, onSuccess: (String) -> Unit) {
         val state = _uiState.value
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -185,7 +185,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                         userId = userId
                     )
                 }
-                onSuccess()
+                onSuccess(route.id)
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Помилка збереження: ${e.localizedMessage}") }
             } finally {

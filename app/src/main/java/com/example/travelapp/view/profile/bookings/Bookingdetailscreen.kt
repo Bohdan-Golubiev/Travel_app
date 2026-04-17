@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,25 +21,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travelapp.data.entity.BookingEntity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingDetailScreen(
-    bookingId: Int,
+    booking: BookingEntity,
 ) {
-    val booking = sampleBookings.find { it.id == bookingId }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 60
-                .dp)
+            contentPadding = PaddingValues(bottom = 60.dp)
         ) {
             item {
                 BookingDetailRow(
-                    leftText = "Route",
-                    rightText = booking?.route.toString()
+                    leftText = "Direction",
+                    rightText = "${booking.from} → ${booking.to}"
                 )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
@@ -48,7 +46,12 @@ fun BookingDetailScreen(
             item {
                 BookingDetailRow(
                     leftText = "Service",
-                    rightText = booking?.service.toString()
+                    rightText = when (booking.type) {
+                        "Pl" -> "Plane"
+                        "Tr" -> "Train"
+                        "Bs" -> "Bus"
+                        else -> "Unknown"
+                    }
                 )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
@@ -56,7 +59,7 @@ fun BookingDetailScreen(
             item {
                 BookingDetailRow(
                     leftText = "Cost",
-                    rightText = booking?.cost.toString()
+                    rightText = "${booking.cost} $"
                 )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
@@ -64,36 +67,36 @@ fun BookingDetailScreen(
             item {
                 BookingDetailRow(
                     leftText = "Status",
-                    rightText = booking?.status.toString()
+                    rightText = booking.status
                 )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
             item {
                 BookingDetailRow(
-                    leftText = "Crated at",
-                    rightText = booking?.createdAt.toString()
+                    leftText = "Created at",
+                    rightText = booking.date
                 )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = 240.dp)
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    Text(
-                        text = booking?.information ?: "information",
-                        fontSize = 15.sp,
-                        color = Color(0xFFB0BEC5)
-                    )
-                }
+                BookingDetailRow(
+                    leftText = "Departure",
+                    rightText = booking.departureTime
+                )
+                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+
+            item {
+                BookingDetailRow(
+                    leftText = "Arrival",
+                    rightText = booking.arrivalTime
+                )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
         }
+
         Button(
             onClick = {},
             modifier = Modifier

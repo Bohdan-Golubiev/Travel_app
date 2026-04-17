@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.example.travelapp.view.profile.PaymentsScreen
@@ -19,6 +20,7 @@ import com.example.travelapp.view.profile.bookings.BookingScreen
 import com.example.travelapp.view.profile.routes.PlaceDetailScreen
 import com.example.travelapp.view.profile.routes.RouteDetailScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
+import com.example.travelapp.viewmodel.profile.BookingViewModel
 import com.google.firebase.auth.FirebaseUser
 
 @Composable
@@ -28,6 +30,7 @@ fun ProfileScreen(
     nav: NavHostController,
     onTitleChange: (String) -> Unit
 ) {
+    val bookingViewModel: BookingViewModel = viewModel()
     NavHost(
         navController = nav,
         startDestination = ProfileNavigation.Profile.route,
@@ -77,26 +80,36 @@ fun ProfileScreen(
             )
         }
 
-            composable(ProfileNavigation.Booking.route) {
+            composable(ProfileNavigation.Booking.route) {backStack ->
                 LaunchedEffect(Unit) { onTitleChange("My Bookings") }
                 BookingScreen(
+                    userId = user.uid,
                     onOpen = { booking ->
-                        nav.navigate(ProfileNavigation.BookingDetail.createRoute(booking.id, booking.name))
+                        nav.navigate(
+                            ProfileNavigation.BookingDetail.createRoute(
+                                booking.id,
+                                booking.name
+                            )
+                        )
                     }
                 )
             }
 
-            composable(
-                route = ProfileNavigation.BookingDetail.route,
-                arguments = ProfileNavigation.BookingDetail.navArguments
-            ) { backStack ->
-                val bookingId = backStack.arguments?.getInt("bookingId") ?: 0
-                val bookingName = backStack.arguments?.getString("bookingName") ?: ""
-                LaunchedEffect(bookingName) { onTitleChange(bookingName) }
-                BookingDetailScreen(
-                    bookingId = bookingId,
-                )
+        composable(
+            route = ProfileNavigation.BookingDetail.route,
+            arguments = ProfileNavigation.BookingDetail.navArguments
+        ) { backStack ->
+            val bookingId = backStack.arguments?.getString("bookingId") ?: ""
+            val bookingName = backStack.arguments?.getString("bookingName") ?: ""
+            LaunchedEffect(bookingName) { onTitleChange(bookingName) }
+
+            val booking by bookingViewModel.getByBookingId(bookingId)
+                .collectAsState(initial = null)
+
+            booking?.let { entity ->
+                BookingDetailScreen(booking = entity)
             }
+        }
             composable(ProfileNavigation.Payment.route) {
                 LaunchedEffect(Unit) { onTitleChange("My Payments") }
                 PaymentsScreen()

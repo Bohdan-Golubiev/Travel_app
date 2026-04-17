@@ -33,6 +33,8 @@ private val ButtonBackground = Color(0xFFD9D9D9)
 
 @Composable
 fun FindVehicleScreen(
+    userId: String,
+    routeId: String,
     onNextClick: () -> Unit = {},
     viewModel: FindVehicleViewModel = viewModel(
         factory = FindVehicleViewModel.factory(LocalContext.current)
@@ -108,7 +110,13 @@ fun FindVehicleScreen(
             ) { Text("Search", fontSize = 16.sp) }
 
             Button(
-                onClick = onNextClick,
+                onClick = {
+                    viewModel.onNextClick(
+                        userId  = userId,
+                        routeId = routeId,
+                        onDone  = onNextClick
+                    )
+                },
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -168,9 +176,7 @@ fun FindVehicleScreen(
                 }
 
                 items(state.results) { option ->
-                    val isSelected = state.selectedServices.any {
-                        it.name == option.name && it.time == option.time
-                    }
+                    val isSelected = state.selectedServices.contains(option)
 
                     BookingOptionItem(
                         option = option,

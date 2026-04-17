@@ -10,6 +10,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,14 +39,18 @@ sealed class CreateNavigation(val route: String) {
         fun withArgs(routeName: String) = "save/$routeName"
     }
 
-    data object FindVehicle : CreateNavigation("vehicle")
+    data object FindVehicle : CreateNavigation("vehicle/{routeId}") {
+        fun withArgs(routeId: String) = "vehicle/$routeId"
+    }
 
     data object FindHotel : CreateNavigation("hotel")
 }
 
-
 @Composable
 fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
+
+    val savedRouteId = remember { mutableStateOf("") }
+
     NavHost(
         navController = nav,
         startDestination = CreateNavigation.Create.route
@@ -60,7 +66,10 @@ fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
         composable(CreateNavigation.CreateRoute.route) {
             SearchPlaces(
                 userId = currentUser.uid,
-                onSaveRoute = { routeName ->
+                onSaveRoute = { routeName, routeId ->
+
+                    savedRouteId.value = routeId
+
                     nav.navigate(CreateNavigation.SaveRoute.withArgs(routeName))
                 }
             )
@@ -75,13 +84,21 @@ fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
             RouteCreatedScreen(
                 routeName = routeName,
                 onMakeBooking = {
-                    nav.navigate(CreateNavigation.FindVehicle.route)
+                    nav.navigate(CreateNavigation.FindVehicle.withArgs(savedRouteId.value))
                 }
             )
         }
 
-        composable(CreateNavigation.FindVehicle.route) {
+        composable(
+            route = CreateNavigation.FindVehicle.route,
+            arguments = listOf(navArgument("routeId") { type = NavType.StringType })
+        ) { backStackEntry ->
+
+            val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
+
             FindVehicleScreen(
+                userId = currentUser.uid,
+                routeId = routeId,
                 onNextClick = {
                     nav.navigate(CreateNavigation.FindHotel.route)
                 }
