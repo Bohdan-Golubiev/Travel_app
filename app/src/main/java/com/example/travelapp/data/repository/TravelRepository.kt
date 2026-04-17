@@ -131,8 +131,8 @@ class TravelRepository(
             }
         }
     }
-
-// підтягування з хмари
+    // підтягування з хмари
+    //
     suspend fun syncFromCloud(userId: String) {
         val cloudRoutes = firestore.getRoutes(userId)
         db.routeDao().upsertAll(cloudRoutes)
@@ -140,6 +140,9 @@ class TravelRepository(
         cloudRoutes.forEach { route ->
             val cloudPlaces = firestore.getPlaces(userId, route.id)
             db.placeDao().upsertAll(cloudPlaces)
+
+            val cloudBookings = firestore.getBookings(userId, route.id)
+            db.bookingDao().upsertAll(cloudBookings)
         }
     }
 

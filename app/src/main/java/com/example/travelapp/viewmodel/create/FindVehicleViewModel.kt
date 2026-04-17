@@ -157,7 +157,7 @@ class FindVehicleViewModel(
         val flightCode = name.substringAfterLast("·").trim()
 
         return BookingEntity(
-            id            = "${type}_${flightCode}_${date}".uppercase()
+            id            = "${type}_${flightCode}_${date}_${routeId}".uppercase()
                 .replace(" ", "")
                 .replace("·", ""),
             userId        = userId,
