@@ -34,6 +34,11 @@ android {
             "AVIATIONSTACK_KEY",
             "\"${project.findProperty("AVIATIONSTACK_KEY")}\""
         )
+        buildConfigField(
+            "String",
+            "RAPIDAPI_KEY",
+            "\"${localProperties.getProperty("RAPIDAPI_KEY")}\""
+        )
     }
 
     ksp {
@@ -63,7 +68,7 @@ android {
     buildTypes.forEach {
         it.buildConfigField("String", "MAPS_API_KEY", "\"${localProperties["MAPS_API_KEY"]}\"")
         it.buildConfigField("String", "AVIATIONSTACK_KEY", "\"${localProperties["AVIATIONSTACK_KEY"]}\"")
-
+        it.buildConfigField("String", "RAPIDAPI_KEY", "\"${localProperties["RAPIDAPI_KEY"]}\"")
     }
 }
 
@@ -113,4 +118,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
 }

@@ -5,9 +5,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,17 +22,16 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.viewmodel.create.FindHotelViewModel
 import com.example.travelapp.viewmodel.create.HotelItemState
-import com.example.travelapp.viewmodel.create.hotelOptions
+import com.example.travelapp.viewmodel.create.HotelResult
+import com.example.travelapp.viewmodel.create.SearchState
+import com.example.travelapp.viewmodel.create.SelectedHotelEntry
 
-private val CardBackground   = Color(0xFFCED4DA)
-private val ButtonBackground = Color(0xFFD9D9D9)
-private val FieldBackground  = Color(0xFFE8E8E8)
+private val CardBackground    = Color(0xFFCED4DA)
+private val SelectedCardColor = Color(0xFFD6EAD6)   // для обраних
+private val ButtonBackground  = Color(0xFFD9D9D9)
+private val FieldBackground   = Color(0xFFE8E8E8)
+private val ErrorColor        = Color(0xFFB00020)
 
-data class HotelOption(
-    val name: String,
-    val costPerDay: String,
-    val costPerDayValue: Int
-)
 @Composable
 fun FindHotelScreen(
     onNextClick: () -> Unit = {},
@@ -46,7 +48,7 @@ fun FindHotelScreen(
         OutlinedTextField(
             value = state.startPlace,
             onValueChange = viewModel::onStartPlaceChange,
-            placeholder = { Text("Start place", color = Color.Gray) },
+            placeholder = { Text("Enter city or place", color = Color.Gray) },
             modifier = Modifier
                 .fillMaxWidth()
                 .background(CardBackground, RoundedCornerShape(10.dp)),
@@ -60,15 +62,26 @@ fun FindHotelScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { /* TODO */ },
+                onClick = { viewModel.searchHotels() },
                 modifier = Modifier.weight(1f).height(52.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = ButtonBackground,
                     contentColor = Color.Black
                 ),
-                elevation = ButtonDefaults.buttonElevation(0.dp)
-            ) { Text("Search", fontSize = 16.sp) }
+                elevation = ButtonDefaults.buttonElevation(0.dp),
+                enabled = state.searchState !is SearchState.Loading
+            ) {
+                if (state.searchState is SearchState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.Black
+                    )
+                } else {
+                    Text("Search", fontSize = 16.sp)
+                }
+            }
 
             Button(
                 onClick = onNextClick,
@@ -82,38 +95,173 @@ fun FindHotelScreen(
             ) { Text("Next ->", fontSize = 16.sp) }
         }
 
+        // Список готелів
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            itemsIndexed(hotelOptions) { index, option ->
-                HotelOptionItem(
-                    option = option,
-                    itemState = state.itemStates[index],
-                    onToggleExpand = { viewModel.toggleExpand(index) },
-                    onDateFromSelected = { millis -> viewModel.onDateFromSelected(index, millis) },
-                    onDateToSelected = { millis -> viewModel.onDateToSelected(index, millis) },
-                    onAddClick = { viewModel.onAddClick(index) }
-                )
+
+            if (state.selectedHotels.isNotEmpty()) {
+                item(key = "selected_header") {
+                    Text(
+                        text = "Selected hotels",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
+                    )
+                }
+
+                items(state.selectedHotels, key = { "sel_${it.hotel.hotelKey}" }) { entry ->
+                    SelectedHotelItem(
+                        entry    = entry,
+                        onRemove = { viewModel.onRemoveSelected(entry.hotel.hotelKey) }
+                    )
+                }
+
+                item(key = "selected_divider") {
+                    HorizontalDivider(
+                        color = Color.Gray.copy(alpha = 0.8f),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            }
+
+            when (val s = state.searchState) {
+
+                is SearchState.Idle -> item(key = "idle") {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Enter a city and tap Search",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                is SearchState.Loading -> item(key = "loading") {
+                    LoadingState(message = "Searching hotels...")
+                }
+
+                is SearchState.Error -> item(key = "error") {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFFFEDED), RoundedCornerShape(10.dp))
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Error: ${s.message}",
+                            color = ErrorColor,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+
+                is SearchState.Success -> {
+                    if (s.hotels.isEmpty()) {
+                        item(key = "empty") {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No hotels found for this location.",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    } else {
+                        if (state.selectedHotels.isNotEmpty()) {
+                            item(key = "results_header") {
+                                Text(
+                                    text = "Search results",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
+                            }
+                        }
+                        items(s.hotels, key = { it.hotelKey }) { hotel ->
+                            HotelOptionItem(
+                                hotel              = hotel,
+                                itemState          = state.itemStates[hotel.hotelKey] ?: HotelItemState(),
+                                isAlreadySelected  = state.selectedHotels.any { it.hotel.hotelKey == hotel.hotelKey },
+                                onToggleExpand     = { viewModel.toggleExpand(hotel.hotelKey) },
+                                onDateFromSelected = { millis -> viewModel.onDateFromSelected(hotel.hotelKey, millis) },
+                                onDateToSelected   = { millis -> viewModel.onDateToSelected(hotel.hotelKey, millis) },
+                                onAddClick         = { viewModel.onAddClick(hotel) }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+@Composable
+private fun SelectedHotelItem(
+    entry    : SelectedHotelEntry,
+    onRemove : () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SelectedCardColor, RoundedCornerShape(10.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = entry.hotel.name,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black
+            )
+            Text(
+                text = "${entry.dateFrom} – ${entry.dateTo}  •  ${entry.days} days",
+                fontSize = 12.sp,
+                color = Color.DarkGray
+            )
+            Text(
+                text = "Total: ${entry.totalCost} $",
+                fontSize = 12.sp,
+                color = Color(0xFF2E7D32),
+                fontWeight = FontWeight.Medium
+            )
+        }
+        IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Remove",
+                tint = Color.Gray,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
+// Картка знайденого готелю
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HotelOptionItem(
-    option: HotelOption,
-    itemState: HotelItemState,
-    onToggleExpand: () -> Unit,
+    hotel             : HotelResult,
+    itemState         : HotelItemState,
+    isAlreadySelected : Boolean,
+    onToggleExpand    : () -> Unit,
     onDateFromSelected: (Long) -> Unit,
-    onDateToSelected: (Long) -> Unit,
-    onAddClick: () -> Unit
+    onDateToSelected  : (Long) -> Unit,
+    onAddClick        : () -> Unit
 ) {
     var showFromPicker by remember { mutableStateOf(false) }
     var showToPicker   by remember { mutableStateOf(false) }
-
-    val total = if (itemState.days > 0) (itemState.days * option.costPerDayValue).toString() else "000"
 
     if (showFromPicker) {
         DatePickerModal(
@@ -131,18 +279,23 @@ private fun HotelOptionItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(CardBackground, RoundedCornerShape(10.dp))
+            .background(if(isAlreadySelected) SelectedCardColor else CardBackground,
+                RoundedCornerShape(10.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(text = option.name, fontSize = 15.sp, color = Color.Black, modifier = Modifier.weight(1f))
-            SmallSquareButton(label = "+", onClick = onAddClick)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = hotel.name, fontSize = 15.sp, color = Color.Black, fontWeight = FontWeight.SemiBold)
+                if (hotel.address.isNotEmpty()) {
+                    Text(text = hotel.address, fontSize = 12.sp, color = Color.DarkGray)
+                }
+            }
         }
 
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "${option.costPerDay} ${option.costPerDayValue}",
+                text = "Cost per day " + hotel.cost,
                 fontSize = 14.sp,
                 color = Color.Black,
                 modifier = Modifier.weight(1f)
@@ -164,7 +317,7 @@ private fun HotelOptionItem(
             ) {
                 HorizontalDivider(color = Color.Gray.copy(alpha = 0.4f))
 
-                Text("Select date", fontSize = 13.sp, color = Color.DarkGray, fontWeight = FontWeight.Medium)
+                Text("Select dates", fontSize = 13.sp, color = Color.DarkGray, fontWeight = FontWeight.Medium)
 
                 DateRow(label = "From:", value = itemState.dateFrom, onClick = { showFromPicker = true })
                 DateRow(label = "To:",   value = itemState.dateTo,   onClick = { showToPicker = true })
@@ -174,11 +327,38 @@ private fun HotelOptionItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Total sum for ${if (itemState.days > 0) itemState.days else "N"} days:",
-                        fontSize = 13.sp, color = Color.Black
-                    )
-                    Text(text = total, fontSize = 13.sp, color = Color.Black, fontWeight = FontWeight.Medium)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = "Duration: ${if (itemState.days > 0) "${itemState.days} days" else "—"}",
+                            fontSize = 13.sp,
+                            color = Color.Black
+                        )
+                        Text(
+                            text = "Total cost: ${itemState.days * hotel.cost} $",
+                            fontSize = 13.sp,
+                            color = Color.Black
+                        )
+                    }
+                    if (itemState.days > 0) {
+                        Button(
+                            onClick = onAddClick,
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isAlreadySelected) Color(0xFF388E3C) else Color(0xFF4CAF50),
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
+                        ) {
+                            Text(
+                                text = if (isAlreadySelected) "Update" else "Add to trip",
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -234,7 +414,11 @@ private fun DatePickerModal(
 }
 
 @Composable
-private fun SmallSquareButton(label: String, onClick: () -> Unit) {
+private fun SmallSquareButton(
+    label  : String,
+    onClick: () -> Unit,
+    tint   : Color = Color.Black
+) {
     Box(
         modifier = Modifier
             .size(36.dp)
@@ -243,8 +427,20 @@ private fun SmallSquareButton(label: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         IconButton(onClick = onClick, modifier = Modifier.fillMaxSize()) {
-            Text(text = label, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+            Text(text = label, fontSize = 16.sp, color = tint, fontWeight = FontWeight.Bold)
         }
+    }
+}
+
+@Composable
+private fun LoadingState(message: String) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        CircularProgressIndicator(color = Color.DarkGray)
+        Text(text = message, color = Color.Gray, fontSize = 14.sp)
     }
 }
 
