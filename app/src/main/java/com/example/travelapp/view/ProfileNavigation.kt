@@ -43,6 +43,19 @@ sealed class ProfileNavigation(val route: String) {
         )
     }
 
+    data object Hotel : ProfileNavigation("hotel")
+
+    data object HotelDetail : ProfileNavigation("hotel_detail/{hotelId}/{hotelName}") {
+
+        fun createRoute(hotelId: String, hotelName: String) =
+            "hotel_detail/$hotelId/$hotelName"
+
+        val navArguments = listOf(
+            navArgument("hotelId") { type = NavType.StringType },
+            navArgument("hotelName") { type = NavType.StringType }
+        )
+    }
+
     data object Review : ProfileNavigation("review")
 
     data object Payment : ProfileNavigation("payment")

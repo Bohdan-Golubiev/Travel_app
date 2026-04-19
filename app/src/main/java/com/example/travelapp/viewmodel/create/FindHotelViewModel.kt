@@ -1,8 +1,12 @@
 package com.example.travelapp.viewmodel.create
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.BuildConfig
+import com.example.travelapp.data.entity.HotelEntity
+import com.example.travelapp.data.repository.HotelRepository
+import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,14 +24,14 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 private const val RAPIDAPI_HOST = "xotelo-hotel-prices.p.rapidapi.com"
-private const val BASE_URL = "https://xotelo-hotel-prices.p.rapidapi.com"
+private const val BASE_URL      = "https://xotelo-hotel-prices.p.rapidapi.com"
 
 data class HotelResult(
-    val hotelKey: String,
-    val name: String,
-    val address: String = "",
-    val imageUrl: String = "",
-    val cost: Double = 100.0
+    val hotelKey : String,
+    val name     : String,
+    val address  : String = "",
+    val imageUrl : String = "",
+    val cost     : Double = 100.0
 )
 
 data class SelectedHotelEntry(
@@ -57,11 +61,19 @@ sealed class SearchState {
     data class Success(val hotels: List<HotelResult>) : SearchState()
 }
 
+sealed class SaveState {
+    object Idle    : SaveState()
+    object Loading : SaveState()
+    object Success : SaveState()
+    data class Error(val message: String) : SaveState()
+}
+
 data class FindHotelUiState(
     val startPlace     : String                      = "",
     val searchState    : SearchState                 = SearchState.Idle,
     val itemStates     : Map<String, HotelItemState> = emptyMap(),
     val selectedHotels : List<SelectedHotelEntry>    = emptyList(),
+    val saveState      : SaveState                   = SaveState.Idle,
 )
 
 private val httpClient = OkHttpClient.Builder()
@@ -69,7 +81,9 @@ private val httpClient = OkHttpClient.Builder()
     .readTimeout(15, TimeUnit.SECONDS)
     .build()
 
-class FindHotelViewModel : ViewModel() {
+class FindHotelViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val repository = HotelRepository(TravelDB.getInstance(application),application)
 
     private val _uiState = MutableStateFlow(FindHotelUiState())
     val uiState: StateFlow<FindHotelUiState> = _uiState.asStateFlow()
@@ -126,7 +140,6 @@ class FindHotelViewModel : ViewModel() {
         }
 
         val parsed = parseHotelList(body)
-
         return parsed.filter {
             val city = it.address.substringBefore(",").trim()
             city.equals(location, ignoreCase = true) ||
@@ -183,10 +196,49 @@ class FindHotelViewModel : ViewModel() {
 
     fun onRemoveSelected(hotelKey: String) {
         _uiState.update { state ->
-            state.copy(selectedHotels = state.selectedHotels.filter { it.hotel.hotelKey != hotelKey })
+            state.copy(selectedHotels = state.selectedHotels.filter {
+                it.hotel.hotelKey != hotelKey
+            })
         }
     }
+
+    fun saveHotels(userId: String, routeId: String) {
+        val entries = _uiState.value.selectedHotels
+        if (entries.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(saveState = SaveState.Loading) }
+            try {
+                val entities = entries.map { entry ->
+                    HotelEntity(
+                        id         = entry.hotel.hotelKey + routeId, //такий спосіб адже в одному маршруті не буде одного і того ж готелю
+                        userId     = userId,
+                        routeId    = routeId,
+                        name       = entry.hotel.name,
+                        address    = entry.hotel.address,
+                        costPerDay = entry.hotel.cost,
+                        dateFrom   = entry.dateFrom,
+                        dateTo     = entry.dateTo,
+                        days       = entry.days,
+                        totalCost  = entry.totalCost
+                    )
+                }
+                repository.saveHotels(userId, entities)
+
+                _uiState.update { it.copy(saveState = SaveState.Success) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(saveState = SaveState.Error(e.message ?: "Save failed"))
+                }
+            }
+        }
+    }
+
+    fun resetSaveState() {
+        _uiState.update { it.copy(saveState = SaveState.Idle) }
+    }
 }
+
 
 private fun parseHotelList(json: String): List<HotelResult> {
     val root = JSONObject(json)
@@ -207,13 +259,13 @@ private fun parseHotelList(json: String): List<HotelResult> {
     return buildList {
         for (i in 0 until array.length()) {
             val item = array.getJSONObject(i)
-            val key = item.optString("key", item.optString("hotel_key", ""))
+            val key  = item.optString("key", item.optString("hotel_key", ""))
             if (key.isBlank()) continue
             add(
                 HotelResult(
                     hotelKey = key,
                     name     = item.optString("name", "Hotel"),
-                    address  = item.optString("place_name", item.optString("place_name", "")),
+                    address  = item.optString("place_name", ""),
                     imageUrl = item.optString("image", item.optString("photo", ""))
                 )
             )

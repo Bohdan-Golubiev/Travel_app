@@ -17,6 +17,8 @@ import com.example.travelapp.view.profile.PaymentsScreen
 import com.example.travelapp.view.profile.ReviewsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
 import com.example.travelapp.view.profile.bookings.BookingScreen
+import com.example.travelapp.view.profile.bookings.HotelDetailScreen
+import com.example.travelapp.view.profile.hotels.HotelScreen
 import com.example.travelapp.view.profile.routes.PlaceDetailScreen
 import com.example.travelapp.view.profile.routes.RouteDetailScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
@@ -110,17 +112,44 @@ fun ProfileScreen(
                 BookingDetailScreen(booking = entity)
             }
         }
-            composable(ProfileNavigation.Payment.route) {
-                LaunchedEffect(Unit) { onTitleChange("My Payments") }
-                PaymentsScreen()
-            }
 
-            composable(ProfileNavigation.Review.route) {
-                LaunchedEffect(Unit) { onTitleChange("My Reviews") }
-                ReviewsScreen()
-            }
+        composable(ProfileNavigation.Hotel.route) {
+            LaunchedEffect(Unit) { onTitleChange("My Hotels") }
+            HotelScreen(
+                userId = user.uid,
+                onOpen = { hotel ->
+                    nav.navigate(
+                        ProfileNavigation.HotelDetail.createRoute(hotel.id, hotel.name)
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = ProfileNavigation.HotelDetail.route,
+            arguments = ProfileNavigation.HotelDetail.navArguments
+        ) { backStack ->
+            val hotelId = backStack.arguments?.getString("hotelId") ?: ""
+            val hotelName = backStack.arguments?.getString("hotelName") ?: ""
+            LaunchedEffect(hotelName) { onTitleChange(hotelName) }
+            HotelDetailScreen(
+                hotelId = hotelId,
+                userId = user.uid,
+                onDeleted = { nav.popBackStack() }
+            )
+        }
+
+        composable(ProfileNavigation.Payment.route) {
+            LaunchedEffect(Unit) { onTitleChange("My Payments") }
+            PaymentsScreen()
+        }
+
+        composable(ProfileNavigation.Review.route) {
+            LaunchedEffect(Unit) { onTitleChange("My Reviews") }
+            ReviewsScreen()
         }
     }
+}
 
 @Composable
 fun ProfileContent(
@@ -176,6 +205,12 @@ fun ProfileContent(
             onClick = {
                 nav.navigate(ProfileNavigation.Booking.route)
             }
+        )
+        HorizontalDivider(color = Color(0xFF2A4A5E))
+
+        ProfileButton(
+            label = "My hotels",
+            onClick = { nav.navigate(ProfileNavigation.Hotel.route) }
         )
         HorizontalDivider(color = Color(0xFF2A4A5E))
 

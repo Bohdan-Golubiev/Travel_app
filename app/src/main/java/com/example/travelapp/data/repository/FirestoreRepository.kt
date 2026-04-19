@@ -1,6 +1,7 @@
 package com.example.travelapp.data.repository
 
 import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.entity.UserEntity
@@ -13,7 +14,6 @@ class FirestoreRepository {
 
     private val db = FirebaseFirestore.getInstance()
 
-    // User
     suspend fun saveUser(user: UserEntity) {
         db.collection("users")
             .document(user.id)
@@ -26,7 +26,6 @@ class FirestoreRepository {
         return if (snap.exists()) snap.toUserEntity() else null
     }
 
-    // Route
     suspend fun saveRoute(route: RouteEntity) {
         db.collection("users")
             .document(route.userId)
@@ -46,25 +45,26 @@ class FirestoreRepository {
     }
 
     suspend fun deleteRoute(userId: String, routeId: String) {
-        val placesSnap = db.collection("users")
+        val routeRef = db.collection("users")
             .document(userId)
             .collection("routes")
             .document(routeId)
-            .collection("places")
-            .get()
-            .await()
+
         val batch = db.batch()
+
+        val placesSnap = routeRef.collection("places").get().await()
         placesSnap.documents.forEach { batch.delete(it.reference) }
-        batch.delete(
-            db.collection("users")
-                .document(userId)
-                .collection("routes")
-                .document(routeId)
-        )
+
+        val bookingsSnap = routeRef.collection("bookings").get().await()
+        bookingsSnap.documents.forEach { batch.delete(it.reference) }
+
+        val hotelsSnap = routeRef.collection("hotels").get().await()
+        hotelsSnap.documents.forEach { batch.delete(it.reference) }
+
+        batch.delete(routeRef)
         batch.commit().await()
     }
 
-    // Place
 
     suspend fun savePlace(userId: String, place: PlaceEntity) {
         db.collection("users")
@@ -115,7 +115,6 @@ class FirestoreRepository {
             .await()
     }
 
-    // Bookings
     suspend fun saveBookings(userId: String, bookings: List<BookingEntity>) {
         if (bookings.isEmpty()) return
         val batch = db.batch()
@@ -153,29 +152,66 @@ class FirestoreRepository {
             .await()
     }
 
-    // конверт
+    // Hotels
+    suspend fun saveHotels(userId: String, hotels: List<HotelEntity>) {
+        if (hotels.isEmpty()) return
+        val batch = db.batch()
+        hotels.forEach { hotel ->
+            val ref = db.collection("users")
+                .document(userId)
+                .collection("routes")
+                .document(hotel.routeId)
+                .collection("hotels")
+                .document(hotel.id)
+            batch.set(ref, hotel.toMap(), SetOptions.merge())
+        }
+        batch.commit().await()
+    }
+
+    suspend fun getHotels(userId: String, routeId: String): List<HotelEntity> {
+        val snap = db.collection("users")
+            .document(userId)
+            .collection("routes")
+            .document(routeId)
+            .collection("hotels")
+            .get()
+            .await()
+        return snap.documents.mapNotNull { it.toHotelEntity(userId, routeId) }
+    }
+
+    suspend fun deleteHotel(userId: String, routeId: String, hotelId: String) {
+        db.collection("users")
+            .document(userId)
+            .collection("routes")
+            .document(routeId)
+            .collection("hotels")
+            .document(hotelId)
+            .delete()
+            .await()
+    }
+
     private fun UserEntity.toMap() = mapOf(
-        "id" to id,
-        "name" to name,
+        "id"    to id,
+        "name"  to name,
         "email" to email
     )
 
     private fun RouteEntity.toMap() = mapOf(
-        "id" to id,
-        "userId" to userId,
-        "name" to name,
-        "createdAt" to createdAt,
+        "id"          to id,
+        "userId"      to userId,
+        "name"        to name,
+        "createdAt"   to createdAt,
         "description" to description
     )
 
     private fun PlaceEntity.toMap() = mapOf(
-        "id" to id,
+        "id"           to id,
         "googlePlaceId" to googlePlaceId,
-        "routeId" to routeId,
-        "name" to name,
-        "location" to location,
+        "routeId"      to routeId,
+        "name"         to name,
+        "location"     to location,
         "orderInRoute" to orderInRoute,
-        "visitDate" to visitDate
+        "visitDate"    to visitDate
     )
 
     private fun BookingEntity.toMap() = mapOf(
@@ -194,30 +230,44 @@ class FirestoreRepository {
         "status"        to status
     )
 
+    private fun HotelEntity.toMap() = mapOf(
+        "id"         to id,
+        "userId"     to userId,
+        "routeId"    to routeId,
+        "name"       to name,
+        "address"    to address,
+        "costPerDay" to costPerDay,
+        "dateFrom"   to dateFrom,
+        "dateTo"     to dateTo,
+        "days"       to days,
+        "totalCost"  to totalCost,
+        "createdAt"  to createdAt
+    )
+
     private fun DocumentSnapshot.toUserEntity() = UserEntity(
-        id = getString("id") ?: id,
-        name = getString("name") ?: "",
+        id    = getString("id") ?: id,
+        name  = getString("name") ?: "",
         email = getString("email") ?: ""
     )
 
     private fun DocumentSnapshot.toRouteEntity(userId: String) = RouteEntity(
-        id = getString("id") ?: id,
-        userId = userId,
-        name = getString("name") ?: "",
-        createdAt = getLong("createdAt") ?: 0L,
+        id          = getString("id") ?: id,
+        userId      = userId,
+        name        = getString("name") ?: "",
+        createdAt   = getLong("createdAt") ?: 0L,
         description = getString("description") ?: "",
-        isSynced = true
+        isSynced    = true
     )
 
     private fun DocumentSnapshot.toPlaceEntity(routeId: String) = PlaceEntity(
-        id = getString("id") ?: id,
+        id            = getString("id") ?: id,
         googlePlaceId = getString("googlePlaceId") ?: "",
-        routeId = routeId,
-        name = getString("name") ?: "",
-        location = getString("location") ?: "",
-        orderInRoute = getLong("orderInRoute")?.toInt() ?: 0,
-        visitDate = getString("visitDate") ?: "",
-        isSynced = true
+        routeId       = routeId,
+        name          = getString("name") ?: "",
+        location      = getString("location") ?: "",
+        orderInRoute  = getLong("orderInRoute")?.toInt() ?: 0,
+        visitDate     = getString("visitDate") ?: "",
+        isSynced      = true
     )
 
     private fun DocumentSnapshot.toBookingEntity(
@@ -238,5 +288,23 @@ class FirestoreRepository {
         cost          = getDouble("cost") ?: 0.0,
         status        = getString("status") ?: "",
         isSynced      = true
+    )
+
+    private fun DocumentSnapshot.toHotelEntity(
+        userId: String,
+        routeId: String
+    ) = HotelEntity(
+        id         = getString("id") ?: id,
+        userId     = userId,
+        routeId    = routeId,
+        name       = getString("name") ?: "",
+        address    = getString("address") ?: "",
+        costPerDay = getDouble("costPerDay") ?: 0.0,
+        dateFrom   = getString("dateFrom") ?: "",
+        dateTo     = getString("dateTo") ?: "",
+        days       = getLong("days")?.toInt() ?: 0,
+        totalCost  = getDouble("totalCost") ?: 0.0,
+        createdAt  = getLong("createdAt") ?: 0L,
+        isSynced   = true
     )
 }
