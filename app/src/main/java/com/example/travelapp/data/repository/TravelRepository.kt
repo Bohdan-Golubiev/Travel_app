@@ -143,6 +143,9 @@ class TravelRepository(
 
             val cloudBookings = firestore.getBookings(userId, route.id)
             db.bookingDao().upsertAll(cloudBookings)
+
+            val cloudHotels = firestore.getHotels(userId, route.id)
+            db.hotelDao().upsertAll(cloudHotels)
         }
     }
 

@@ -3,9 +3,8 @@ package com.example.travelapp.data.repository
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import com.example.travelapp.data.dao.BookingWithRoute
 import com.example.travelapp.data.dao.HotelWithRoute
-import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.entity.DeletedHotelEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +40,14 @@ class HotelRepository(
             runCatching {
                 firestore.deleteHotel(userId, hotel.routeId, hotel.id)
             }
+        } else {
+            db.deletedHotelDao().insert(
+                DeletedHotelEntity(
+                    hotelId = hotel.id,
+                    userId = userId,
+                    routeId = hotel.routeId
+                )
+            )
         }
     }
 
@@ -50,6 +57,14 @@ class HotelRepository(
             runCatching {
                 firestore.saveHotels(userId, unsyncedHotels)
                 unsyncedHotels.forEach { db.bookingDao().markSynced(it.id) }
+            }
+        }
+
+        val pendingDeletions = db.deletedHotelDao().getAll(userId)
+        pendingDeletions.forEach { deleted ->
+            runCatching {
+                firestore.deleteHotel(deleted.userId, deleted.routeId, deleted.hotelId)
+                db.deletedHotelDao().delete(deleted.hotelId)
             }
         }
     }

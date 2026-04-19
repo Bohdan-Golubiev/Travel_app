@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "54276f6eef7a3d9b83438b085583c3ef",
+    "identityHash": "340ea58f901c34cd56a964897f356102",
     "entities": [
       {
         "tableName": "users",
@@ -523,12 +523,44 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "deleted_hotel",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hotelId` TEXT NOT NULL, `userId` TEXT NOT NULL, `routeId` TEXT NOT NULL, PRIMARY KEY(`hotelId`))",
+        "fields": [
+          {
+            "fieldPath": "hotelId",
+            "columnName": "hotelId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "routeId",
+            "columnName": "routeId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hotelId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '54276f6eef7a3d9b83438b085583c3ef')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '340ea58f901c34cd56a964897f356102')"
     ]
   }
 }
