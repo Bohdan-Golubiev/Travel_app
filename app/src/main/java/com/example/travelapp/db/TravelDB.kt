@@ -10,6 +10,7 @@ import com.example.travelapp.data.dao.DeletedHotelDao
 import com.example.travelapp.data.dao.DeletedRouteDao
 import com.example.travelapp.data.dao.HotelDao
 import com.example.travelapp.data.dao.PlaceDao
+import com.example.travelapp.data.dao.ReviewDao
 import com.example.travelapp.data.dao.RouteDao
 import com.example.travelapp.data.dao.UserDao
 import com.example.travelapp.data.entity.BookingEntity
@@ -18,6 +19,7 @@ import com.example.travelapp.data.entity.DeletedHotelEntity
 import com.example.travelapp.data.entity.DeletedRouteEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.entity.UserEntity
 
@@ -29,7 +31,8 @@ import com.example.travelapp.data.entity.UserEntity
         BookingEntity::class,
         DeletedBookingEntity::class,
         HotelEntity::class,
-        DeletedHotelEntity::class],
+        DeletedHotelEntity::class,
+        ReviewEntity::class,  ],
     version = 1,
     exportSchema = true
 )
@@ -42,6 +45,7 @@ abstract class TravelDB : RoomDatabase() {
     abstract fun deletedBookingDao(): DeletedBookingDao
     abstract fun hotelDao(): HotelDao
     abstract fun deletedHotelDao(): DeletedHotelDao
+    abstract fun reviewDao(): ReviewDao
 
     companion object {
         @Volatile

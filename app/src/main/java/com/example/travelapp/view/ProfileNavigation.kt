@@ -30,6 +30,8 @@ sealed class ProfileNavigation(val route: String) {
         )
     }
 
+    data object AddReview : ProfileNavigation("add_review")
+
     data object Booking : ProfileNavigation("booking")
 
     data object BookingDetail : ProfileNavigation("booking_detail/{bookingId}/{bookingName}") {

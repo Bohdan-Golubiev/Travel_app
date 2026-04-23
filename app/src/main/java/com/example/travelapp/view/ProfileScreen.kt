@@ -10,21 +10,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.entity.HotelEntity
+import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.view.profile.PaymentsScreen
 import com.example.travelapp.view.profile.ReviewsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
 import com.example.travelapp.view.profile.bookings.BookingScreen
 import com.example.travelapp.view.profile.bookings.HotelDetailScreen
 import com.example.travelapp.view.profile.hotels.HotelScreen
+import com.example.travelapp.view.profile.routes.AddReviewPlaceScreen
 import com.example.travelapp.view.profile.routes.PlaceDetailScreen
 import com.example.travelapp.view.profile.routes.RouteDetailScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
 import com.example.travelapp.viewmodel.profile.BookingViewModel
 import com.google.firebase.auth.FirebaseUser
 
+class SharedViewModel : ViewModel() {
+    var selectedPlace: PlaceEntity? = null
+    var selectedBooking: BookingEntity? = null
+    var selectedHotel: HotelEntity? = null
+}
 @Composable
 fun ProfileScreen(
     user: FirebaseUser,
@@ -32,6 +42,7 @@ fun ProfileScreen(
     nav: NavHostController,
     onTitleChange: (String) -> Unit
 ) {
+    val sharedViewModel: SharedViewModel = viewModel()
     val bookingViewModel: BookingViewModel = viewModel()
     NavHost(
         navController = nav,
@@ -78,24 +89,40 @@ fun ProfileScreen(
             LaunchedEffect(placeName) { onTitleChange(placeName) }
             PlaceDetailScreen(
                 placeId = placeId,
-                routeId = routeId
+                routeId = routeId,
+                userId = user.uid,
+                onAddReview = { place ->
+                    sharedViewModel.selectedPlace = place
+                    nav.navigate(ProfileNavigation.AddReview.route)
+                }
             )
         }
 
-            composable(ProfileNavigation.Booking.route) {backStack ->
-                LaunchedEffect(Unit) { onTitleChange("My Bookings") }
-                BookingScreen(
+        composable(ProfileNavigation.AddReview.route) {
+            val place = sharedViewModel.selectedPlace
+            place?.let {
+                AddReviewPlaceScreen(
+                    place = it,
                     userId = user.uid,
-                    onOpen = { booking ->
-                        nav.navigate(
-                            ProfileNavigation.BookingDetail.createRoute(
-                                booking.id,
-                                booking.name
-                            )
-                        )
-                    }
+                    onSubmit = { nav.popBackStack() }
                 )
             }
+        }
+
+        composable(ProfileNavigation.Booking.route) {backStack ->
+            LaunchedEffect(Unit) { onTitleChange("My Bookings") }
+            BookingScreen(
+                userId = user.uid,
+                onOpen = { booking ->
+                    nav.navigate(
+                        ProfileNavigation.BookingDetail.createRoute(
+                            booking.id,
+                            booking.name
+                        )
+                    )
+                }
+            )
+        }
 
         composable(
             route = ProfileNavigation.BookingDetail.route,
@@ -146,7 +173,7 @@ fun ProfileScreen(
 
         composable(ProfileNavigation.Review.route) {
             LaunchedEffect(Unit) { onTitleChange("My Reviews") }
-            ReviewsScreen()
+            ReviewsScreen(userId = user.uid)
         }
     }
 }

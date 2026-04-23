@@ -3,10 +3,12 @@ package com.example.travelapp.data.repository
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.entity.UserEntity
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
@@ -22,7 +24,10 @@ class FirestoreRepository {
     }
 
     suspend fun getUser(userId: String): UserEntity? {
-        val snap = db.collection("users").document(userId).get().await()
+        val snap = db.collection("users").
+        document(userId).
+        get().
+        await()
         return if (snap.exists()) snap.toUserEntity() else null
     }
 
@@ -190,6 +195,71 @@ class FirestoreRepository {
             .await()
     }
 
+    suspend fun saveReview(review: ReviewEntity) {
+        db.collection("reviews")
+            .document(review.id)
+            .set(review.toMap(), SetOptions.merge())
+            .await()
+
+        db.collection("users")
+            .document(review.userId)
+            .collection("personal_reviews")
+            .document(review.id)
+            .set(review.toMap(), SetOptions.merge())
+            .await()
+    }
+    suspend fun saveReviews(reviews: List<ReviewEntity>) { // проверить
+        if (reviews.isEmpty()) return
+        val batch = db.batch()
+        reviews.forEach { review ->
+            val ref = db.collection("reviews")
+                .document(review.id)
+            batch.set(ref, review.toMap(), SetOptions.merge())
+        }
+        batch.commit().await()
+
+        reviews.forEach { review ->
+            val ref =  db.collection("users")
+                .document(review.userId)
+                .collection("personal_reviews")
+                .document(review.id)
+            batch.set(ref, review.toMap(), SetOptions.merge())
+        }
+        batch.commit().await()
+    }
+
+    suspend fun deleteReview(reviewId: String, userId: String) {
+        db.collection("reviews")
+            .document(reviewId)
+            .delete()
+            .await()
+
+        db.collection("users")
+            .document(userId)
+            .collection("personal_reviews")
+            .document(reviewId)
+            .delete()
+            .await()
+    }
+
+    suspend fun getReviewsByTargetId(targetId: String): List<ReviewEntity> {
+        val snap = db.collection("reviews")
+            .whereEqualTo("targetId", targetId)
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .get()
+            .await()
+        return snap.documents.mapNotNull { it.toReviewEntity() }
+    }
+
+    suspend fun getUserReviews(userId: String): List<ReviewEntity> {
+        val snap = db.collection("users")
+            .document(userId)
+            .collection("personal_reviews")
+            .get()
+            .await()
+        return snap.documents.mapNotNull { it.toReviewEntity() }
+    }
+
     private fun UserEntity.toMap() = mapOf(
         "id"    to id,
         "name"  to name,
@@ -241,6 +311,16 @@ class FirestoreRepository {
         "dateTo"     to dateTo,
         "days"       to days,
         "totalCost"  to totalCost,
+        "createdAt"  to createdAt
+    )
+
+    private fun ReviewEntity.toMap() = mapOf(
+        "userId"     to userId,
+        "userName"   to userName,
+        "targetId"   to targetId,
+        "targetType" to targetType,
+        "mark"       to mark,
+        "text"       to text,
         "createdAt"  to createdAt
     )
 
@@ -307,4 +387,18 @@ class FirestoreRepository {
         createdAt  = getLong("createdAt") ?: 0L,
         isSynced   = true
     )
+
+    private fun DocumentSnapshot.toReviewEntity(): ReviewEntity? {
+        return ReviewEntity(
+            id         = getString("id") ?: id,
+            userId     = getString("userId") ?: return null,
+            userName = getString("userName") ?: "",
+            targetId   = getString("targetId") ?: return null,
+            targetType = getString("targetType") ?: return null,
+            mark       = getLong("mark")?.toInt() ?: return null,
+            text       = getString("text") ?: "",
+            createdAt  = getLong("createdAt") ?: System.currentTimeMillis(),
+            isSynced   = true
+        )
+    }
 }

@@ -147,6 +147,9 @@ class TravelRepository(
             val cloudHotels = firestore.getHotels(userId, route.id)
             db.hotelDao().upsertAll(cloudHotels)
         }
+
+        val cloudReviews = firestore.getUserReviews(userId)
+        db.reviewDao().upsertAll(cloudReviews)
     }
 
 // відправка несихнонних записів в хмару
