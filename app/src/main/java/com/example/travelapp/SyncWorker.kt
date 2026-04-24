@@ -24,7 +24,7 @@ class SyncWorker(
             repository.pushUnsyncedToCloud(userId)
             repositoryBooking.pushUnsyncedToCloud(userId)
             repositoryHotels.pushUnsyncedToCloud(userId)
-            repositoryReviews.pushUnsyncedToCloud()
+            repositoryReviews.pushUnsyncedToCloud(userId)
 
             repository.syncFromCloud(userId)
             Result.success()

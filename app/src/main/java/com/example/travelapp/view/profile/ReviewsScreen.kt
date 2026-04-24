@@ -23,11 +23,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.ui.theme.TextPrimary
 import com.example.travelapp.ui.theme.TextSecondary
-import com.example.travelapp.viewmodel.profile.ReviewsViewModel
+import com.example.travelapp.viewmodel.profile.review.ReviewsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
 
 data class ReviewWithPlace(
     val review: ReviewEntity,
@@ -37,6 +36,7 @@ data class ReviewWithPlace(
 @Composable
 fun ReviewsScreen(
     userId: String,
+    onEdit: (ReviewWithPlace) -> Unit,
     viewModel: ReviewsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -46,8 +46,7 @@ fun ReviewsScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         when {
             uiState.isLoading -> {
@@ -76,8 +75,8 @@ fun ReviewsScreen(
                     ) { review ->
                         ReviewCard(
                             item = review,
-                            onDelete = { viewModel.deleteReview(userId,review.review) },
-                            onEdit = {}
+                            onDelete = { viewModel.deleteReview(userId, review.review) },
+                            onEdit = { onEdit(review) }
                         )
                         HorizontalDivider(color = Color(0xFF2A4A5E))
                     }
@@ -86,6 +85,7 @@ fun ReviewsScreen(
         }
     }
 }
+
 @Composable
 private fun ReviewCard(
     item: ReviewWithPlace,

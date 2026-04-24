@@ -3,6 +3,7 @@ package com.example.travelapp.data.repository
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.example.travelapp.data.entity.DeletedReviewEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.db.TravelDB
@@ -47,17 +48,38 @@ class ReviewRepository(
             runCatching {
                 firestore.deleteReview(review.id, userId)
             }
+        }else{
+            db.deletedReviewDao().insert(
+                DeletedReviewEntity(
+                    reviewId =  review.id,
+                    userId = userId
+                )
+            )
         }
     }
 
-    suspend fun pushUnsyncedToCloud(){
-        val unsyncedReviews = db.reviewDao().getUnsynced()
+    suspend fun pushUnsyncedToCloud(userId: String) {
+        val pendingDeletions = db.deletedReviewDao().getAll(userId)
+        val deletedIds = pendingDeletions.map { it.reviewId }.toSet()
+
+        val unsyncedReviews = db.reviewDao()
+            .getUnsynced()
+            .filter { it.id !in deletedIds }
+
         if (unsyncedReviews.isNotEmpty()) {
             runCatching {
                 firestore.saveReviews(unsyncedReviews)
-                unsyncedReviews.forEach { db.bookingDao().markSynced(it.id) }
+            }.onSuccess {
+                unsyncedReviews.forEach { db.reviewDao().markSynced(it.id) }
             }
         }
-        //видалені відгуки
+
+        pendingDeletions.forEach { deleted ->
+            runCatching {
+                firestore.deleteReview(deleted.reviewId, userId)
+            }.onSuccess {
+                db.deletedReviewDao().delete(deleted.reviewId)
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.travelapp.viewmodel.profile
+package com.example.travelapp.viewmodel.profile.review
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

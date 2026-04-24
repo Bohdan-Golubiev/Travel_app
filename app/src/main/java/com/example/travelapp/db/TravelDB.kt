@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import com.example.travelapp.data.dao.BookingDao
 import com.example.travelapp.data.dao.DeletedBookingDao
 import com.example.travelapp.data.dao.DeletedHotelDao
+import com.example.travelapp.data.dao.DeletedReviewDao
 import com.example.travelapp.data.dao.DeletedRouteDao
 import com.example.travelapp.data.dao.HotelDao
 import com.example.travelapp.data.dao.PlaceDao
@@ -16,6 +17,7 @@ import com.example.travelapp.data.dao.UserDao
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.DeletedBookingEntity
 import com.example.travelapp.data.entity.DeletedHotelEntity
+import com.example.travelapp.data.entity.DeletedReviewEntity
 import com.example.travelapp.data.entity.DeletedRouteEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
@@ -24,7 +26,8 @@ import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.entity.UserEntity
 
 @Database(
-    entities = [UserEntity::class,
+    entities = [
+        UserEntity::class,
         RouteEntity::class,
         PlaceEntity::class,
         DeletedRouteEntity::class,
@@ -32,7 +35,8 @@ import com.example.travelapp.data.entity.UserEntity
         DeletedBookingEntity::class,
         HotelEntity::class,
         DeletedHotelEntity::class,
-        ReviewEntity::class,  ],
+        ReviewEntity::class,
+        DeletedReviewEntity::class],
     version = 1,
     exportSchema = true
 )
@@ -46,6 +50,7 @@ abstract class TravelDB : RoomDatabase() {
     abstract fun hotelDao(): HotelDao
     abstract fun deletedHotelDao(): DeletedHotelDao
     abstract fun reviewDao(): ReviewDao
+    abstract fun deletedReviewDao(): DeletedReviewDao
 
     companion object {
         @Volatile

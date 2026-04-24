@@ -208,22 +208,19 @@ class FirestoreRepository {
             .set(review.toMap(), SetOptions.merge())
             .await()
     }
-    suspend fun saveReviews(reviews: List<ReviewEntity>) { // проверить
+    suspend fun saveReviews(reviews: List<ReviewEntity>) {
         if (reviews.isEmpty()) return
         val batch = db.batch()
-        reviews.forEach { review ->
-            val ref = db.collection("reviews")
-                .document(review.id)
-            batch.set(ref, review.toMap(), SetOptions.merge())
-        }
-        batch.commit().await()
 
         reviews.forEach { review ->
-            val ref =  db.collection("users")
+            val globalRef = db.collection("reviews").document(review.id)
+            val userRef = db.collection("users")
                 .document(review.userId)
                 .collection("personal_reviews")
                 .document(review.id)
-            batch.set(ref, review.toMap(), SetOptions.merge())
+
+            batch.set(globalRef, review.toMap(), SetOptions.merge())
+            batch.set(userRef, review.toMap(), SetOptions.merge())
         }
         batch.commit().await()
     }

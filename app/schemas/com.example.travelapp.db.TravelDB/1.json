@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "759f300d26f475ed7754338c19e48c97",
+    "identityHash": "90d09428bd919544057232a59412d7db",
     "entities": [
       {
         "tableName": "users",
@@ -645,12 +645,38 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "deleted_review",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`reviewId` TEXT NOT NULL, `userId` TEXT NOT NULL, PRIMARY KEY(`reviewId`))",
+        "fields": [
+          {
+            "fieldPath": "reviewId",
+            "columnName": "reviewId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userId",
+            "columnName": "userId",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "reviewId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '759f300d26f475ed7754338c19e48c97')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '90d09428bd919544057232a59412d7db')"
     ]
   }
 }

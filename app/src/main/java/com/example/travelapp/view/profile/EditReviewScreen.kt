@@ -1,4 +1,4 @@
-package com.example.travelapp.view.profile.routes
+package com.example.travelapp.view.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,17 +16,23 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.travelapp.data.entity.PlaceEntity
-import com.example.travelapp.viewmodel.profile.review.AddReviewPlaceViewModel
+import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.viewmodel.profile.review.EditReviewViewModel
 
 @Composable
-fun AddReviewPlaceScreen(
-    place: PlaceEntity,
+fun EditReviewScreen(
+    review: ReviewEntity,
+    placeName: String,
+    placeLocation: String,
     userId: String,
-    viewModel: AddReviewPlaceViewModel = viewModel(),
+    viewModel: EditReviewViewModel = viewModel(),
     onSubmit: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(review.id) {
+        viewModel.initWith(review)
+    }
 
     LaunchedEffect(uiState.isSubmitted) {
         if (uiState.isSubmitted) onSubmit()
@@ -56,12 +62,13 @@ fun AddReviewPlaceScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = place.location,
-                    fontSize = 14.sp,
-                    color = Color(0xFFB0BEC5)
+                    text = placeName,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
                 )
                 Text(
-                    text = "Order in route: ${place.orderInRoute + 1}",
+                    text = placeLocation,
                     fontSize = 14.sp,
                     color = Color(0xFFB0BEC5)
                 )
@@ -69,6 +76,7 @@ fun AddReviewPlaceScreen(
 
             HorizontalDivider(color = Color(0xFF2A4A5E))
 
+            // Зірки рейтингу
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -165,7 +173,7 @@ fun AddReviewPlaceScreen(
         }
 
         Button(
-            onClick = { viewModel.submitReview(userId, place) },
+            onClick = { viewModel.submitEdit( review) },
             enabled = uiState.isSubmitEnabled,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -184,7 +192,7 @@ fun AddReviewPlaceScreen(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Submit", fontSize = 15.sp)
+                Text("Save changes", fontSize = 15.sp)
             }
         }
     }

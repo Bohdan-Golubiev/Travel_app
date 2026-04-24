@@ -17,7 +17,9 @@ import androidx.navigation.compose.*
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.view.profile.EditReviewScreen
 import com.example.travelapp.view.profile.PaymentsScreen
+import com.example.travelapp.view.profile.ReviewWithPlace
 import com.example.travelapp.view.profile.ReviewsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
 import com.example.travelapp.view.profile.bookings.BookingScreen
@@ -34,6 +36,7 @@ class SharedViewModel : ViewModel() {
     var selectedPlace: PlaceEntity? = null
     var selectedBooking: BookingEntity? = null
     var selectedHotel: HotelEntity? = null
+    var selectedReviewWithPlace: ReviewWithPlace? = null
 }
 @Composable
 fun ProfileScreen(
@@ -173,7 +176,25 @@ fun ProfileScreen(
 
         composable(ProfileNavigation.Review.route) {
             LaunchedEffect(Unit) { onTitleChange("My Reviews") }
-            ReviewsScreen(userId = user.uid)
+            ReviewsScreen(userId = user.uid,
+                onEdit = { review ->
+                    sharedViewModel.selectedReviewWithPlace = review
+                    nav.navigate(ProfileNavigation.EditReview.route)
+                })
+        }
+
+        composable(ProfileNavigation.EditReview.route) {
+            LaunchedEffect(Unit) { onTitleChange("Edit review") }
+            val reviewWithPlace = sharedViewModel.selectedReviewWithPlace
+            reviewWithPlace?.let { item ->
+                EditReviewScreen(
+                    review = item.review,
+                    placeName = item.placeName ?: "",
+                    placeLocation = item.placeLocation ?: "",
+                    userId = user.uid,
+                    onSubmit = { nav.popBackStack() }
+                )
+            }
         }
     }
 }
