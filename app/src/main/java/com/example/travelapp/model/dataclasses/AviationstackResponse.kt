@@ -15,6 +15,7 @@ data class FlightData(
 
 data class AirportInfo(
     val airport: String?,
+    val timezone: String?,
     val iata: String?,
     val scheduled: String?,
     val estimated: String?,

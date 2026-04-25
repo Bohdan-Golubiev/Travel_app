@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class RouteDetailViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -28,6 +30,9 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _timelineError = MutableStateFlow(false)
+    val timelineError: StateFlow<Boolean> = _timelineError.asStateFlow()
 
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         repository.getPlaces(routeId)
@@ -59,6 +64,11 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun saveChanges(userId: String, routeId: String, originalPlaces: List<PlaceEntity>, onSuccess: () -> Unit) {
+        if (!checkCorrectTimeLine()) {
+            _timelineError.value = true
+            return
+        }
+        _timelineError.value = false
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -94,5 +104,27 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
                 it[index] = it[index].copy(visitDate = date)
             }
         }
+    }
+    fun checkCorrectTimeLine(): Boolean {
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+        val parsedDates = _editedPlaces.value.map { place ->
+            val dateStr = place.visitDate
+
+            if (dateStr.isEmpty() || dateStr == "00.00.0000") return false
+
+            val parsed = runCatching { dateFormat.parse(dateStr) }.getOrNull()
+                ?: return false
+
+            parsed
+        }
+
+        return parsedDates
+            .zipWithNext()
+            .all { (prev, next) -> !next.before(prev) }
+    }
+
+    fun dismissTimelineError() {
+        _timelineError.value = false
     }
 }

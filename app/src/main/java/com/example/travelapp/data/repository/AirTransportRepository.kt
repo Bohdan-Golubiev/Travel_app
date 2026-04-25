@@ -49,10 +49,18 @@ class AirTransportRepository {
             ?.substring(0, 5)
             ?: "—"
 
+        val from = departure.timezone
+            ?.substringAfter("/")
+            ?: "Unknown"
+
         val arrTime = arrival.scheduled
             ?.substringAfter("T")
             ?.substring(0, 5)
             ?: "—"
+
+        val to = arrival.timezone
+            ?.substringAfter("/")
+            ?: "Unknown"
 
         val date = departure.scheduled //"scheduled":"2026-04-15T17:00:00+00:00"
             ?.substring(0, 10)
@@ -63,7 +71,9 @@ class AirTransportRepository {
             name = "${airline.name ?: "Unknown"} · $flightCode".trim(),
             time = "$depTime → $arrTime",
             date = "$date",
-            cost = flight_status
+            cost = flight_status,
+            from = from,
+            to = to
         )
     }
     private fun isValidFlightCode(code: String): Boolean {

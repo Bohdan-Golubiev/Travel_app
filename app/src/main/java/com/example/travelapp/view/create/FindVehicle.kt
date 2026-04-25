@@ -25,7 +25,9 @@ data class BookingOption(
     val name: String,
     val time: String,
     val date: String,
-    val cost: String
+    val cost: String,
+    val from: String,
+    val to  :String
 )
 val transportOptions = listOf("Plane", "Train", "Bus", "Without")
 private val CardBackground   = Color(0xFFCED4DA)

@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -99,11 +100,18 @@ private fun BookingItem(
                         fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
-                    Text(
-                        text = booking.status,
-                        fontSize = 13.sp,
-                        color = Color(0xFFB0BEC5)
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF1A3A4E)
+                    ) {
+                        Text(
+                            text = "${booking.cost} ₴",
+                            fontSize = 13.sp,
+                            color = Color(0xFF4FC3F7),
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
                 }
 
                 Row(

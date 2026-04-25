@@ -37,7 +37,7 @@ fun RouteDetailScreen(
     routeName: String,
     userId: String,
     onNext: (PlaceEntity) -> Unit,
-    onTitleChange: (String) -> Unit = {},
+    onTitleChange: (String) -> Unit,
     viewModel: RouteDetailViewModel = viewModel()
 ) {
     val places by viewModel.getPlaces(routeId).collectAsState(initial = emptyList())
@@ -45,6 +45,7 @@ fun RouteDetailScreen(
     val editedName by viewModel.editedName.collectAsState()
     val editedPlaces by viewModel.editedPlaces.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val timelineError by viewModel.timelineError.collectAsState()
 
     val displayedPlaces = if (isEditing) editedPlaces else places
 
@@ -57,11 +58,28 @@ fun RouteDetailScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
+        if (timelineError) {
+            AlertDialog(
+                onDismissRequest = viewModel::dismissTimelineError,
+                title = { Text("Некоректний порядок або значення дат") },
+                text = { Text("Для всіх локацій мають бути встановлені дати. Дати відвідування мають йти в порядку зростання.") },
+                confirmButton = {
+                    TextButton(onClick = viewModel::dismissTimelineError) {
+                        Text("Зрозуміло", color = Color(0xFF219EBC))
+                    }
+                },
+                containerColor = Color(0xFF1B3A4B),
+                titleContentColor = Color.White,
+                textContentColor = Color(0xFFB0BEC5)
+            )
+        }
+
         if (isEditing) {
             OutlinedTextField(
                 value = editedName,
                 onValueChange = viewModel::onNameChange,
-                placeholder = { Text("Route name", color = Color.Gray) },
+                placeholder = { Text("New route name", color = Color.Gray) },
+                supportingText = { Text("Route name", color = Color.Gray) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -189,12 +207,10 @@ private fun EditablePlaceItem(
             Text(text = place.name, color = Color.White, fontSize = 14.sp)
             Text(text = place.location, color = Color(0xFFB0BEC5), fontSize = 12.sp)
         }
-        if (place.visitDate.isNotEmpty()) {
-            DateRow(
-                value = place.visitDate,
-                onClick = { showDatePicker = true }
-            )
-        }
+        DateRow(
+            value = place.visitDate,
+            onClick = { showDatePicker = true }
+        )
         IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
             Icon(
                 imageVector = Icons.Default.Close,
@@ -259,7 +275,7 @@ private fun DateRow(value: String, onClick: () -> Unit) {
     ) {
         Text(
             text = value.ifEmpty { "00.00.0000" },
-            color = if (value.isEmpty()) Color.Gray else Color.Black,
+            color = Color.Black,
             fontSize = 13.sp
         )
     }

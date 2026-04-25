@@ -137,8 +137,8 @@ class FindVehicleViewModel(
                         "Bus"   -> "Bs"
                         else    -> "Pl"
                     },
-                    from = _uiState.value.startPlace,
-                    to = _uiState.value.endPlace
+                    from = option.from,
+                    to = option.to
                 )
             }
             bookingRepository.saveBookings(bookings, userId)
