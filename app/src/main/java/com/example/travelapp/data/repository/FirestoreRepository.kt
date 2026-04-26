@@ -10,6 +10,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 
 class FirestoreRepository {
@@ -243,7 +244,7 @@ class FirestoreRepository {
         val snap = db.collection("reviews")
             .whereEqualTo("targetId", targetId)
             .orderBy("createdAt", Query.Direction.DESCENDING)
-            .get()
+            .get(Source.SERVER)
             .await()
         return snap.documents.mapNotNull { it.toReviewEntity() }
     }

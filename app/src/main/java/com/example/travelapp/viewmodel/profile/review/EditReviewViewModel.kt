@@ -55,7 +55,9 @@ class EditReviewViewModel(application: Application) : AndroidViewModel(applicati
             runCatching {
                 val updated = original.copy(
                     mark = state.selectedRating,
-                    text = state.commentText,
+                    text = state.commentText
+                        .replace(Regex("\\n\\s*\\n+"), "\n")
+                        .trim(),
                     isSynced = false
                 )
                 repository.addReview(updated)

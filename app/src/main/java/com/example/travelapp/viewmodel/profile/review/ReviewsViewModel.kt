@@ -6,14 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.repository.ReviewRepository
 import com.example.travelapp.db.TravelDB
-import com.example.travelapp.view.profile.ReviewWithPlace
+import com.example.travelapp.model.ReviewItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ReviewsUiState(
-    val reviews: List<ReviewWithPlace> = emptyList(),
+    val placeReviews: List<ReviewItem.PlaceReview> = emptyList(),
+    val hotelReviews: List<ReviewItem.HotelReview> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -29,38 +30,54 @@ class ReviewsViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
-            try {
+            runCatching {
                 val reviews = repository.getReviewsByUserId(userId)
 
-                val reviewsWithPlaces = reviews.map { review ->
-                    val place = repository.getPlaceById(review.targetId)
+                val placeReviews = mutableListOf<ReviewItem.PlaceReview>()
+                val hotelReviews = mutableListOf<ReviewItem.HotelReview>()
 
-                    ReviewWithPlace(
-                        review = review,
-                        placeName = place?.name,
-                        placeLocation = place?.location
-                    )
+                reviews.forEach { review ->
+                    when (review.targetType) {
+                        "place" -> {
+                            val place = repository.getPlaceById(review.targetId)
+                            placeReviews += ReviewItem.PlaceReview(
+                                review       = review,
+                                placeName    = place?.name ?: review.targetId,
+                                placeLocation = place?.location ?: ""
+                            )
+                        }
+                        "hotel" -> {
+                            val hotel = repository.getHotelByKey(review.targetId)
+                            hotelReviews += ReviewItem.HotelReview(
+                                review       = review,
+                                hotelName    = hotel?.name ?: review.targetId,
+                                hotelAddress = hotel?.address ?: ""
+                            )
+                        }
+                    }
                 }
 
                 _uiState.value = _uiState.value.copy(
-                    reviews = reviewsWithPlaces,
-                    isLoading = false
+                    placeReviews = placeReviews,
+                    hotelReviews = hotelReviews,
+                    isLoading    = false
                 )
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = e.message
+                    error     = e.message
                 )
             }
         }
     }
 
-    fun deleteReview(userId: String,review: ReviewEntity) {
+    fun deleteReview(userId: String, review: ReviewEntity) {
         viewModelScope.launch {
-            repository.deleteReview(userId,review)
+            repository.deleteReview(userId, review)
         }
         _uiState.value = _uiState.value.copy(
-            reviews = _uiState.value.reviews.filter { it.review.id != review.id }
+            placeReviews = _uiState.value.placeReviews.filter { it.review.id != review.id },
+            hotelReviews = _uiState.value.hotelReviews.filter { it.review.id != review.id }
         )
     }
 }

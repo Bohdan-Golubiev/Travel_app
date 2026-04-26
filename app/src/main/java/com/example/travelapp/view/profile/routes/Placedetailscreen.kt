@@ -141,7 +141,7 @@ private fun ReviewItem(review: ReviewEntity, currentUserId: String) {
     }
 
     val displayName = if (review.userId == currentUserId) {
-        "Ви" // 👈 тут магія
+        "Ви"
     } else {
         review.userName
     }

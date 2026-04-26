@@ -5,7 +5,6 @@ import androidx.room.Query
 import androidx.room.Upsert
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ReviewDao {

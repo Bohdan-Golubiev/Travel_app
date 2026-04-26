@@ -14,6 +14,9 @@ interface HotelDao {
     @Upsert
     suspend fun upsertAll(hotels: List<HotelEntity>)
 
+    @Query("SELECT * FROM hotels")
+    suspend fun getAll(): List<HotelEntity>
+
     @Query("SELECT * FROM hotels WHERE routeId = :routeId")
     suspend fun getByRoute(routeId: String): List<HotelEntity>
 

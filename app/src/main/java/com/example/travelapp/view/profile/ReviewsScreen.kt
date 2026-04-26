@@ -6,12 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.model.ReviewItem
 import com.example.travelapp.ui.theme.TextPrimary
 import com.example.travelapp.ui.theme.TextSecondary
 import com.example.travelapp.viewmodel.profile.review.ReviewsViewModel
@@ -28,15 +24,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-data class ReviewWithPlace(
-    val review: ReviewEntity,
-    val placeName: String? = null,
-    val placeLocation: String? = null
-)
 @Composable
 fun ReviewsScreen(
     userId: String,
-    onEdit: (ReviewWithPlace) -> Unit,
+    onEdit: (ReviewItem) -> Unit,
     viewModel: ReviewsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -50,12 +41,10 @@ fun ReviewsScreen(
     ) {
         when {
             uiState.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            uiState.reviews.isEmpty() -> {
+            uiState.placeReviews.isEmpty() && uiState.hotelReviews.isEmpty() -> {
                 Text(
                     text = "Відгуків ще немає",
                     modifier = Modifier.align(Alignment.Center),
@@ -69,16 +58,42 @@ fun ReviewsScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(
-                        items = uiState.reviews,
-                        key = { it.review.id }
-                    ) { review ->
-                        ReviewCard(
-                            item = review,
-                            onDelete = { viewModel.deleteReview(userId, review.review) },
-                            onEdit = { onEdit(review) }
-                        )
-                        HorizontalDivider(color = Color(0xFF2A4A5E))
+                    if (uiState.placeReviews.isNotEmpty()) {
+                        item {
+                            SectionHeader(title = "Місця")
+                        }
+                        items(
+                            items = uiState.placeReviews,
+                            key = { it.review.id }
+                        ) { item ->
+                            ReviewCard(
+                                title    = item.placeName,
+                                subtitle = item.placeLocation,
+                                review   = item.review,
+                                onDelete = { viewModel.deleteReview(userId, item.review) },
+                                onEdit   = { onEdit(item) }
+                            )
+                            HorizontalDivider(color = Color(0xFF2A4A5E))
+                        }
+                    }
+
+                    if (uiState.hotelReviews.isNotEmpty()) {
+                        item {
+                            SectionHeader(title = "Готелі")
+                        }
+                        items(
+                            items = uiState.hotelReviews,
+                            key = { it.review.id }
+                        ) { item ->
+                            ReviewCard(
+                                title    = item.hotelName,
+                                subtitle = item.hotelAddress,
+                                review   = item.review,
+                                onDelete = { viewModel.deleteReview(userId, item.review) },
+                                onEdit   = { onEdit(item) }
+                            )
+                            HorizontalDivider(color = Color(0xFF2A4A5E))
+                        }
                     }
                 }
             }
@@ -87,8 +102,24 @@ fun ReviewsScreen(
 }
 
 @Composable
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
+        color = Color(0xFF219EBC),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp)
+    )
+    HorizontalDivider(color = Color(0xFF2A4A5E))
+}
+
+@Composable
 private fun ReviewCard(
-    item: ReviewWithPlace,
+    title: String,
+    subtitle: String,
+    review: ReviewEntity,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
@@ -104,14 +135,10 @@ private fun ReviewCard(
                 TextButton(onClick = {
                     showConfirmDialog = false
                     onDelete()
-                }) {
-                    Text("Видалити", color = MaterialTheme.colorScheme.error)
-                }
+                }) { Text("Видалити", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) {
-                    Text("Скасувати")
-                }
+                TextButton(onClick = { showConfirmDialog = false }) { Text("Скасувати") }
             }
         )
     }
@@ -127,19 +154,17 @@ private fun ReviewCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = item.placeName.toString(),
+                text = title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = TextPrimary
             )
-
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Оцінка: ${item.review.mark}/5",
+                    text = "Оцінка: ${review.mark}/5",
                     fontSize = 13.sp,
                     color = TextSecondary
                 )
-
                 Box {
                     IconButton(
                         onClick = { menuExpanded = true },
@@ -157,25 +182,14 @@ private fun ReviewCard(
                         onDismissRequest = { menuExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = {
-                                Text(
-                                    "Видалити",
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            },
+                            text = { Text("Видалити", color = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 menuExpanded = false
                                 showConfirmDialog = true
                             }
                         )
-
                         DropdownMenuItem(
-                            text = {
-                                Text(
-                                    "Редагувати",
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            },
+                            text = { Text("Редагувати", color = MaterialTheme.colorScheme.secondary) },
                             onClick = {
                                 menuExpanded = false
                                 onEdit()
@@ -192,13 +206,9 @@ private fun ReviewCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            Text(text = subtitle, fontSize = 13.sp, color = TextSecondary)
             Text(
-                text = item.placeLocation.toString(),
-                fontSize = 13.sp,
-                color = TextSecondary
-            )
-            Text(
-                text = item.review.createdAt.toFormattedDate(),
+                text = review.createdAt.toFormattedDate(),
                 fontSize = 12.sp,
                 color = TextSecondary,
                 modifier = Modifier.padding(end = 12.dp)
@@ -208,7 +218,7 @@ private fun ReviewCard(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = item.review.text,
+            text = review.text,
             fontSize = 13.sp,
             color = TextPrimary,
             lineHeight = 18.sp,
@@ -216,5 +226,6 @@ private fun ReviewCard(
         )
     }
 }
+
 private fun Long.toFormattedDate(): String =
     SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(this))

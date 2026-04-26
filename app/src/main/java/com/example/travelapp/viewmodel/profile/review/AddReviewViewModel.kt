@@ -3,11 +3,11 @@ package com.example.travelapp.viewmodel.profile.review
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.repository.ReviewRepository
 import com.example.travelapp.data.repository.UserRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.model.ReviewTarget
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,9 +26,9 @@ data class AddReviewUiState(
         get() = selectedRating > 0 && commentText.isNotBlank() && !isSubmitting
 }
 
-class AddReviewPlaceViewModel( application: Application) : AndroidViewModel(application) {
+class AddReviewViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ReviewRepository(TravelDB.getInstance(application), application)
-    private val userRepo = UserRepository(TravelDB.getInstance(application))
+    private val userRepo   = UserRepository(TravelDB.getInstance(application))
 
     private val _uiState = MutableStateFlow(AddReviewUiState())
     val uiState: StateFlow<AddReviewUiState> = _uiState.asStateFlow()
@@ -43,7 +43,7 @@ class AddReviewPlaceViewModel( application: Application) : AndroidViewModel(appl
         }
     }
 
-    fun submitReview(userId: String, place: PlaceEntity) {
+    fun submitReview(userId: String, target: ReviewTarget) {
         val state = _uiState.value
         if (!state.isSubmitEnabled) return
 
@@ -57,10 +57,12 @@ class AddReviewPlaceViewModel( application: Application) : AndroidViewModel(appl
                     id         = UUID.randomUUID().toString(),
                     userId     = userId,
                     userName   = user?.name ?: "Unknown",
-                    targetId   = place.googlePlaceId,
-                    targetType = "place",
+                    targetId   = target.googlePlaceId,
+                    targetType = target.targetType,
                     mark       = state.selectedRating,
-                    text       = state.commentText.trim(),
+                    text       = state.commentText
+                        .replace(Regex("\\n\\s*\\n+"), "\n")
+                        .trim(),
                     createdAt  = System.currentTimeMillis()
                 )
 
@@ -70,9 +72,7 @@ class AddReviewPlaceViewModel( application: Application) : AndroidViewModel(appl
                     _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) }
                 }
                 .onFailure { e ->
-                    _uiState.update {
-                        it.copy(isSubmitting = false, error = e.message)
-                    }
+                    _uiState.update { it.copy(isSubmitting = false, error = e.message) }
                 }
         }
     }

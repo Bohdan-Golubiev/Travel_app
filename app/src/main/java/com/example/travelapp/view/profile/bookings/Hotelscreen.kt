@@ -1,4 +1,4 @@
-package com.example.travelapp.view.profile.hotels
+package com.example.travelapp.view.profile.bookings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -65,6 +65,37 @@ private fun HotelListItem(
 ) {
     val hotel = hotelWithRoute.hotel
     var menuExpanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete hotel", color = Color.White) },
+            text = {
+                Text(
+                    "Are you sure you want to delete \"${hotelWithRoute.hotel.name}\" from \"${hotelWithRoute.routeName}\" route?",
+                    color = Color(0xFFB0BEC5)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete", color = Color(0xFFEF5350))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel", color = Color(0xFF4FC3F7))
+                }
+            },
+            containerColor = Color(0xFF0D2535),
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
 
     Row(
         modifier = Modifier
@@ -135,7 +166,7 @@ private fun HotelListItem(
                     text = { Text("Delete", color = Color(0xFFFF6B6B)) },
                     onClick = {
                         menuExpanded = false
-                        onDelete()
+                        showDeleteDialog = true
                     }
                 )
             }

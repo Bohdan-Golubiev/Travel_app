@@ -17,15 +17,16 @@ import androidx.navigation.compose.*
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.model.ReviewItem
+import com.example.travelapp.model.ReviewTarget
 import com.example.travelapp.view.profile.EditReviewScreen
 import com.example.travelapp.view.profile.PaymentsScreen
-import com.example.travelapp.view.profile.ReviewWithPlace
 import com.example.travelapp.view.profile.ReviewsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
 import com.example.travelapp.view.profile.bookings.BookingScreen
 import com.example.travelapp.view.profile.bookings.HotelDetailScreen
-import com.example.travelapp.view.profile.hotels.HotelScreen
-import com.example.travelapp.view.profile.routes.AddReviewPlaceScreen
+import com.example.travelapp.view.profile.bookings.HotelScreen
+import com.example.travelapp.view.profile.routes.AddReviewScreen
 import com.example.travelapp.view.profile.routes.PlaceDetailScreen
 import com.example.travelapp.view.profile.routes.RouteDetailScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
@@ -36,7 +37,8 @@ class SharedViewModel : ViewModel() {
     var selectedPlace: PlaceEntity? = null
     var selectedBooking: BookingEntity? = null
     var selectedHotel: HotelEntity? = null
-    var selectedReviewWithPlace: ReviewWithPlace? = null
+    var selectedReview: ReviewItem? = null
+
 }
 @Composable
 fun ProfileScreen(
@@ -102,10 +104,12 @@ fun ProfileScreen(
         }
 
         composable(ProfileNavigation.AddReview.route) {
-            val place = sharedViewModel.selectedPlace
-            place?.let {
-                AddReviewPlaceScreen(
-                    place = it,
+            val reviewTarget = sharedViewModel.selectedPlace?.let { ReviewTarget.Place(it) }
+                ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it) }
+
+            reviewTarget?.let { target ->
+                AddReviewScreen(
+                    target = target,
                     userId = user.uid,
                     onSubmit = { nav.popBackStack() }
                 )
@@ -165,7 +169,11 @@ fun ProfileScreen(
             HotelDetailScreen(
                 hotelId = hotelId,
                 userId = user.uid,
-                onDeleted = { nav.popBackStack() }
+                onAddReview = { hotel ->
+                    sharedViewModel.selectedHotel = hotel
+                    sharedViewModel.selectedPlace = null
+                    nav.navigate(ProfileNavigation.AddReview.route)
+                }
             )
         }
 
@@ -176,23 +184,31 @@ fun ProfileScreen(
 
         composable(ProfileNavigation.Review.route) {
             LaunchedEffect(Unit) { onTitleChange("My Reviews") }
-            ReviewsScreen(userId = user.uid,
-                onEdit = { review ->
-                    sharedViewModel.selectedReviewWithPlace = review
+            ReviewsScreen(
+                userId = user.uid,
+                onEdit = { item ->
+                    sharedViewModel.selectedReview = item
                     nav.navigate(ProfileNavigation.EditReview.route)
-                })
+                }
+            )
         }
 
         composable(ProfileNavigation.EditReview.route) {
             LaunchedEffect(Unit) { onTitleChange("Edit review") }
-            val reviewWithPlace = sharedViewModel.selectedReviewWithPlace
-            reviewWithPlace?.let { item ->
+            val item = sharedViewModel.selectedReview
+            item?.let {
                 EditReviewScreen(
-                    review = item.review,
-                    placeName = item.placeName ?: "",
-                    placeLocation = item.placeLocation ?: "",
-                    userId = user.uid,
-                    onSubmit = { nav.popBackStack() }
+                    review        = it.review,
+                    placeName     = when (it) {
+                        is ReviewItem.PlaceReview -> it.placeName
+                        is ReviewItem.HotelReview -> it.hotelName
+                    },
+                    placeLocation = when (it) {
+                        is ReviewItem.PlaceReview -> it.placeLocation
+                        is ReviewItem.HotelReview -> it.hotelAddress
+                    },
+                    userId        = user.uid,
+                    onSubmit      = { nav.popBackStack() }
                 )
             }
         }

@@ -16,14 +16,14 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.travelapp.data.entity.PlaceEntity
-import com.example.travelapp.viewmodel.profile.review.AddReviewPlaceViewModel
+import com.example.travelapp.model.ReviewTarget
+import com.example.travelapp.viewmodel.profile.review.AddReviewViewModel
 
 @Composable
-fun AddReviewPlaceScreen(
-    place: PlaceEntity,
+fun AddReviewScreen(
+    target: ReviewTarget,
     userId: String,
-    viewModel: AddReviewPlaceViewModel = viewModel(),
+    viewModel: AddReviewViewModel = viewModel(),
     onSubmit: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -56,19 +56,23 @@ fun AddReviewPlaceScreen(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = place.location,
+                    text = target.subtitle,
                     fontSize = 14.sp,
                     color = Color(0xFFB0BEC5)
                 )
-                Text(
-                    text = "Order in route: ${place.orderInRoute + 1}",
-                    fontSize = 14.sp,
-                    color = Color(0xFFB0BEC5)
-                )
+
+                if (target is ReviewTarget.Place) {
+                    Text(
+                        text = "Order in route: ${target.entity.orderInRoute + 1}",
+                        fontSize = 14.sp,
+                        color = Color(0xFFB0BEC5)
+                    )
+                }
             }
 
             HorizontalDivider(color = Color(0xFF2A4A5E))
 
+            // Rating
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,14 +96,10 @@ fun AddReviewPlaceScreen(
                         ) {
                             Icon(
                                 imageVector = if (star <= uiState.selectedRating)
-                                    Icons.Filled.Star
-                                else
-                                    Icons.Outlined.Star,
+                                    Icons.Filled.Star else Icons.Outlined.Star,
                                 contentDescription = "Star $star",
                                 tint = if (star <= uiState.selectedRating)
-                                    Color(0xFF219EBC)
-                                else
-                                    Color(0xFF5E7A8A),
+                                    Color(0xFF219EBC) else Color(0xFF5E7A8A),
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -165,7 +165,7 @@ fun AddReviewPlaceScreen(
         }
 
         Button(
-            onClick = { viewModel.submitReview(userId, place) },
+            onClick = { viewModel.submitReview(userId, target) },
             enabled = uiState.isSubmitEnabled,
             modifier = Modifier
                 .align(Alignment.BottomCenter)

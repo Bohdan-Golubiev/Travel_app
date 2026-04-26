@@ -4,10 +4,10 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.example.travelapp.data.entity.DeletedReviewEntity
+import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.db.TravelDB
-
 class ReviewRepository(
     private val db: TravelDB,
     private val context: Context,
@@ -41,6 +41,9 @@ class ReviewRepository(
 
     suspend fun getPlaceById(targetId: String): PlaceEntity? =
         db.reviewDao().getByPlaceId(targetId)
+
+    suspend fun getHotelByKey(hotelKey: String): HotelEntity? =
+        db.hotelDao().getAll().firstOrNull { it.id.startsWith(hotelKey) } //може бути бобо
 
     suspend fun deleteReview(userId: String, review: ReviewEntity) {
         db.reviewDao().deleteById(review.id)
