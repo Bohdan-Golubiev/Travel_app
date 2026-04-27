@@ -3,6 +3,7 @@ package com.example.travelapp.data.repository
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.DeletedReviewEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
@@ -44,6 +45,9 @@ class ReviewRepository(
 
     suspend fun getHotelByKey(hotelKey: String): HotelEntity? =
         db.hotelDao().getAll().firstOrNull { it.id.startsWith(hotelKey) } //може бути бобо
+
+    suspend fun getBookingByKey(bookingKey: String): BookingEntity? =
+        db.hotelDao().getAllFromBookings().firstOrNull { it.id.startsWith(bookingKey) }
 
     suspend fun deleteReview(userId: String, review: ReviewEntity) {
         db.reviewDao().deleteById(review.id)

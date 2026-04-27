@@ -95,6 +95,26 @@ fun ReviewsScreen(
                             HorizontalDivider(color = Color(0xFF2A4A5E))
                         }
                     }
+
+                    if (uiState.bookingReviews.isNotEmpty()) {
+                        item {
+                            SectionHeader(title = "Рейси")
+                        }
+                        items(
+                            items = uiState.bookingReviews,
+                            key = { it.review.id }
+                        ) { item ->
+                            ReviewCard(
+                                title    = "From " + item.fromTo,
+                                subtitle = "Fly by " + item.nameBooking + "\n" +
+                                        "in " + item.date,
+                                review   = item.review,
+                                onDelete = { viewModel.deleteReview(userId, item.review) },
+                                onEdit   = { onEdit(item) }
+                            )
+                            HorizontalDivider(color = Color(0xFF2A4A5E))
+                        }
+                    }
                 }
             }
         }

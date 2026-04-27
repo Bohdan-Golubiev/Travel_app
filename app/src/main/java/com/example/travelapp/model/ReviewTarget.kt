@@ -1,5 +1,7 @@
 package com.example.travelapp.model
 
+import androidx.compose.ui.text.toUpperCase
+import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
 
@@ -21,5 +23,13 @@ sealed class ReviewTarget {
         override val name          = entity.name
         override val subtitle      = entity.address
         override val targetType    = "hotel"
+    }
+
+    data class Booking(val entity: BookingEntity) : ReviewTarget() {
+        override val googlePlaceId = entity.id.removeSuffix(entity.routeId.uppercase())
+        override val name          = entity.name
+        override val subtitle      = entity.date
+        val fromTo                 = entity.from + " to " + entity.to
+        override val targetType    = "booking"
     }
 }

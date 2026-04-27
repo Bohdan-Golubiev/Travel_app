@@ -55,6 +55,15 @@ fun AddReviewScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+
+                if (target is ReviewTarget.Booking) {
+                    Text(
+                        text = "Fly from " + target.fromTo,
+                        fontSize = 14.sp,
+                        color = Color(0xFFB0BEC5)
+                    )
+                }
+
                 Text(
                     text = target.subtitle,
                     fontSize = 14.sp,

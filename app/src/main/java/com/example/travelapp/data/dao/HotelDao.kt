@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Embedded
 import androidx.room.Query
 import androidx.room.Upsert
+import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.HotelEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -16,6 +17,9 @@ interface HotelDao {
 
     @Query("SELECT * FROM hotels")
     suspend fun getAll(): List<HotelEntity>
+
+    @Query("SELECT * FROM bookings")
+    suspend fun getAllFromBookings(): List<BookingEntity>
 
     @Query("SELECT * FROM hotels WHERE routeId = :routeId")
     suspend fun getByRoute(routeId: String): List<HotelEntity>

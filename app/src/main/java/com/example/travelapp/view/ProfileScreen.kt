@@ -105,7 +105,8 @@ fun ProfileScreen(
 
         composable(ProfileNavigation.AddReview.route) {
             val reviewTarget = sharedViewModel.selectedPlace?.let { ReviewTarget.Place(it) }
-                ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it) }
+                ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it)}
+                ?: sharedViewModel.selectedBooking?.let { ReviewTarget.Booking(it)}
 
             reviewTarget?.let { target ->
                 AddReviewScreen(
@@ -143,7 +144,15 @@ fun ProfileScreen(
                 .collectAsState(initial = null)
 
             booking?.let { entity ->
-                BookingDetailScreen(booking = entity)
+                BookingDetailScreen(
+                    booking = entity,
+                    userId = user.uid,
+                    onAddReview = { entity ->
+                        sharedViewModel.selectedBooking = entity
+                        sharedViewModel.selectedHotel = null
+                        sharedViewModel.selectedPlace = null
+                        nav.navigate(ProfileNavigation.AddReview.route)
+                    })
             }
         }
 
@@ -202,10 +211,12 @@ fun ProfileScreen(
                     placeName     = when (it) {
                         is ReviewItem.PlaceReview -> it.placeName
                         is ReviewItem.HotelReview -> it.hotelName
+                        is ReviewItem.BookingReview -> "From " + it.fromTo
                     },
                     placeLocation = when (it) {
                         is ReviewItem.PlaceReview -> it.placeLocation
                         is ReviewItem.HotelReview -> it.hotelAddress
+                        is ReviewItem.BookingReview -> "Fly by " + it.nameBooking + " in " + it.date
                     },
                     userId        = user.uid,
                     onSubmit      = { nav.popBackStack() }

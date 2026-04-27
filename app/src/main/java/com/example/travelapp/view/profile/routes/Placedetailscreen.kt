@@ -34,6 +34,8 @@ fun PlaceDetailScreen(
     val reviews by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
 
+    val avg by viewModel.avgRating.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -94,6 +96,9 @@ fun PlaceDetailScreen(
                             color = Color(0xFF219EBC)
                         )
                     }
+                    Text(
+                        text = "⭐ ${"%.1f".format(avg)}",
+                        color = Color.White)
                 }
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }

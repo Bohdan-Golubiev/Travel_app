@@ -11,8 +11,11 @@ import com.example.travelapp.data.repository.ReviewRepository
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class PlaceDetailViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,6 +32,16 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val _isLoadingReviews = MutableStateFlow(false)
     val isLoadingReviews: StateFlow<Boolean> = _isLoadingReviews.asStateFlow()
 
+    val avgRating: StateFlow<Double> = reviews
+        .map { list ->
+            if (list.isEmpty()) 0.0
+            else list.sumOf { it.mark }.toDouble() / list.size
+        }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            0.0
+        )
     fun loadPlace(placeId: String, routeId: String) {
         viewModelScope.launch {
             repository.getPlaces(routeId)

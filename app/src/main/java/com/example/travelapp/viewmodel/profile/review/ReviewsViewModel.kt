@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 data class ReviewsUiState(
     val placeReviews: List<ReviewItem.PlaceReview> = emptyList(),
     val hotelReviews: List<ReviewItem.HotelReview> = emptyList(),
+    val bookingReviews: List<ReviewItem.BookingReview> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -35,6 +36,7 @@ class ReviewsViewModel(application: Application) : AndroidViewModel(application)
 
                 val placeReviews = mutableListOf<ReviewItem.PlaceReview>()
                 val hotelReviews = mutableListOf<ReviewItem.HotelReview>()
+                val bookingReviews = mutableListOf<ReviewItem.BookingReview>()
 
                 reviews.forEach { review ->
                     when (review.targetType) {
@@ -54,12 +56,22 @@ class ReviewsViewModel(application: Application) : AndroidViewModel(application)
                                 hotelAddress = hotel?.address ?: ""
                             )
                         }
+                        "booking" -> {
+                            val booking = repository.getBookingByKey(review.targetId)
+                            bookingReviews += ReviewItem.BookingReview(
+                                review       = review,
+                                nameBooking  = booking?.name ?: "Unknown",
+                                fromTo       = booking?.from + " to " + booking?.to,
+                                date         = booking?.date ?: ""
+                            )
+                        }
                     }
                 }
 
                 _uiState.value = _uiState.value.copy(
                     placeReviews = placeReviews,
                     hotelReviews = hotelReviews,
+                    bookingReviews = bookingReviews,
                     isLoading    = false
                 )
             }.onFailure { e ->

@@ -16,4 +16,11 @@ sealed class ReviewItem {
         val hotelName: String,
         val hotelAddress: String
     ) : ReviewItem()
+
+    data class BookingReview(
+        override val review: ReviewEntity,
+        var nameBooking: String,
+        val fromTo: String,
+        val date: String
+    ) : ReviewItem()
 }

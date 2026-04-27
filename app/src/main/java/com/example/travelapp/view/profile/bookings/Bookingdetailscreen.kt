@@ -2,47 +2,68 @@ package com.example.travelapp.view.profile.bookings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.viewmodel.profile.BookingDetailViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingDetailScreen(
     booking: BookingEntity,
+    userId: String,
+    onAddReview: (BookingEntity) -> Unit,
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    val viewModel: BookingDetailViewModel = viewModel()
+    val reviews by viewModel.reviews.collectAsState()
+    val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
+
+    val avg by viewModel.avgRating.collectAsState()
+
+    val targetId = remember(booking.id) { booking.id.removeSuffix(booking.routeId.uppercase()) }
+
+    LaunchedEffect(targetId) {
+        viewModel.loadReviews(targetId)
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 60.dp)
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                BookingDetailRow(
-                    leftText = "Direction",
-                    rightText = "${booking.from} → ${booking.to}"
-                )
+                BookingDetailRow(leftText = "Direction", rightText = "${booking.from} → ${booking.to}")
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
-
             item {
                 BookingDetailRow(
                     leftText = "Service",
@@ -55,50 +76,75 @@ fun BookingDetailScreen(
                 )
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
-
             item {
-                BookingDetailRow(
-                    leftText = "Cost",
-                    rightText = "${booking.cost} $"
-                )
+                BookingDetailRow(leftText = "Cost", rightText = "${booking.cost} $")
+                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+            item {
+                BookingDetailRow(leftText = "Status", rightText = booking.status)
+                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+            item {
+                BookingDetailRow(leftText = "Created at", rightText = booking.date)
+                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+            item {
+                BookingDetailRow(leftText = "Departure", rightText = booking.departureTime)
+                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+            item {
+                BookingDetailRow(leftText = "Arrival", rightText = booking.arrivalTime)
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
             item {
-                BookingDetailRow(
-                    leftText = "Status",
-                    rightText = booking.status
-                )
+                HorizontalDivider(color = Color(0xFF2A4A5E))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Reviews (${reviews.size})",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
+                    )
+                    if (isLoadingReviews) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFF219EBC)
+                        )
+                    }
+                    Text(
+                        text = "⭐ ${"%.1f".format(avg)}",
+                        color = Color.White)
+                }
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
-            item {
-                BookingDetailRow(
-                    leftText = "Created at",
-                    rightText = booking.date
-                )
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-
-            item {
-                BookingDetailRow(
-                    leftText = "Departure",
-                    rightText = booking.departureTime
-                )
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-
-            item {
-                BookingDetailRow(
-                    leftText = "Arrival",
-                    rightText = booking.arrivalTime
-                )
-                HorizontalDivider(color = Color(0xFF2A4A5E))
+            if (!isLoadingReviews && reviews.isEmpty()) {
+                item {
+                    Text(
+                        text = "No reviews yet. Be the first!",
+                        fontSize = 13.sp,
+                        color = Color(0xFF5E7A8A),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                    )
+                }
+            } else {
+                items(reviews.size) { index ->
+                    BookingReviewItem(review = reviews[index], currentUserId = userId)
+                    HorizontalDivider(color = Color(0xFF2A4A5E))
+                }
             }
         }
 
         Button(
-            onClick = {},
+            onClick = { onAddReview(booking) },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
@@ -107,6 +153,45 @@ fun BookingDetailScreen(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC)),
         ) {
             Text("Add review")
+        }
+    }
+}
+
+@Composable
+private fun BookingReviewItem(review: ReviewEntity, currentUserId: String) {
+    val formattedDate = remember(review.createdAt) {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            .format(Date(review.createdAt))
+    }
+
+    val displayName = if (review.userId == currentUserId) "Ви" else review.userName
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = displayName, fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.Medium)
+            Text(text = "${review.mark}/5", fontSize = 13.sp, color = Color(0xFFB0BEC5))
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = review.text,
+                fontSize = 13.sp,
+                color = Color(0xFFB0BEC5),
+                modifier = Modifier.weight(1f)
+            )
+            Text(text = formattedDate, fontSize = 12.sp, color = Color(0xFF5E7A8A))
         }
     }
 }

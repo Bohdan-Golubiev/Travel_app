@@ -55,6 +55,7 @@ private fun HotelDetailContent(
     val reviews by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
     val hotelKey = remember(hotel.id) { hotel.id.removeSuffix(hotel.routeId) }
+    val avg by viewModel.avgRating.collectAsState()
 
     LaunchedEffect(hotelKey) {
         viewModel.loadReviews(hotelKey)
@@ -127,6 +128,9 @@ private fun HotelDetailContent(
                     color = Color(0xFF219EBC)
                 )
             }
+            Text(
+                text = "⭐ ${"%.1f".format(avg)}",
+                color = Color.White)
         }
 
         HorizontalDivider(color = Color(0xFF2A4A5E))
