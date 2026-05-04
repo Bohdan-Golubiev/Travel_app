@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
@@ -16,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -76,6 +79,39 @@ fun SearchPlaces(
                         )
                     }
                 }
+            )
+            OutlinedTextField(
+                value = state.routeDescription,
+                onValueChange = viewModel::onRouteDescriptionChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp),
+                placeholder = {
+                    Text(
+                        text = "Write description here...",
+                        fontSize = 14.sp,
+                        color = Color(0xFF5E7A8A)
+                    )
+                },
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    focusedBorderColor = Color(0xFF219EBC),
+                    unfocusedBorderColor = Color(0xFF2A4A5E),
+                    cursorColor = Color(0xFF219EBC)
+                ),
+                supportingText = {
+                    Text(
+                        text = "${state.routeDescription.length}/1000",
+                        fontSize = 12.sp,
+                        color = Color(0xFF5E7A8A)
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                maxLines = 8
             )
 
             val lazyListState = rememberLazyListState()

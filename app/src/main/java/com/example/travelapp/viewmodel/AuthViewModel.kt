@@ -6,6 +6,7 @@ import com.example.travelapp.model.AuthModel
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,6 +56,14 @@ class AuthViewModel : ViewModel() {
                 } else {
                     auth.createUserWithEmailAndPassword(state.email.trim(), state.password).await()
                 }
+
+                if (!state.isLogin && state.name.isNotBlank()) {
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(state.name.trim())
+                        .build()
+                    result.user?.updateProfile(profileUpdates)?.await()
+                }
+
                 result.user?.let { onSuccess(it) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = parseFirebaseError(e.message)) }

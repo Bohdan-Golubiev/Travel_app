@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,69 +38,99 @@ private val BtnColor  = Color(0xFFD9D9D9)
 
 @Composable
 fun HotelBookedScreen(
-    selectedHotels : List<SelectedHotelEntry>,
-    onDoneClick    : () -> Unit
+    selectedHotels   : List<SelectedHotelEntry>,
+    selectedVehicles : List<BookingOption>,
+    onDoneClick      : () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        Icon(
-            imageVector        = Icons.Filled.CheckCircle,
-            contentDescription = "Done",
-            tint               = GreenOk,
-            modifier           = Modifier.size(64.dp)
-        )
+        LazyColumn(
+            modifier            = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                Icon(
+                    imageVector        = Icons.Filled.CheckCircle,
+                    contentDescription = "Done",
+                    tint               = GreenOk,
+                    modifier           = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .size(64.dp)
+                )
+            }
+            item {
+                Text(
+                    text       = "Services booked!",
+                    fontSize   = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color      = Color.White,
+                    textAlign  = TextAlign.Center,
+                    modifier   = Modifier.fillMaxWidth()
+                )
+            }
+            item {
+                Text(
+                    text      = "Your selections have been saved successfully.",
+                    fontSize  = 14.sp,
+                    color     = Color.LightGray,
+                    textAlign = TextAlign.Center,
+                    modifier  = Modifier.fillMaxWidth()
+                )
+            }
+            item {
+                HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f))
+            }
 
-        Text(
-            text       = "Services booked!",
-            fontSize   = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color      = Color.White
-        )
+            if (selectedVehicles.isNotEmpty()) {
+                item {
+                    Text(
+                        text       = "Your transport",
+                        fontSize   = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = Color.White,
+                        modifier   = Modifier.fillMaxWidth()
+                    )
+                }
+                items(selectedVehicles) { vehicle ->
+                    BookedVehicleCard(vehicle)
+                }
+            }
 
-        Text(
-            text      = "Your hotel selections have been saved successfully.",
-            fontSize  = 14.sp,
-            color     = Color.LightGray,
-            textAlign = TextAlign.Center
-        )
-
-        HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f))
-
-        if (selectedHotels.isNotEmpty()) {
-            Text(
-                text       = "Your hotels",
-                fontSize   = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color      = Color.White,
-                modifier   = Modifier.fillMaxWidth()
-            )
-
-            LazyColumn(
-                modifier            = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            if (selectedHotels.isNotEmpty()) {
+                item {
+                    Text(
+                        text       = "Your hotels",
+                        fontSize   = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = Color.White,
+                        modifier   = Modifier.fillMaxWidth()
+                    )
+                }
                 items(selectedHotels, key = { it.hotel.hotelKey }) { entry ->
                     BookedHotelCard(entry)
                 }
             }
-        } else {
-            Box(
-                modifier          = Modifier.weight(1f),
-                contentAlignment  = Alignment.Center
-            ) {
-                Text(
-                    text     = "No hotels selected.",
-                    color    = Color.Gray,
-                    fontSize = 14.sp
-                )
+
+            if (selectedHotels.isEmpty() && selectedVehicles.isEmpty()) {
+                item {
+                    Box(
+                        modifier         = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No services selected.", color = Color.Gray, fontSize = 14.sp)
+                    }
+                }
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick  = onDoneClick,
             modifier = Modifier
@@ -168,7 +199,41 @@ private fun BookedHotelCard(entry: SelectedHotelEntry) {
         }
     }
 }
+@Composable
+private fun BookedVehicleCard(vehicle: BookingOption) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(CardBg, RoundedCornerShape(10.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text       = vehicle.name,
+            fontSize   = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color      = Color.Black
+        )
 
+        Row(
+            modifier              = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                InfoRow(label = "From:", value = vehicle.from)
+                InfoRow(label = "To:",   value = vehicle.to)
+                InfoRow(label = "Date:", value = vehicle.date)
+                InfoRow(label = "Time:", value = vehicle.time)
+            }
+            Text(
+                text       = "100 $",
+                fontSize   = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color      = GreenOk
+            )
+        }
+    }
+}
 @Composable
 private fun InfoRow(label: String, value: String) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {

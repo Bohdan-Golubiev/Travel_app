@@ -3,7 +3,6 @@ package com.example.travelapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -11,7 +10,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -19,7 +21,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.example.travelapp.data.entity.UserEntity
-import com.example.travelapp.data.repository.TravelRepository
+import com.example.travelapp.data.repository.UserRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.ui.theme.TravelAppTheme
 import com.example.travelapp.view.AuthScreen
@@ -30,7 +32,10 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color(0xFF0D1B2A).toArgb()
+
         setContent {
             TravelAppTheme {
                 TravelAuthApp()
@@ -44,7 +49,7 @@ fun TravelAuthApp() {
     val context = LocalContext.current
     val auth = remember { FirebaseAuth.getInstance() }
     val repository = remember {
-        TravelRepository(TravelDB.getInstance(context), context)
+        UserRepository(TravelDB.getInstance(context))
     }
     var currentUser by remember { mutableStateOf(auth.currentUser) }
     val scope = rememberCoroutineScope()

@@ -1,5 +1,6 @@
 package com.example.travelapp.view
 
+import android.net.Uri
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 
@@ -9,13 +10,14 @@ sealed class ProfileNavigation(val route: String) {
 
     data object ListOfRoutes : ProfileNavigation("list")
 
-    data object Route : ProfileNavigation("route/{routeId}/{routeName}") {
-        fun createRoute(routeId: String, routeName: String) =
-            "route/$routeId/$routeName"
+    data object Route : ProfileNavigation("route/{routeId}/{routeName}/{routeDescription}") {
+        fun createRoute(routeId: String, routeName: String, routeDescription: String) =
+            "route/$routeId/${Uri.encode(routeName)}/${Uri.encode(routeDescription)}"
 
         val navArguments = listOf(
             navArgument("routeId") { type = NavType.StringType },
-            navArgument("routeName") { type = NavType.StringType }
+            navArgument("routeName") { type = NavType.StringType },
+            navArgument("routeDescription") { type = NavType.StringType }
         )
     }
 

@@ -1,6 +1,5 @@
 package com.example.travelapp.model
 
-import androidx.compose.ui.text.toUpperCase
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity

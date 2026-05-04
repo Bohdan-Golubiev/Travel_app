@@ -23,6 +23,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.travelapp.view.create.BookingOption
 import com.example.travelapp.view.create.FindHotelScreen
 import com.example.travelapp.view.create.FindVehicleScreen
 import com.example.travelapp.view.create.HotelBookedScreen
@@ -56,6 +57,7 @@ fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
 
     val savedRouteId = remember { mutableStateOf("") }
 
+    val bookedVehicles = rememberSaveable { mutableStateOf<List<BookingOption>>(emptyList()) }
     val bookedHotels = rememberSaveable { mutableStateOf<List<SelectedHotelEntry>>(emptyList()) }
 
     NavHost(
@@ -102,7 +104,8 @@ fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
             FindVehicleScreen(
                 userId     = currentUser.uid,
                 routeId    = routeId,
-                onNextClick = {
+                onNextClick = { selected ->
+                    bookedVehicles.value = selected
                     nav.navigate(CreateNavigation.FindHotel.withArgs(savedRouteId.value))
                 }
             )
@@ -127,6 +130,7 @@ fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
         composable(CreateNavigation.HotelBooked.route) {
             HotelBookedScreen(
                 selectedHotels = bookedHotels.value,
+                selectedVehicles = bookedVehicles.value,
                 onDoneClick    = {
                     nav.navigate(CreateNavigation.Create.route) {
                         popUpTo(CreateNavigation.Create.route) { inclusive = true }

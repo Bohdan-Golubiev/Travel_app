@@ -31,13 +31,14 @@ data class BookingOption(
 )
 val transportOptions = listOf("Plane", "Train", "Bus", "Without")
 private val CardBackground   = Color(0xFFCED4DA)
+private val SelectedCardColor = Color(0xFFD6EAD6)
 private val ButtonBackground = Color(0xFFD9D9D9)
 
 @Composable
 fun FindVehicleScreen(
     userId: String,
     routeId: String,
-    onNextClick: () -> Unit = {},
+    onNextClick: (List<BookingOption>) -> Unit = {},
     viewModel: FindVehicleViewModel = viewModel(
         factory = FindVehicleViewModel.factory(LocalContext.current)
     )
@@ -116,7 +117,7 @@ fun FindVehicleScreen(
                     viewModel.onNextClick(
                         userId  = userId,
                         routeId = routeId,
-                        onDone  = onNextClick
+                        onDone  = { onNextClick(state.selectedServices) }
                     )
                 },
                 modifier = Modifier.weight(1f).height(48.dp),
@@ -201,7 +202,7 @@ private fun BookingOptionItem(
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (isSelected) CardBackground.copy(alpha = 0.6f) else CardBackground,
+                if (isSelected) SelectedCardColor else CardBackground,
                 RoundedCornerShape(10.dp)
             )
             .border(

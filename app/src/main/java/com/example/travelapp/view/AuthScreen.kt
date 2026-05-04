@@ -70,7 +70,7 @@ fun AuthScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF0D1B2A), Color(0xFF1B3A4B))
+                    colors = listOf(Color(0xFF0D1B2A), Color(0xFF25485E))
                 )
             ),
         contentAlignment = Alignment.Center

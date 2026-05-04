@@ -62,8 +62,7 @@ fun ProfileScreen(
             RoutesScreen(
                 userId = user.uid,
                 onOpen = { route ->
-                    nav.navigate(ProfileNavigation.Route.createRoute(route.id, route.name))
-                }
+                    nav.navigate(ProfileNavigation.Route.createRoute(route.id, route.name, route.description))                }
             )
         }
         composable(
@@ -72,12 +71,22 @@ fun ProfileScreen(
         ) { backStack ->
             val routeId = backStack.arguments?.getString("routeId") ?: ""
             val routeName = backStack.arguments?.getString("routeName") ?: ""
+            val routeDescription = backStack.arguments?.getString("routeDescription") ?: ""
+
             LaunchedEffect(routeName) { onTitleChange(routeName) }
             RouteDetailScreen(
                 routeId = routeId,
                 routeName = routeName,
+                routeDescription = routeDescription,
                 userId = user.uid,
-                onTitleChange = onTitleChange,
+                onTitleChange = { newName, newDescription ->
+                    onTitleChange(newName)
+                    nav.navigate(
+                        ProfileNavigation.Route.createRoute(routeId, newName, newDescription)
+                    ) {
+                        popUpTo(ProfileNavigation.Route.route) { inclusive = true }
+                    }
+                },
                 onNext = { place ->
                     nav.navigate(ProfileNavigation.Place.createRoute(routeId, place.id, place.name))
                 }

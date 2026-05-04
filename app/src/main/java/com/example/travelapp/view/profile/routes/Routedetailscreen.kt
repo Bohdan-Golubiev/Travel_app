@@ -35,14 +35,16 @@ import java.util.Locale
 fun RouteDetailScreen(
     routeId: String,
     routeName: String,
+    routeDescription: String,
     userId: String,
     onNext: (PlaceEntity) -> Unit,
-    onTitleChange: (String) -> Unit,
+    onTitleChange: (String, String) -> Unit,
     viewModel: RouteDetailViewModel = viewModel()
 ) {
     val places by viewModel.getPlaces(routeId).collectAsState(initial = emptyList())
     val isEditing by viewModel.isEditing.collectAsState()
     val editedName by viewModel.editedName.collectAsState()
+    val editedDescription by viewModel.editedDescription.collectAsState()
     val editedPlaces by viewModel.editedPlaces.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val timelineError by viewModel.timelineError.collectAsState()
@@ -92,6 +94,35 @@ fun RouteDetailScreen(
                     cursorColor = Color(0xFF219EBC)
                 )
             )
+            OutlinedTextField(
+                value = editedDescription,
+                onValueChange = viewModel::onDescriptionChange,
+                placeholder = { Text("Description (optional)", color = Color.Gray) },
+                supportingText = { Text("Description", color = Color.Gray) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 80.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 8.dp),
+                maxLines = 4,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF219EBC),
+                    unfocusedBorderColor = Color(0xFF2A4A5E),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF219EBC)
+                )
+            )
+        } else if (routeDescription.isNotBlank()) {
+            Text(
+                text = routeDescription,
+                fontSize = 14.sp,
+                color = Color(0xFFB0BEC5),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            HorizontalDivider(color = Color(0xFF2A4A5E))
         }
 
         LazyColumn(
@@ -137,7 +168,7 @@ fun RouteDetailScreen(
             OutlinedButton(
                 onClick = {
                     if (isEditing) viewModel.cancelEditing()
-                    else viewModel.startEditing(routeName, places)
+                    else viewModel.startEditing(routeName, routeDescription, places)
                 },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),
@@ -149,8 +180,8 @@ fun RouteDetailScreen(
             Button(
                 onClick = {
                     if (isEditing) {
-                        viewModel.saveChanges(userId, routeId, places) {
-                            onTitleChange(editedName)
+                        viewModel.saveChanges(userId, routeId, places) { newName, newDescription ->
+                            onTitleChange(newName, newDescription)
                         }
                     }
                 },

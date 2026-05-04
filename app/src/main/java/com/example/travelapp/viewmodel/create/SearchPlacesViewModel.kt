@@ -35,6 +35,7 @@ data class PlaceItem(
 
 data class SearchPlacesUiState(
     val routeName: String = "",
+    val routeDescription: String = "",
     val searchQuery: String = "",
     val places: List<PlaceItem> = emptyList(),
     val suggestions: List<AutocompletePrediction> = emptyList(),
@@ -62,6 +63,10 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
 
     fun onRouteNameChange(name: String) {
         _uiState.update { it.copy(routeName = name) }
+    }
+
+    fun onRouteDescriptionChange(description: String) {
+        _uiState.update { it.copy(routeDescription = description) }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -169,7 +174,8 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
             try {
                 val route = repository.createRoute(
                     userId = userId,
-                    name = state.routeName
+                    name = state.routeName,
+                    description = state.routeDescription
                 )
                 state.places.forEachIndexed { index, placeItem ->
                     repository.addPlace(

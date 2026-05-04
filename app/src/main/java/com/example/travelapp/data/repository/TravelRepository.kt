@@ -6,7 +6,6 @@ import android.net.NetworkCapabilities
 import com.example.travelapp.data.entity.DeletedRouteEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.RouteEntity
-import com.example.travelapp.data.entity.UserEntity
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
@@ -23,12 +22,7 @@ class TravelRepository(
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    suspend fun saveUser(user: UserEntity) {
-        db.userDao().upsert(user)
-        runCatching { firestore.saveUser(user) }
-    }
-
-// Маршрути
+    // Маршрути
     fun getRoutes(userId: String): Flow<List<RouteEntity>> =
         db.routeDao().getAllByUser(userId)
 
@@ -131,6 +125,18 @@ class TravelRepository(
             }
         }
     }
+
+    suspend fun updateRouteDescription(userId: String, routeId: String, newDescription: String) {
+        val existing = db.routeDao().getById(routeId) ?: return
+        val updated = existing.copy(description = newDescription, isSynced = false)
+        db.routeDao().upsert(updated)
+        if (isNetworkAvailable()) {
+            runCatching {
+                firestore.saveRoute(updated)
+                db.routeDao().markSynced(routeId)
+            }
+        }
+    }
     // підтягування з хмари
     //
     suspend fun syncFromCloud(userId: String) {
@@ -152,7 +158,7 @@ class TravelRepository(
         db.reviewDao().upsertAll(cloudReviews)
     }
 
-// відправка несихнонних записів в хмару
+    // відправка несихнонних записів в хмару
     suspend fun pushUnsyncedToCloud(userId: String) {
         val unsyncedRoutes = db.routeDao().getUnsynced(userId)
         unsyncedRoutes.forEach { route ->

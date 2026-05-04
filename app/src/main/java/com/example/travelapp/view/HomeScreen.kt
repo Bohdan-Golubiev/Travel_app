@@ -1,5 +1,6 @@
 package com.example.travelapp.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -27,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -39,7 +41,6 @@ import com.google.firebase.auth.FirebaseUser
 fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
     val mainNav = rememberNavController()
     val createNav = rememberNavController()
-
 
     var currentDestinationName by rememberSaveable {
         mutableStateOf(AppDestinations.PROFILE.name)
@@ -118,6 +119,10 @@ fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    .background(
+                        Brush.verticalGradient(
+                        colors = listOf(Color(0xFF0D1B2A), Color(0xFF25485E))
+                    ))
             ) {
                 when (currentDestination) {
                     AppDestinations.CREATE -> CreateScreen(

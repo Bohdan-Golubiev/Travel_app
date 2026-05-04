@@ -25,6 +25,9 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val _editedName = MutableStateFlow("")
     val editedName: StateFlow<String> = _editedName.asStateFlow()
 
+    private val _editedDescription = MutableStateFlow("")
+    val editedDescription: StateFlow<String> = _editedDescription.asStateFlow()
+
     private val _editedPlaces = MutableStateFlow<List<PlaceEntity>>(emptyList())
     val editedPlaces: StateFlow<List<PlaceEntity>> = _editedPlaces.asStateFlow()
 
@@ -37,8 +40,9 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         repository.getPlaces(routeId)
 
-    fun startEditing(currentName: String, currentPlaces: List<PlaceEntity>) {
+    fun startEditing(currentName: String, currentDescription: String, currentPlaces: List<PlaceEntity>) {
         _editedName.value = currentName
+        _editedDescription.value = currentDescription
         _editedPlaces.value = currentPlaces
         _isEditing.value = true
     }
@@ -49,6 +53,10 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     fun onNameChange(name: String) {
         _editedName.update { name }
+    }
+
+    fun onDescriptionChange(description: String) {
+        _editedDescription.update { description }
     }
 
     fun movePlace(from: Int, to: Int) {
@@ -63,7 +71,7 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun saveChanges(userId: String, routeId: String, originalPlaces: List<PlaceEntity>, onSuccess: () -> Unit) {
+    fun saveChanges(userId: String, routeId: String, originalPlaces: List<PlaceEntity>, onSuccess: (String, String) -> Unit) {
         if (!checkCorrectTimeLine()) {
             _timelineError.value = true
             return
@@ -72,7 +80,9 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                val cleanedDescription = _editedDescription.value.replace(Regex("\n{3,}"), "\n\n").trim()
                 repository.updateRouteName(userId, routeId, _editedName.value)
+                repository.updateRouteDescription(userId, routeId, cleanedDescription)
 
                 val editedIds = _editedPlaces.value.map { it.id }.toSet()
                 val deletedPlaces = originalPlaces.filter { it.id !in editedIds }
@@ -91,7 +101,7 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
                 }
 
                 _isEditing.value = false
-                onSuccess()
+                onSuccess(_editedName.value, cleanedDescription)
             } catch (e: Exception) {
             } finally {
                 _isLoading.value = false
