@@ -64,6 +64,7 @@ abstract class TravelDB : RoomDatabase() {
                     "travel.db"
                 )
                     .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigrationOnDowngrade()
                     .build()
                     .also { INSTANCE = it }
             }

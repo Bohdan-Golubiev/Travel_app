@@ -33,6 +33,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
+        val isFirstRun = prefs.getBoolean("is_first_run", true)
+
+        if (isFirstRun) {
+            FirebaseAuth.getInstance().signOut()
+            prefs.edit().putBoolean("is_first_run", false).apply()
+        }
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color(0xFF0D1B2A).toArgb()
 

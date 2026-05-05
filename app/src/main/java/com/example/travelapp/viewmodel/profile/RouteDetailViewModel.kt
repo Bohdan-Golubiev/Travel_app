@@ -37,14 +37,29 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val _timelineError = MutableStateFlow(false)
     val timelineError: StateFlow<Boolean> = _timelineError.asStateFlow()
 
+    private val _editedIsFavorite = MutableStateFlow(false)
+    val editedIsFavorite: StateFlow<Boolean> = _editedIsFavorite.asStateFlow()
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         repository.getPlaces(routeId)
 
-    fun startEditing(currentName: String, currentDescription: String, currentPlaces: List<PlaceEntity>) {
-        _editedName.value = currentName
-        _editedDescription.value = currentDescription
-        _editedPlaces.value = currentPlaces
-        _isEditing.value = true
+    fun startEditing(
+        currentName: String,
+        currentDescription: String,
+        currentPlaces: List<PlaceEntity>,
+        routeId: String
+    ) {
+        viewModelScope.launch {
+            val route = repository.getRoute(routeId)
+            _editedName.value = currentName
+            _editedDescription.value = currentDescription
+            _editedPlaces.value = currentPlaces
+            _editedIsFavorite.value = route?.isFavorite ?: false
+            _isEditing.value = true
+        }
+    }
+
+    fun onFavoriteToggle() {
+        _editedIsFavorite.update { !it }
     }
 
     fun cancelEditing() {
@@ -71,7 +86,12 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun saveChanges(userId: String, routeId: String, originalPlaces: List<PlaceEntity>, onSuccess: (String, String) -> Unit) {
+    fun saveChanges(
+        userId: String,
+        routeId: String,
+        originalPlaces: List<PlaceEntity>,
+        onSuccess: (String, String) -> Unit
+    ) {
         if (!checkCorrectTimeLine()) {
             _timelineError.value = true
             return
@@ -80,22 +100,25 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val cleanedDescription = _editedDescription.value.replace(Regex("\n{3,}"), "\n\n").trim()
-                repository.updateRouteName(userId, routeId, _editedName.value)
-                repository.updateRouteDescription(userId, routeId, cleanedDescription)
+                val cleanedDescription = _editedDescription.value
+                    .replace(Regex("\n{3,}"), "\n\n").trim()
+
+                repository.updateRoute(
+                    userId = userId,
+                    routeId = routeId,
+                    newName = _editedName.value,
+                    newDescription = cleanedDescription,
+                    isFavorite = _editedIsFavorite.value
+                )
 
                 val editedIds = _editedPlaces.value.map { it.id }.toSet()
-                val deletedPlaces = originalPlaces.filter { it.id !in editedIds }
-                deletedPlaces.forEach { place ->
+                originalPlaces.filter { it.id !in editedIds }.forEach { place ->
                     repository.deletePlace(userId, routeId, place.id)
                 }
-
                 _editedPlaces.value.forEachIndexed { index, place ->
-                    if (place.orderInRoute != index) {
+                    if (place.orderInRoute != index)
                         repository.updatePlaceOrder(place.id, index, userId, routeId)
-                    }
                 }
-
                 _editedPlaces.value.forEachIndexed { index, place ->
                     repository.updatePlaceDate(place.id, index, place.visitDate, userId, routeId)
                 }

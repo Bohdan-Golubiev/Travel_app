@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -48,6 +50,7 @@ fun RouteDetailScreen(
     val editedPlaces by viewModel.editedPlaces.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val timelineError by viewModel.timelineError.collectAsState()
+    val editedIsFavorite by viewModel.editedIsFavorite.collectAsState()
 
     val displayedPlaces = if (isEditing) editedPlaces else places
 
@@ -77,23 +80,38 @@ fun RouteDetailScreen(
         }
 
         if (isEditing) {
-            OutlinedTextField(
-                value = editedName,
-                onValueChange = viewModel::onNameChange,
-                placeholder = { Text("New route name", color = Color.Gray) },
-                supportingText = { Text("Route name", color = Color.Gray) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF219EBC),
-                    unfocusedBorderColor = Color(0xFF2A4A5E),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = Color(0xFF219EBC)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = viewModel::onNameChange,
+                    placeholder = { Text("New route name", color = Color.Gray) },
+                    supportingText = { Text("Route name", color = Color.Gray) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF219EBC),
+                        unfocusedBorderColor = Color(0xFF2A4A5E),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFF219EBC)
+                    )
                 )
-            )
+
+                IconButton(onClick = { viewModel.onFavoriteToggle() }) {
+                    Icon(
+                        imageVector = if (editedIsFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (editedIsFavorite) Color(0xFFFF0000) else Color.Gray,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                }
+            }
             OutlinedTextField(
                 value = editedDescription,
                 onValueChange = viewModel::onDescriptionChange,
@@ -168,7 +186,12 @@ fun RouteDetailScreen(
             OutlinedButton(
                 onClick = {
                     if (isEditing) viewModel.cancelEditing()
-                    else viewModel.startEditing(routeName, routeDescription, places)
+                    else viewModel.startEditing(
+                        routeName,
+                        routeDescription,
+                        places,
+                        routeId
+                    )
                 },
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(12.dp),

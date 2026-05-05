@@ -13,7 +13,11 @@ interface RouteDao {
     @Upsert
     suspend fun upsertAll(routes: List<RouteEntity>)
 
-    @Query("SELECT * FROM routes WHERE userId = :userId ORDER BY createdAt DESC")
+    @Query("""
+    SELECT * FROM routes 
+    WHERE userId = :userId 
+    ORDER BY isFavorite DESC, createdAt DESC
+""")
     fun getAllByUser(userId: String): Flow<List<RouteEntity>>
 
     @Query("SELECT * FROM routes WHERE id = :id")

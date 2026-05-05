@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -74,7 +76,7 @@ private fun RouteItem(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 10.dp),
+            .padding(horizontal = 2.dp, vertical = 10.dp),
         shape = RoundedCornerShape(0.dp),
         colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
     ) {
@@ -84,6 +86,12 @@ private fun RouteItem(
                 .padding(vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                modifier = Modifier.padding(end = 8.dp),
+                imageVector = if (route.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                contentDescription = "Favorite",
+                tint = if (route.isFavorite) Color(0xFFFF0000) else Color.Gray
+            )
             Text(
                 text = route.name,
                 fontSize = 15.sp,

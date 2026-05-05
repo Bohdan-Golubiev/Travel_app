@@ -33,6 +33,7 @@ class TravelRepository(
             name = name,
             createdAt = System.currentTimeMillis(),
             description = description,
+            isFavorite = false,
             isSynced = false
         )
         db.routeDao().upsert(route)
@@ -61,6 +62,9 @@ class TravelRepository(
 
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         db.placeDao().getAllByRoute(routeId)
+
+    suspend fun getRoute(routeId: String):RouteEntity? =
+        db.routeDao().getById(routeId)
 
 
     suspend fun addPlace(place: PlaceEntity, userId: String) {
@@ -113,22 +117,20 @@ class TravelRepository(
             reordered.forEach { db.placeDao().markSynced(it.id) }
         }
     }
-
-    suspend fun updateRouteName(userId: String, routeId: String, newName: String) {
+    suspend fun updateRoute(
+        userId: String,
+        routeId: String,
+        newName: String,
+        newDescription: String,
+        isFavorite: Boolean
+    ) {
         val existing = db.routeDao().getById(routeId) ?: return
-        val updated = existing.copy(name = newName, isSynced = false)
-        db.routeDao().upsert(updated)
-        if (isNetworkAvailable()) {
-            runCatching {
-                firestore.saveRoute(updated)
-                db.routeDao().markSynced(routeId)
-            }
-        }
-    }
-
-    suspend fun updateRouteDescription(userId: String, routeId: String, newDescription: String) {
-        val existing = db.routeDao().getById(routeId) ?: return
-        val updated = existing.copy(description = newDescription, isSynced = false)
+        val updated = existing.copy(
+            name = newName,
+            description = newDescription,
+            isFavorite = isFavorite,
+            isSynced = false
+        )
         db.routeDao().upsert(updated)
         if (isNetworkAvailable()) {
             runCatching {
