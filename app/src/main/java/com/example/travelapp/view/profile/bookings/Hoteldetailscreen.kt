@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.dao.HotelWithRoute
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.HotelViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -56,6 +57,7 @@ private fun HotelDetailContent(
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
     val hotelKey = remember(hotel.id) { hotel.id.removeSuffix(hotel.routeId) }
     val avg by viewModel.avgRating.collectAsState()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(hotelKey) {
         viewModel.loadReviews(hotelKey)
@@ -89,23 +91,23 @@ private fun HotelDetailContent(
             }
         }
 
-        InfoCard(title = "Stay period") {
-            InfoRow(label = "Check-in", value = hotel.dateFrom)
-            InfoRow(label = "Check-out", value = hotel.dateTo)
-            InfoRow(label = "Duration", value = "${hotel.days} day(s)")
+        InfoCard(title = strings.stayPeriod) {
+            InfoRow(label = strings.checkIn, value = hotel.dateFrom)
+            InfoRow(label = strings.checkOut, value = hotel.dateTo)
+            InfoRow(label = strings.duration, value = hotel.days.toString() + strings.days)
         }
 
-        InfoCard(title = "Cost") {
-            InfoRow(label = "Per day", value = "%.2f".format(hotel.costPerDay))
+        InfoCard(title = strings.cost) {
+            InfoRow(label = strings.perDay, value = "%.2f".format(hotel.costPerDay))
             InfoRow(
-                label = "Total",
+                label = strings.total,
                 value = "%.2f".format(hotel.totalCost),
                 valueColor = Color(0xFF4FC3F7),
             )
         }
 
-        InfoCard(title = "Route") {
-            InfoRow(label = "Route name", value = hotelWithRoute.routeName)
+        InfoCard(title = strings.routeUp) {
+            InfoRow(label = strings.routeName, value = hotelWithRoute.routeName)
         }
 
         HorizontalDivider(color = Color(0xFF2A4A5E))
@@ -116,7 +118,7 @@ private fun HotelDetailContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Reviews (${reviews.size})",
+                text = strings.reviews + "(${reviews.size})",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
@@ -137,7 +139,7 @@ private fun HotelDetailContent(
 
         if (!isLoadingReviews && reviews.isEmpty()) {
             Text(
-                text = "No reviews yet. Be the first!",
+                text = strings.noReviews,
                 fontSize = 13.sp,
                 color = Color(0xFF5E7A8A),
                 modifier = Modifier.padding(vertical = 16.dp)
@@ -160,7 +162,7 @@ private fun HotelDetailContent(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
         ) {
-            Text("Add review")
+            Text(strings.addReview)
         }
     }
 }
@@ -171,9 +173,11 @@ private fun ReviewItem(review: ReviewEntity, currentUserId: String) {
         SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             .format(Date(review.createdAt))
     }
+    val strings = LocalAppStrings.current
+
 
     val displayName = if (review.userId == currentUserId) {
-        "Ви"
+        strings.you
     } else {
         review.userName
     }

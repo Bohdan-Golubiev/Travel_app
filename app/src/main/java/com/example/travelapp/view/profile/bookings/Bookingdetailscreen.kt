@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.BookingDetailViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,6 +51,7 @@ fun BookingDetailScreen(
     val avg by viewModel.avgRating.collectAsState()
 
     val targetId = remember(booking.id) { booking.id.removeSuffix(booking.routeId.uppercase()) }
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(targetId) {
         viewModel.loadReviews(targetId)
@@ -61,14 +63,14 @@ fun BookingDetailScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                BookingDetailRow(leftText = "Direction", rightText = "${booking.from} → ${booking.to}")
+                BookingDetailRow(leftText = strings.direction, rightText = "${booking.from} → ${booking.to}")
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
             item {
                 BookingDetailRow(
-                    leftText = "Service",
+                    leftText = strings.service,
                     rightText = when (booking.type) {
-                        "Pl" -> "Plane"
+                        "Pl" -> strings.plane
                         "Tr" -> "Train"
                         "Bs" -> "Bus"
                         else -> "Unknown"
@@ -77,23 +79,23 @@ fun BookingDetailScreen(
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
             item {
-                BookingDetailRow(leftText = "Cost", rightText = "${booking.cost} $")
+                BookingDetailRow(leftText = strings.cost, rightText = "${booking.cost} $")
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
             item {
-                BookingDetailRow(leftText = "Status", rightText = booking.status)
+                BookingDetailRow(leftText = strings.status, rightText = booking.status)
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
             item {
-                BookingDetailRow(leftText = "Created at", rightText = booking.date)
+                BookingDetailRow(leftText = strings.createdAt, rightText = booking.date)
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
             item {
-                BookingDetailRow(leftText = "Departure", rightText = booking.departureTime)
+                BookingDetailRow(leftText = strings.departure, rightText = booking.departureTime)
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
             item {
-                BookingDetailRow(leftText = "Arrival", rightText = booking.arrivalTime)
+                BookingDetailRow(leftText = strings.arrival, rightText = booking.arrivalTime)
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
@@ -107,7 +109,7 @@ fun BookingDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Reviews (${reviews.size})",
+                        text = strings.reviews + "( " + reviews.size + " )",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
@@ -129,7 +131,7 @@ fun BookingDetailScreen(
             if (!isLoadingReviews && reviews.isEmpty()) {
                 item {
                     Text(
-                        text = "No reviews yet. Be the first!",
+                        text = strings.noReviews,
                         fontSize = 13.sp,
                         color = Color(0xFF5E7A8A),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
@@ -152,7 +154,7 @@ fun BookingDetailScreen(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC)),
         ) {
-            Text("Add review")
+            Text(strings.addReview)
         }
     }
 }
@@ -163,8 +165,10 @@ private fun BookingReviewItem(review: ReviewEntity, currentUserId: String) {
         SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             .format(Date(review.createdAt))
     }
+    val strings = LocalAppStrings.current
 
-    val displayName = if (review.userId == currentUserId) "Ви" else review.userName
+
+    val displayName = if (review.userId == currentUserId) strings.you else review.userName
 
     Column(
         modifier = Modifier

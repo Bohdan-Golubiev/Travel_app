@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.RouteDetailViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -60,17 +61,18 @@ fun RouteDetailScreen(
     ) { from, to ->
         viewModel.movePlace(from.index, to.index)
     }
+    val strings = LocalAppStrings.current
 
     Column(modifier = Modifier.fillMaxSize()) {
 
         if (timelineError) {
             AlertDialog(
                 onDismissRequest = viewModel::dismissTimelineError,
-                title = { Text("Некоректний порядок або значення дат") },
-                text = { Text("Для всіх локацій мають бути встановлені дати. Дати відвідування мають йти в порядку зростання.") },
+                title = { Text(strings.inCorrectDate) },
+                text = { Text(strings.inCorrectDateMessage) },
                 confirmButton = {
                     TextButton(onClick = viewModel::dismissTimelineError) {
-                        Text("Зрозуміло", color = Color(0xFF219EBC))
+                        Text(strings.understand, color = Color(0xFF219EBC))
                     }
                 },
                 containerColor = Color(0xFF1B3A4B),
@@ -87,8 +89,8 @@ fun RouteDetailScreen(
                 OutlinedTextField(
                     value = editedName,
                     onValueChange = viewModel::onNameChange,
-                    placeholder = { Text("New route name", color = Color.Gray) },
-                    supportingText = { Text("Route name", color = Color.Gray) },
+                    placeholder = { Text(strings.newRouteName, color = Color.Gray) },
+                    supportingText = { Text(strings.routeName, color = Color.Gray) },
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -115,8 +117,8 @@ fun RouteDetailScreen(
             OutlinedTextField(
                 value = editedDescription,
                 onValueChange = viewModel::onDescriptionChange,
-                placeholder = { Text("Description (optional)", color = Color.Gray) },
-                supportingText = { Text("Description", color = Color.Gray) },
+                placeholder = { Text(strings.descriptionOpt, color = Color.Gray) },
+                supportingText = { Text(strings.description, color = Color.Gray) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = 80.dp)
@@ -198,7 +200,7 @@ fun RouteDetailScreen(
                 border = ButtonDefaults.outlinedButtonBorder,
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
             ) {
-                Text(if (isEditing) "Cancel" else "Edit")
+                Text(if (isEditing) strings.cancel else strings.edit)
             }
             Button(
                 onClick = {
@@ -222,7 +224,7 @@ fun RouteDetailScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Save")
+                    Text(strings.save)
                 }
             }
         }
@@ -340,6 +342,7 @@ private fun DatePickerModal(
     onDateSelected: (Long?) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val datePickerState = rememberDatePickerState()
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -350,7 +353,7 @@ private fun DatePickerModal(
             }) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(strings.cancel) }
         }
     ) {
         DatePicker(state = datePickerState)

@@ -32,6 +32,7 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.example.travelapp.R
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.AuthViewModel
 
 @Composable
@@ -41,6 +42,7 @@ fun AuthScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
 
     // Google Sign-In client
     val googleSignInClient = remember {
@@ -84,9 +86,9 @@ fun AuthScreen(
             verticalArrangement = Arrangement.Center
         ) {
             // title
-            Text("TravelApp", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(strings.appName, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Text(
-                if (uiState.isLogin) "Welcome back, explorer" else "Start your journey",
+                if (uiState.isLogin) strings.welcomeBack else strings.startJourney,
                 fontSize = 14.sp, color = Color(0xFF8ECAE6)
             )
 
@@ -99,7 +101,7 @@ fun AuthScreen(
                     .background(Color(0xFF162032))
                     .padding(4.dp)
             ) {
-                listOf("Sign In" to true, "Sign Up" to false).forEach { (label, value) ->
+                listOf(strings.signIn to true, strings.signUp to false).forEach { (label, value) ->
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -121,7 +123,7 @@ fun AuthScreen(
                 OutlinedTextField(
                     value = uiState.name,
                     onValueChange = viewModel::onNameChange,
-                    label = { Text("Enter your name", color = Color(0xFF8ECAE6)) },
+                    label = { Text(strings.enterName, color = Color(0xFF8ECAE6)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = authTextFieldColors(),
@@ -134,7 +136,7 @@ fun AuthScreen(
             OutlinedTextField(
                 value = uiState.email,
                 onValueChange = viewModel::onEmailChange,
-                label = { Text("Email", color = Color(0xFF8ECAE6)) },
+                label = { Text(strings.email, color = Color(0xFF8ECAE6)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
@@ -148,14 +150,14 @@ fun AuthScreen(
             OutlinedTextField(
                 value = uiState.password,
                 onValueChange = viewModel::onPasswordChange,
-                label = { Text("Password", color = Color(0xFF8ECAE6)) },
+                label = { Text(strings.password, color = Color(0xFF8ECAE6)) },
                 singleLine = true,
                 visualTransformation = if (uiState.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
                     TextButton(onClick = viewModel::onPasswordVisibilityToggle) {
                         Text(
-                            if (uiState.passwordVisible) "Hide" else "Show",
+                            if (uiState.passwordVisible) strings.hide else strings.show,
                             color = Color(0xFF8ECAE6), fontSize = 12.sp
                         )
                     }
@@ -198,7 +200,7 @@ fun AuthScreen(
                     )
                 } else {
                     Text(
-                        if (uiState.isLogin) "Sign In" else "Create Account",
+                        if (uiState.isLogin) strings.signIn else strings.createAccount,
                         fontSize = 15.sp,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
@@ -214,7 +216,7 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF2A4A5E))
-                Text("  or  ", color = Color(0xFF8ECAE6), fontSize = 12.sp)
+                Text(" " + strings.or + " ", color = Color(0xFF8ECAE6), fontSize = 12.sp)
                 HorizontalDivider(modifier = Modifier.weight(1f), color = Color(0xFF2A4A5E))
             }
 
@@ -235,7 +237,7 @@ fun AuthScreen(
                 border = BorderStroke(1.dp, Color(0xFF2A4A5E)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
             ) {
-                Text("Continue with Google", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(strings.continueWithGoogle, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
 
             // Forgot password (login only)
@@ -243,14 +245,14 @@ fun AuthScreen(
                 TextButton(onClick = {
                     viewModel.sendPasswordReset(
                         onSent = {
-                            Toast.makeText(context, "Reset email sent!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.resetEmailSent, Toast.LENGTH_SHORT).show()
                         },
                         onError = {
-                            Toast.makeText(context, "Could not send reset email", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, strings.couldNotSendReset, Toast.LENGTH_SHORT).show()
                         }
                     )
                 }) {
-                    Text("Forgot password?", color = Color(0xFF8ECAE6), fontSize = 13.sp)
+                    Text(strings.forgotPassword, color = Color(0xFF8ECAE6), fontSize = 13.sp)
                 }
             }
         }

@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.BookingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +72,7 @@ private fun BookingItem(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     var menuExpanded by remember { mutableStateOf(false) }
 
     TextButton(
@@ -119,7 +121,7 @@ private fun BookingItem(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Route: $routeName",
+                        text = strings.route + routeName,
                         fontSize = 13.sp,
                         color = Color(0xFFB0BEC5)
                     )
@@ -145,7 +147,7 @@ private fun BookingItem(
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Delete", color = Color(0xFFFF6B6B)) },
+                        text = { Text(strings.delete, color = Color(0xFFFF6B6B)) },
                         onClick = {
                             menuExpanded = false
                             onDelete()

@@ -1,6 +1,5 @@
 package com.example.travelapp.view.create
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,6 +19,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.model.dataclasses.Airport
 import com.example.travelapp.viewmodel.create.FindVehicleViewModel
 import androidx.compose.ui.platform.LocalContext
+import com.example.travelapp.utils.LocalAppStrings
 
 data class BookingOption(
     val name: String,
@@ -29,7 +29,6 @@ data class BookingOption(
     val from: String,
     val to  :String
 )
-val transportOptions = listOf("Plane", "Train", "Bus", "Without")
 private val CardBackground   = Color(0xFFCED4DA)
 private val SelectedCardColor = Color(0xFFD6EAD6)
 private val ButtonBackground = Color(0xFFD9D9D9)
@@ -44,6 +43,7 @@ fun FindVehicleScreen(
     )
 ) {
     val state by viewModel.uiState.collectAsState()
+    val strings = LocalAppStrings.current
 
     Column(
         modifier = Modifier
@@ -51,38 +51,10 @@ fun FindVehicleScreen(
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Вибір транспорту
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            transportOptions.forEach { option ->
-                val isSelected = state.selectedTransport == option
-                OutlinedButton(
-                    onClick = { viewModel.onTransportSelected(option) },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = if (isSelected) Color(0x00000000) else ButtonBackground,
-                    ),
-                    border = BorderStroke(
-                        width = if (isSelected) 2.dp else 0.dp,
-                        color  = if (isSelected) Color.White else Color.Transparent
-                    ),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(text = option,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = if(isSelected) Color.White else Color.Black
-                    )
-                }
-            }
-        }
 
         PlaceInputWithSuggestions(
             value = state.startPlace,
-            placeholder = "Start place (city)",
+            placeholder = strings.startPlace,
             suggestions = state.startSuggestions,
             onValueChange = viewModel::onStartPlaceChange,
             onAirportSelected = viewModel::onStartAirportSelected
@@ -90,7 +62,7 @@ fun FindVehicleScreen(
 
         PlaceInputWithSuggestions(
             value = state.endPlace,
-            placeholder = "End place (city)",
+            placeholder = strings.endPlace,
             suggestions = state.endSuggestions,
             onValueChange = viewModel::onEndPlaceChange,
             onAirportSelected = viewModel::onEndAirportSelected
@@ -110,7 +82,7 @@ fun FindVehicleScreen(
                     contentColor = Color.Black
                 ),
                 elevation = ButtonDefaults.buttonElevation(0.dp)
-            ) { Text("Search", fontSize = 16.sp) }
+            ) { Text(strings.search, fontSize = 16.sp) }
 
             Button(
                 onClick = {
@@ -127,7 +99,7 @@ fun FindVehicleScreen(
                     contentColor = Color.Black
                 ),
                 elevation = ButtonDefaults.buttonElevation(0.dp)
-            ) { Text("Next →", fontSize = 16.sp) }
+            ) { Text(strings.next + "→", fontSize = 16.sp) }
         }
 
         LazyColumn(
@@ -138,7 +110,7 @@ fun FindVehicleScreen(
             if (state.selectedServices.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Selected",
+                        text = strings.selected,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color.White
@@ -170,7 +142,7 @@ fun FindVehicleScreen(
                 if (state.results.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Search results",
+                            text = strings.searchResult,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White

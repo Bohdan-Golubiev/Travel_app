@@ -24,6 +24,8 @@ import com.example.travelapp.data.entity.UserEntity
 import com.example.travelapp.data.repository.UserRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.ui.theme.TravelAppTheme
+import com.example.travelapp.utils.LocaleManager
+import com.example.travelapp.utils.LocaleProvider
 import com.example.travelapp.view.AuthScreen
 import com.example.travelapp.view.HomeScreen
 import com.google.firebase.auth.FirebaseAuth
@@ -62,6 +64,10 @@ fun TravelAuthApp() {
     var currentUser by remember { mutableStateOf(auth.currentUser) }
     val scope = rememberCoroutineScope()
 
+    var currentLocale by remember {
+        mutableStateOf(LocaleManager.getSavedLocale(context))
+    }
+
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
             val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
@@ -80,17 +86,18 @@ fun TravelAuthApp() {
         }
     }
 
-    if (currentUser != null) {
-        HomeScreen(
-            user = currentUser!!,
-            onSignOut = {
-                auth.signOut()
-                currentUser = null
-            }
-        )
-    } else {
-        AuthScreen(
-            onAuthSuccess = { firebaseUser ->
+    LocaleProvider(locale = currentLocale) {
+        if (currentUser != null) {
+            HomeScreen(
+                user = currentUser!!,
+                onSignOut = { auth.signOut(); currentUser = null },
+                onLocaleChange = { newLocale ->
+                    LocaleManager.saveLocale(context, newLocale)
+                    currentLocale = newLocale
+                }
+            )
+        } else {
+            AuthScreen(onAuthSuccess = { firebaseUser ->
                 scope.launch {
                     repository.saveUser(
                         UserEntity(
@@ -101,7 +108,7 @@ fun TravelAuthApp() {
                     )
                 }
                 currentUser = firebaseUser
-            }
-        )
+            })
+        }
     }
 }

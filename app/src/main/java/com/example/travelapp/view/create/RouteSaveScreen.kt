@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travelapp.utils.LocalAppStrings
 
 private val CardBackground  = Color(0xFFDDDDDD)
 
@@ -28,6 +29,7 @@ fun RouteCreatedScreen(
     routeName: String,
     onMakeBooking: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     Box(
         modifier = Modifier
             .fillMaxSize(),
@@ -49,7 +51,7 @@ fun RouteCreatedScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Route \"$routeName\"\ncreated successful",
+                    text =  strings.route + " \"$routeName\"\n" + strings.createdSuccessful,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,
@@ -65,12 +67,13 @@ fun RouteCreatedScreen(
                     .height(80.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC)),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
             ) {
                 Text(
-                    text = "Make booking for trip",
+                    text = strings.makeBooking,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center
                 )
             }
         }

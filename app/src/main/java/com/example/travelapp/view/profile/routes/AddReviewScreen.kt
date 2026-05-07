@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.model.ReviewTarget
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.review.AddReviewViewModel
 
 @Composable
@@ -27,6 +28,7 @@ fun AddReviewScreen(
     onSubmit: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(uiState.isSubmitted) {
         if (uiState.isSubmitted) onSubmit()
@@ -58,7 +60,7 @@ fun AddReviewScreen(
 
                 if (target is ReviewTarget.Booking) {
                     Text(
-                        text = "Fly from " + target.fromTo,
+                        text = strings.flyFrom + target.fromTo,
                         fontSize = 14.sp,
                         color = Color(0xFFB0BEC5)
                     )
@@ -72,7 +74,7 @@ fun AddReviewScreen(
 
                 if (target is ReviewTarget.Place) {
                     Text(
-                        text = "Order in route: ${target.entity.orderInRoute + 1}",
+                        text = strings.orderInRoute + "${target.entity.orderInRoute + 1}",
                         fontSize = 14.sp,
                         color = Color(0xFFB0BEC5)
                     )
@@ -89,7 +91,7 @@ fun AddReviewScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Rating",
+                    text = strings.rating,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
@@ -132,7 +134,7 @@ fun AddReviewScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Comment",
+                    text = strings.comment,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
@@ -145,7 +147,7 @@ fun AddReviewScreen(
                         .heightIn(min = 120.dp),
                     placeholder = {
                         Text(
-                            text = "Write your review here...",
+                            text = strings.writeReview,
                             fontSize = 14.sp,
                             color = Color(0xFF5E7A8A)
                         )
@@ -193,7 +195,7 @@ fun AddReviewScreen(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Submit", fontSize = 15.sp)
+                Text(strings.submit, fontSize = 15.sp)
             }
         }
     }

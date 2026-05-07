@@ -19,6 +19,7 @@ import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.model.ReviewItem
 import com.example.travelapp.ui.theme.TextPrimary
 import com.example.travelapp.ui.theme.TextSecondary
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.review.ReviewsViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -31,6 +32,7 @@ fun ReviewsScreen(
     viewModel: ReviewsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(userId) {
         viewModel.loadReviews(userId)
@@ -46,7 +48,7 @@ fun ReviewsScreen(
 
             uiState.placeReviews.isEmpty() && uiState.hotelReviews.isEmpty() -> {
                 Text(
-                    text = "Відгуків ще немає",
+                    text = strings.noReviewsScreen,
                     modifier = Modifier.align(Alignment.Center),
                     fontSize = 14.sp,
                     color = TextSecondary
@@ -60,7 +62,7 @@ fun ReviewsScreen(
                 ) {
                     if (uiState.placeReviews.isNotEmpty()) {
                         item {
-                            SectionHeader(title = "Місця")
+                            SectionHeader(title = strings.locations)
                         }
                         items(
                             items = uiState.placeReviews,
@@ -79,7 +81,7 @@ fun ReviewsScreen(
 
                     if (uiState.hotelReviews.isNotEmpty()) {
                         item {
-                            SectionHeader(title = "Готелі")
+                            SectionHeader(title = strings.hotels)
                         }
                         items(
                             items = uiState.hotelReviews,
@@ -98,16 +100,16 @@ fun ReviewsScreen(
 
                     if (uiState.bookingReviews.isNotEmpty()) {
                         item {
-                            SectionHeader(title = "Рейси")
+                            SectionHeader(title = strings.flights)
                         }
                         items(
                             items = uiState.bookingReviews,
                             key = { it.review.id }
                         ) { item ->
                             ReviewCard(
-                                title    = "From " + item.fromTo,
-                                subtitle = "Fly by " + item.nameBooking + "\n" +
-                                        "in " + item.date,
+                                title    = strings.from + item.from + " ${strings.toLow} " + item.to,
+                                subtitle = strings.flyBy + item.nameBooking + "\n" +
+                                        strings.In + item.date,
                                 review   = item.review,
                                 onDelete = { viewModel.deleteReview(userId, item.review) },
                                 onEdit   = { onEdit(item) }
@@ -145,20 +147,21 @@ private fun ReviewCard(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     var showConfirmDialog by remember { mutableStateOf(false) }
+    val strings = LocalAppStrings.current
 
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
-            title = { Text("Видалити відгук?") },
-            text = { Text("Цю дію неможливо скасувати.") },
+            title = { Text(strings.deleteReview) },
+            text = { Text(strings.alertReview) },
             confirmButton = {
                 TextButton(onClick = {
                     showConfirmDialog = false
                     onDelete()
-                }) { Text("Видалити", color = MaterialTheme.colorScheme.error) }
+                }) { Text(strings.delete, color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showConfirmDialog = false }) { Text("Скасувати") }
+                TextButton(onClick = { showConfirmDialog = false }) { Text(strings.cancel) }
             }
         )
     }
@@ -181,7 +184,7 @@ private fun ReviewCard(
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Оцінка: ${review.mark}/5",
+                    text = strings.mark + "${review.mark}/5",
                     fontSize = 13.sp,
                     color = TextSecondary
                 )
@@ -202,14 +205,14 @@ private fun ReviewCard(
                         onDismissRequest = { menuExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Видалити", color = MaterialTheme.colorScheme.error) },
+                            text = { Text(strings.delete, color = MaterialTheme.colorScheme.error) },
                             onClick = {
                                 menuExpanded = false
                                 showConfirmDialog = true
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Редагувати", color = MaterialTheme.colorScheme.secondary) },
+                            text = { Text(strings.edit, color = MaterialTheme.colorScheme.secondary) },
                             onClick = {
                                 menuExpanded = false
                                 onEdit()

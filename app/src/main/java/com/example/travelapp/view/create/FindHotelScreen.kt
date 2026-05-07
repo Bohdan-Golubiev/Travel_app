@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.create.FindHotelViewModel
 import com.example.travelapp.viewmodel.create.HotelItemState
 import com.example.travelapp.viewmodel.create.HotelResult
@@ -41,6 +42,7 @@ fun FindHotelScreen(
     viewModel   : FindHotelViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(state.saveState) {
         if (state.saveState is SaveState.Success) {
@@ -58,7 +60,7 @@ fun FindHotelScreen(
         OutlinedTextField(
             value         = state.startPlace,
             onValueChange = viewModel::onStartPlaceChange,
-            placeholder   = { Text("Enter city or place", color = Color.Gray) },
+            placeholder   = { Text(strings.enterCity, color = Color.Gray) },
             modifier      = Modifier
                 .fillMaxWidth()
                 .background(CardBackground, RoundedCornerShape(10.dp)),
@@ -89,7 +91,7 @@ fun FindHotelScreen(
                         color       = Color.Black
                     )
                 } else {
-                    Text("Search", fontSize = 16.sp)
+                    Text(strings.search, fontSize = 16.sp)
                 }
             }
 
@@ -117,7 +119,7 @@ fun FindHotelScreen(
                         color       = Color.Black
                     )
                 } else {
-                    Text("Next ->", fontSize = 16.sp)
+                    Text(strings.next + "->", fontSize = 16.sp)
                 }
             }
         }
@@ -130,7 +132,7 @@ fun FindHotelScreen(
                     .padding(12.dp)
             ) {
                 Text(
-                    text  = "Save error: ${(state.saveState as SaveState.Error).message}",
+                    text  = strings.saveError + (state.saveState as SaveState.Error).message,
                     color = ErrorColor,
                     fontSize = 13.sp
                 )
@@ -145,7 +147,7 @@ fun FindHotelScreen(
             if (state.selectedHotels.isNotEmpty()) {
                 item(key = "selected_header") {
                     Text(
-                        text       = "Selected hotels",
+                        text       = strings.selectedHotels,
                         fontSize   = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color      = Color.White,
@@ -176,7 +178,7 @@ fun FindHotelScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text     = "Enter a city and tap Search",
+                            text     = strings.enterCityAndTap,
                             color    = Color.Gray,
                             fontSize = 14.sp
                         )
@@ -184,7 +186,7 @@ fun FindHotelScreen(
                 }
 
                 is SearchState.Loading -> item(key = "loading") {
-                    LoadingState(message = "Searching hotels...")
+                    LoadingState(message = strings.searchingHotels)
                 }
 
                 is SearchState.Error -> item(key = "error") {
@@ -210,7 +212,7 @@ fun FindHotelScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text     = "No hotels found for this location.",
+                                    text     = strings.noHotels,
                                     color    = Color.Gray,
                                     fontSize = 14.sp
                                 )
@@ -220,7 +222,7 @@ fun FindHotelScreen(
                         if (state.selectedHotels.isNotEmpty()) {
                             item(key = "results_header") {
                                 Text(
-                                    text       = "Search results",
+                                    text       = strings.searchResult,
                                     fontSize   = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color      = Color.White,
@@ -251,6 +253,7 @@ private fun SelectedHotelItem(
     entry   : SelectedHotelEntry,
     onRemove: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -272,7 +275,7 @@ private fun SelectedHotelItem(
                 color    = Color.DarkGray
             )
             Text(
-                text     = "Total: ${entry.totalCost} $",
+                text     = strings.total + ": ${entry.totalCost} $",
                 fontSize = 12.sp,
                 color    = Color.Black
             )
@@ -280,7 +283,7 @@ private fun SelectedHotelItem(
         IconButton(onClick = onRemove) {
             Icon(
                 imageVector        = Icons.Filled.Close,
-                contentDescription = "Remove",
+                contentDescription = strings.remove,
                 tint               = Color.DarkGray
             )
         }
@@ -299,6 +302,7 @@ private fun HotelOptionItem(
 ) {
     var showFromPicker by remember { mutableStateOf(false) }
     var showToPicker   by remember { mutableStateOf(false) }
+    val strings = LocalAppStrings.current
 
     if (showFromPicker) {
         DatePickerModal(
@@ -339,7 +343,7 @@ private fun HotelOptionItem(
 
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text     = "Cost per day: ${hotel.cost} $",
+                text     = strings.costPerDay + "${hotel.cost} $",
                 fontSize = 14.sp,
                 color    = Color.Black,
                 modifier = Modifier.weight(1f)
@@ -360,9 +364,9 @@ private fun HotelOptionItem(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 HorizontalDivider(color = Color.Gray.copy(alpha = 0.4f))
-                Text("Select dates", fontSize = 13.sp, color = Color.DarkGray, fontWeight = FontWeight.Medium)
-                DateRow(label = "From:", value = itemState.dateFrom, onClick = { showFromPicker = true })
-                DateRow(label = "To:",   value = itemState.dateTo,   onClick = { showToPicker = true })
+                Text(strings.selectedDates, fontSize = 13.sp, color = Color.DarkGray, fontWeight = FontWeight.Medium)
+                DateRow(label = strings.fromHotelSearch, value = itemState.dateFrom, onClick = { showFromPicker = true })
+                DateRow(label = strings.toHotelSearch,   value = itemState.dateTo,   onClick = { showToPicker = true })
 
                 Row(
                     modifier              = Modifier.fillMaxWidth(),
@@ -371,12 +375,12 @@ private fun HotelOptionItem(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text     = "Duration: ${if (itemState.days > 0) "${itemState.days} days" else "—"}",
+                            text     = strings.duration + ": ${if (itemState.days > 0) "${itemState.days} " + strings.days else "—"}",
                             fontSize = 13.sp,
                             color    = Color.Black
                         )
                         Text(
-                            text     = "Total cost: ${itemState.days * hotel.cost} $",
+                            text     = strings.totalCost +"${itemState.days * hotel.cost} $",
                             fontSize = 13.sp,
                             color    = Color.Black
                         )
@@ -393,7 +397,7 @@ private fun HotelOptionItem(
                             modifier        = Modifier.height(36.dp)
                         ) {
                             Text(
-                                text     = if (isAlreadySelected) "Update" else "Add to trip",
+                                text     = if (isAlreadySelected) strings.update else strings.addToTrip,
                                 fontSize = 13.sp
                             )
                         }
@@ -435,6 +439,7 @@ private fun DatePickerModal(
     onDateSelected: (Long?) -> Unit,
     onDismiss     : () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val datePickerState = rememberDatePickerState()
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -445,7 +450,7 @@ private fun DatePickerModal(
             }) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(strings.cancel) }
         }
     ) {
         DatePicker(state = datePickerState)

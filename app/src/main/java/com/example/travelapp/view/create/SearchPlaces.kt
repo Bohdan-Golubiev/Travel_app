@@ -17,12 +17,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.create.PlaceItem
 import com.example.travelapp.viewmodel.create.SearchPlacesViewModel
 import sh.calvin.reorderable.ReorderableItem
@@ -38,6 +38,7 @@ fun SearchPlaces(
     viewModel: SearchPlacesViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val strings = LocalAppStrings.current
 
     Box(
         modifier = Modifier
@@ -51,7 +52,7 @@ fun SearchPlaces(
             OutlinedTextField(
                 value = state.routeName,
                 onValueChange = viewModel::onRouteNameChange,
-                placeholder = { Text("Route name", color = Color.Gray) },
+                placeholder = { Text(strings.routeName, color = Color.Gray) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(CardBackground, RoundedCornerShape(8.dp)),
@@ -63,7 +64,7 @@ fun SearchPlaces(
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = viewModel::onSearchQueryChange,
-                placeholder = { Text("Search place", color = Color.Gray) },
+                placeholder = { Text(strings.searchPlace, color = Color.Gray) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(CardBackground, RoundedCornerShape(8.dp)),
@@ -88,7 +89,7 @@ fun SearchPlaces(
                     .heightIn(min = 120.dp),
                 placeholder = {
                     Text(
-                        text = "Write description here...",
+                        text = strings.writeDescription,
                         fontSize = 14.sp,
                         color = Color(0xFF5E7A8A)
                     )
@@ -171,7 +172,7 @@ fun SearchPlaces(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text(text = "Save", fontSize = 18.sp)
+                        Text(text = strings.save, fontSize = 18.sp)
                     }
                 }
             }
@@ -243,6 +244,7 @@ private fun PlaceListItem(
     isDragging: Boolean
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    val strings = LocalAppStrings.current
 
     Row(
         modifier = Modifier
@@ -268,7 +270,7 @@ private fun PlaceListItem(
             Text(text = place.name, color = Color.Black, fontSize = 14.sp)
             Text(text = place.location, color = Color.Gray, fontSize = 12.sp)
             DateRow(
-                label = "Date",
+                label = strings.date,
                 value = place.visitDate,
                 onClick = { showDatePicker = true }
             )
@@ -279,7 +281,7 @@ private fun PlaceListItem(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Remove",
+                contentDescription = strings.remove,
                 tint = Color.DarkGray
             )
         }
@@ -330,6 +332,7 @@ private fun DatePickerModal(
     onDateSelected: (Long?) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     val datePickerState = rememberDatePickerState()
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -340,7 +343,7 @@ private fun DatePickerModal(
             }) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(strings.cancel) }
         }
     ) {
         DatePicker(state = datePickerState)

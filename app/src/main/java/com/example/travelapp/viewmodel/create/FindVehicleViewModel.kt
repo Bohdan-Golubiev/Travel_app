@@ -41,11 +41,6 @@ class FindVehicleViewModel(
 
     private val _uiState = MutableStateFlow(FindVehicleUiState())
     val uiState: StateFlow<FindVehicleUiState> = _uiState.asStateFlow()
-
-    fun onTransportSelected(transport: String) {
-        _uiState.update { it.copy(selectedTransport = transport) }
-    }
-
     fun onStartPlaceChange(value: String) {
         _uiState.update {
             it.copy(

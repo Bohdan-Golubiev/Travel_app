@@ -3,7 +3,6 @@ package com.example.travelapp.view
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -34,11 +33,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.travelapp.utils.AppLocale
+import com.example.travelapp.utils.AppStrings
+import com.example.travelapp.utils.LocalAppStrings
 import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
+fun HomeScreen(
+    user: FirebaseUser,
+    onSignOut: () -> Unit,
+    onLocaleChange: (AppLocale) -> Unit
+) {
     val mainNav = rememberNavController()
     val createNav = rememberNavController()
 
@@ -63,6 +69,13 @@ fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
             AppDestinations.CREATE -> createNav.previousBackStackEntry != null
         }
 
+    val strings = LocalAppStrings.current
+
+    fun AppDestinations.label(strings: AppStrings) = when (this) {
+        AppDestinations.CREATE -> strings.create
+        AppDestinations.PROFILE -> strings.profile
+    }
+
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             AppDestinations.entries.forEach { destination ->
@@ -70,10 +83,10 @@ fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                     icon = {
                         Icon(
                             imageVector = destination.icon,
-                            contentDescription = destination.label
+                            contentDescription = destination.label(strings)
                         )
                     },
-                    label = { Text(destination.label) },
+                    label = { Text(destination.label(strings)) },
                     selected = currentDestination == destination,
                     onClick = { currentDestinationName = destination.name }
                 )
@@ -134,17 +147,15 @@ fun HomeScreen(user: FirebaseUser, onSignOut: () -> Unit) {
                         user = user,
                         onSignOut = onSignOut,
                         nav = mainNav,
-                        onTitleChange = { topBarTitle = it }
+                        onTitleChange = { topBarTitle = it },
+                        onLocaleChange = onLocaleChange
                     )
                 }
             }
         }
     }
 }
-enum class AppDestinations(
-    val label: String,
-    val icon: ImageVector,
-) {
-    CREATE("Create", Icons.Default.Create),
-    PROFILE("Profile", Icons.Default.Person),
+enum class AppDestinations(val icon: ImageVector) {
+    CREATE(Icons.Default.Create),
+    PROFILE(Icons.Default.Person),
 }

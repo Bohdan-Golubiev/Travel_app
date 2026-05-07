@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.create.SelectedHotelEntry
 
 private val CardBg    = Color(0xFFCED4DA)
@@ -42,6 +43,7 @@ fun HotelBookedScreen(
     selectedVehicles : List<BookingOption>,
     onDoneClick      : () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -55,7 +57,7 @@ fun HotelBookedScreen(
             item {
                 Icon(
                     imageVector        = Icons.Filled.CheckCircle,
-                    contentDescription = "Done",
+                    contentDescription = strings.done,
                     tint               = GreenOk,
                     modifier           = Modifier
                         .fillMaxWidth()
@@ -65,7 +67,7 @@ fun HotelBookedScreen(
             }
             item {
                 Text(
-                    text       = "Services booked!",
+                    text       = strings.servicesBooked,
                     fontSize   = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color      = Color.White,
@@ -75,7 +77,7 @@ fun HotelBookedScreen(
             }
             item {
                 Text(
-                    text      = "Your selections have been saved successfully.",
+                    text      = strings.savedSuccessful,
                     fontSize  = 14.sp,
                     color     = Color.LightGray,
                     textAlign = TextAlign.Center,
@@ -89,7 +91,7 @@ fun HotelBookedScreen(
             if (selectedVehicles.isNotEmpty()) {
                 item {
                     Text(
-                        text       = "Your transport",
+                        text       = strings.yourTransport,
                         fontSize   = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color      = Color.White,
@@ -104,7 +106,7 @@ fun HotelBookedScreen(
             if (selectedHotels.isNotEmpty()) {
                 item {
                     Text(
-                        text       = "Your hotels",
+                        text       = strings.yourHotels,
                         fontSize   = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color      = Color.White,
@@ -124,7 +126,7 @@ fun HotelBookedScreen(
                             .height(120.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No services selected.", color = Color.Gray, fontSize = 14.sp)
+                        Text(strings.noServices, color = Color.Gray, fontSize = 14.sp)
                     }
                 }
             }
@@ -143,13 +145,14 @@ fun HotelBookedScreen(
             ),
             elevation = ButtonDefaults.buttonElevation(0.dp)
         ) {
-            Text("Done", fontSize = 16.sp)
+            Text(strings.done, fontSize = 16.sp)
         }
     }
 }
 
 @Composable
 private fun BookedHotelCard(entry: SelectedHotelEntry) {
+    val strings = LocalAppStrings.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,9 +182,9 @@ private fun BookedHotelCard(entry: SelectedHotelEntry) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                InfoRow(label = "From:", value = entry.dateFrom)
-                InfoRow(label = "To:",   value = entry.dateTo)
-                InfoRow(label = "Days:", value = "${entry.days}")
+                InfoRow(label = strings.from + ": ", value = entry.dateFrom)
+                InfoRow(label = strings.to + ": ",   value = entry.dateTo)
+                InfoRow(label = strings.daysBooked + ": ", value = "${entry.days}")
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
@@ -191,7 +194,7 @@ private fun BookedHotelCard(entry: SelectedHotelEntry) {
                     color      = GreenOk
                 )
                 Text(
-                    text     = "total",
+                    text     = strings.totalLow,
                     fontSize = 11.sp,
                     color    = Color.Gray
                 )
@@ -201,6 +204,7 @@ private fun BookedHotelCard(entry: SelectedHotelEntry) {
 }
 @Composable
 private fun BookedVehicleCard(vehicle: BookingOption) {
+    val strings = LocalAppStrings.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -220,10 +224,10 @@ private fun BookedVehicleCard(vehicle: BookingOption) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                InfoRow(label = "From:", value = vehicle.from)
-                InfoRow(label = "To:",   value = vehicle.to)
-                InfoRow(label = "Date:", value = vehicle.date)
-                InfoRow(label = "Time:", value = vehicle.time)
+                InfoRow(label = strings.from + ": ", value = vehicle.from)
+                InfoRow(label = strings.to + ": ",   value = vehicle.to)
+                InfoRow(label = strings.daysBooked + ": ", value = vehicle.date)
+                InfoRow(label = strings.time + ": ", value = vehicle.time)
             }
             Text(
                 text       = "100 $",

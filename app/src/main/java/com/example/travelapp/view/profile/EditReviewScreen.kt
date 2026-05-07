@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.review.EditReviewViewModel
 
 @Composable
@@ -29,6 +30,7 @@ fun EditReviewScreen(
     onSubmit: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(review.id) {
         viewModel.initWith(review)
@@ -84,7 +86,7 @@ fun EditReviewScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Rating",
+                    text = strings.rating,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
@@ -131,7 +133,7 @@ fun EditReviewScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Comment",
+                    text = strings.comment,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White
@@ -144,7 +146,7 @@ fun EditReviewScreen(
                         .heightIn(min = 120.dp),
                     placeholder = {
                         Text(
-                            text = "Write your review here...",
+                            text = strings.writeReview,
                             fontSize = 14.sp,
                             color = Color(0xFF5E7A8A)
                         )
@@ -192,7 +194,7 @@ fun EditReviewScreen(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Save changes", fontSize = 15.sp)
+                Text(strings.saveChange, fontSize = 15.sp)
             }
         }
     }

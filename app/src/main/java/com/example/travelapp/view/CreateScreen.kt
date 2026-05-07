@@ -23,6 +23,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.view.create.BookingOption
 import com.example.travelapp.view.create.FindHotelScreen
 import com.example.travelapp.view.create.FindVehicleScreen
@@ -143,13 +144,14 @@ fun CreateScreen(currentUser: FirebaseUser, nav: NavHostController) {
 
 @Composable
 fun CreateContent(onCreate: () -> Unit) {
+    val strings = LocalAppStrings.current
     Box(
         modifier         = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         OutlinedButton(
             onClick  = onCreate,
-            modifier = Modifier.fillMaxWidth(0.5f),
+            modifier = Modifier.fillMaxWidth(0.6f),
             shape    = RoundedCornerShape(12.dp),
             border   = BorderStroke(1.dp, Color.White),
             colors   = ButtonDefaults.outlinedButtonColors(
@@ -157,7 +159,7 @@ fun CreateContent(onCreate: () -> Unit) {
             )
         ) {
             Text(
-                text     = "Create route",
+                text     = strings.createRoute,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(vertical = 20.dp)
             )

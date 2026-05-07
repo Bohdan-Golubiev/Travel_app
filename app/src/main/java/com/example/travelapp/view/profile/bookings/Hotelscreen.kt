@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.dao.HotelWithRoute
 import com.example.travelapp.data.entity.HotelEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.HotelViewModel
 
 @Composable
@@ -28,6 +29,8 @@ fun HotelScreen(
 ) {
     val viewModel: HotelViewModel = viewModel()
     val hotels by viewModel.getHotelsByUser(userId).collectAsState(initial = emptyList())
+    val strings = LocalAppStrings.current
+
 
     if (hotels.isEmpty()) {
         Box(
@@ -35,7 +38,7 @@ fun HotelScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "No hotels yet",
+                text = strings.noHotels,
                 color = Color(0xFFB0BEC5),
                 fontSize = 16.sp
             )
@@ -66,14 +69,16 @@ private fun HotelListItem(
     val hotel = hotelWithRoute.hotel
     var menuExpanded by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val strings = LocalAppStrings.current
+
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete hotel", color = Color.White) },
+            title = { Text(strings.deleteHotel, color = Color.White) },
             text = {
                 Text(
-                    "Are you sure you want to delete \"${hotelWithRoute.hotel.name}\" from \"${hotelWithRoute.routeName}\" route?",
+                    strings.alertHotel + hotelWithRoute.hotel.name + strings.fromHotel +  hotelWithRoute.routeName + strings.routeLow,
                     color = Color(0xFFB0BEC5)
                 )
             },
@@ -84,12 +89,12 @@ private fun HotelListItem(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("Delete", color = Color(0xFFEF5350))
+                    Text(strings.delete, color = Color(0xFFEF5350))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel", color = Color(0xFF4FC3F7))
+                    Text(strings.cancel, color = Color(0xFF4FC3F7))
                 }
             },
             containerColor = Color(0xFF0D2535),
@@ -163,7 +168,7 @@ private fun HotelListItem(
                 onDismissRequest = { menuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Delete", color = Color(0xFFFF6B6B)) },
+                    text = { Text(strings.delete, color = Color(0xFFFF6B6B)) },
                     onClick = {
                         menuExpanded = false
                         showDeleteDialog = true

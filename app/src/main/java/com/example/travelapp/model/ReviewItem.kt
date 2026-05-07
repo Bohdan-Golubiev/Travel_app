@@ -20,7 +20,8 @@ sealed class ReviewItem {
     data class BookingReview(
         override val review: ReviewEntity,
         var nameBooking: String,
-        val fromTo: String,
+        val from: String,
+        val to: String,
         val date: String
     ) : ReviewItem()
 }

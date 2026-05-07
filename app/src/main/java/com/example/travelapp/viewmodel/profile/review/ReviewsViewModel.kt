@@ -61,7 +61,8 @@ class ReviewsViewModel(application: Application) : AndroidViewModel(application)
                             bookingReviews += ReviewItem.BookingReview(
                                 review       = review,
                                 nameBooking  = booking?.name ?: "Unknown",
-                                fromTo       = booking?.from + " to " + booking?.to,
+                                from         = booking?.from ?: "Unknown",
+                                to           = booking?.to ?: "Unknown",
                                 date         = booking?.date ?: ""
                             )
                         }

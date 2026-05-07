@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.RouteEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.RoutesViewModel
 
 fun Long.toFormattedDate(): String { //з мілісекунд в дату
@@ -71,6 +72,7 @@ private fun RouteItem(
     onDelete: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
+    val strings = LocalAppStrings.current
 
     TextButton(
         onClick = onClick,
@@ -119,7 +121,7 @@ private fun RouteItem(
                     onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Delete", color = Color(0xFFFF6B6B)) },
+                        text = { Text(strings.delete, color = Color(0xFFFF6B6B)) },
                         onClick = {
                             menuExpanded = false
                             onDelete()

@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.PlaceDetailViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,6 +36,7 @@ fun PlaceDetailScreen(
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
 
     val avg by viewModel.avgRating.collectAsState()
+    val strings = LocalAppStrings.current
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -61,13 +63,13 @@ fun PlaceDetailScreen(
                     )
                     if (!place?.visitDate.isNullOrEmpty()) {
                         Text(
-                            text = "Visit date: ${place?.visitDate}",
+                            text = strings.visitDate + place?.visitDate,
                             fontSize = 14.sp,
                             color = Color(0xFFB0BEC5)
                         )
                     }
                     Text(
-                        text = "Order in route: ${(place?.orderInRoute?.plus(1)) ?: ""}",
+                        text = (strings.orderInRoute + (place?.orderInRoute?.plus(1))),
                         fontSize = 14.sp,
                         color = Color(0xFFB0BEC5)
                     )
@@ -84,7 +86,7 @@ fun PlaceDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Reviews (${reviews.size})",
+                        text = strings.reviews + "( " + reviews.size + " )",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White
@@ -106,7 +108,7 @@ fun PlaceDetailScreen(
             if (!isLoadingReviews && reviews.isEmpty()) {
                 item {
                     Text(
-                        text = "No reviews yet. Be the first!",
+                        text = strings.noReviews,
                         fontSize = 13.sp,
                         color = Color(0xFF5E7A8A),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)
@@ -133,7 +135,7 @@ fun PlaceDetailScreen(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
         ) {
-            Text("Add review")
+            Text(strings.addReview)
         }
     }
 }
@@ -144,9 +146,10 @@ private fun ReviewItem(review: ReviewEntity, currentUserId: String) {
         SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             .format(Date(review.createdAt))
     }
+    val strings = LocalAppStrings.current
 
     val displayName = if (review.userId == currentUserId) {
-        "Ви"
+        strings.you
     } else {
         review.userName
     }
