@@ -9,6 +9,8 @@ import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.repository.FirestoreRepository
 import com.example.travelapp.data.repository.ReviewRepository
 import com.example.travelapp.data.repository.TravelRepository
+import com.example.travelapp.data.repository.WeatherInfo
+import com.example.travelapp.data.repository.WeatherRepository
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +24,7 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     private val repository = TravelRepository(TravelDB.getInstance(application), application)
     private val repositoryReview = ReviewRepository(TravelDB.getInstance(application), application)
-
+    private val weatherRepository = WeatherRepository()
     private val _place = MutableStateFlow<PlaceEntity?>(null)
     val place: StateFlow<PlaceEntity?> = _place.asStateFlow()
 
@@ -31,6 +33,12 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _isLoadingReviews = MutableStateFlow(false)
     val isLoadingReviews: StateFlow<Boolean> = _isLoadingReviews.asStateFlow()
+
+    private val _weather = MutableStateFlow<WeatherInfo?>(null)
+    val weather: StateFlow<WeatherInfo?> = _weather.asStateFlow()
+
+    private val _isLoadingWeather = MutableStateFlow(false)
+    val isLoadingWeather: StateFlow<Boolean> = _isLoadingWeather.asStateFlow()
 
     val avgRating: StateFlow<Double> = reviews
         .map { list ->
@@ -48,8 +56,14 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
                 .collect { places ->
                     val found = places.find { it.id == placeId }
                     _place.value = found
-                    found?.googlePlaceId?.takeIf { it.isNotEmpty() }?.let {
-                        loadReviews(it)
+
+                    found?.let {
+                        it.googlePlaceId.takeIf { id -> id.isNotEmpty() }?.let { id ->
+                            loadReviews(id)
+                        }
+                        if (it.visitDate.isNotBlank()) {
+                            loadWeather(it)
+                        }
                     }
                 }
         }
@@ -69,6 +83,21 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
                 Log.e("FIRESTORE", "Error loading reviews", it)
             }
             _isLoadingReviews.value = false
+        }
+    }
+    private fun loadWeather(place: PlaceEntity) {
+        viewModelScope.launch {
+            _isLoadingWeather.value = true
+            _weather.value = null
+
+            val query = if (place.location.isNotBlank()) {
+                "${place.name}, ${place.location}"
+            } else {
+                place.name
+            }
+
+            _weather.value = weatherRepository.getForecast(query, place.visitDate)
+            _isLoadingWeather.value = false
         }
     }
 }

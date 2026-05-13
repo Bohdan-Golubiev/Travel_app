@@ -151,6 +151,10 @@ data class AppStrings(
     val totalLow: String,
 
     val toLow: String,
+
+    val weatherOn: String,
+    val avgTemp: String,
+    val speed: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -293,6 +297,10 @@ val EnglishStrings = AppStrings(
     totalLow = "total",
 
     toLow = "to",
+
+    weatherOn = "Weather at ",
+    avgTemp = "Average temperature ",
+    speed = "km/h",
 )
 
 val UkrainianStrings = AppStrings(
@@ -433,6 +441,10 @@ val UkrainianStrings = AppStrings(
     totalLow = "разом",
 
     toLow = "до",
+
+    weatherOn = "Погода на ",
+    avgTemp = "Середня температура ",
+    speed = "км/г",
 )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

@@ -27,7 +27,6 @@ import com.example.travelapp.utils.AppLocale
 import com.example.travelapp.utils.LocalAppLocale
 import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.view.profile.EditReviewScreen
-import com.example.travelapp.view.profile.PaymentsScreen
 import com.example.travelapp.view.profile.ReviewsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
 import com.example.travelapp.view.profile.bookings.BookingScreen
@@ -206,11 +205,6 @@ fun ProfileScreen(
             )
         }
 
-        composable(ProfileNavigation.Payment.route) {
-            LaunchedEffect(Unit) { onTitleChange("My Payments") }
-            PaymentsScreen()
-        }
-
         composable(ProfileNavigation.Review.route) {
             LaunchedEffect(Unit) { onTitleChange(strings.myReviews) }
             ReviewsScreen(
@@ -307,9 +301,6 @@ fun ProfileContent(
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(label = strings.myHotels,  onClick = { nav.navigate(ProfileNavigation.Hotel.route) })
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(label = "My payments",     onClick = { nav.navigate(ProfileNavigation.Payment.route) })
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(label = strings.myReviews, onClick = { nav.navigate(ProfileNavigation.Review.route) })

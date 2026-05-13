@@ -13,8 +13,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.data.repository.WeatherInfo
 import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.PlaceDetailViewModel
 import java.text.SimpleDateFormat
@@ -34,6 +36,8 @@ fun PlaceDetailScreen(
     val place by viewModel.place.collectAsState()
     val reviews by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
+    val weather by viewModel.weather.collectAsState()
+    val isLoadingWeather by viewModel.isLoadingWeather.collectAsState()
 
     val avg by viewModel.avgRating.collectAsState()
     val strings = LocalAppStrings.current
@@ -77,6 +81,18 @@ fun PlaceDetailScreen(
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
+            val visitDate = place?.visitDate
+            if (!visitDate.isNullOrBlank() && isWithinTenDays(visitDate)) {
+                item {
+                    WeatherSection(
+                        isLoading = isLoadingWeather,
+                        weather = weather,
+                        visitDate = visitDate
+                    )
+                    HorizontalDivider(color = Color(0xFF2A4A5E))
+                }
+            }
+
             item {
                 Row(
                     modifier = Modifier
@@ -100,7 +116,8 @@ fun PlaceDetailScreen(
                     }
                     Text(
                         text = "⭐ ${"%.1f".format(avg)}",
-                        color = Color.White)
+                        color = Color.White
+                    )
                 }
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
@@ -136,6 +153,97 @@ fun PlaceDetailScreen(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
         ) {
             Text(strings.addReview)
+        }
+    }
+}
+
+private fun isWithinTenDays(visitDate: String): Boolean {
+    val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+    val visit = runCatching { sdf.parse(visitDate) }.getOrNull() ?: return false
+    val diffDays = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(visit.time - Date().time)
+    return diffDays in 0..10
+}
+
+@Composable
+private fun WeatherSection(
+    isLoading: Boolean,
+    weather: WeatherInfo?,
+    visitDate: String
+) {
+    val strings = LocalAppStrings.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = strings.weatherOn + visitDate,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White
+        )
+
+        when {
+            isLoading -> {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFF219EBC)
+                    )
+                }
+            }
+
+            weather != null -> {
+                WeatherCard(weather)
+            }
+
+            else -> {
+
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeatherCard(weather: WeatherInfo) {
+    val strings = LocalAppStrings.current
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = weather.conditionIconUrl,
+            contentDescription = weather.conditionText,
+            modifier = Modifier.size(48.dp)
+        )
+
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = strings.avgTemp + " •  ${"%.0f".format(weather.tempC)}°C",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = "💧 ${weather.humidity}%",
+                    fontSize = 12.sp,
+                    color = Color(0xFFB0BEC5)
+                )
+                Text(
+                    text = "💨 ${"%.0f".format(weather.windKph)} км/г",
+                    fontSize = 12.sp,
+                    color = Color(0xFFB0BEC5)
+                )
+            }
         }
     }
 }
