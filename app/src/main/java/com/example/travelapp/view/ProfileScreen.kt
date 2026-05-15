@@ -33,9 +33,6 @@ import com.example.travelapp.view.profile.bookings.BookingScreen
 import com.example.travelapp.view.profile.bookings.HotelDetailScreen
 import com.example.travelapp.view.profile.bookings.HotelScreen
 import com.example.travelapp.view.profile.routes.AddReviewScreen
-import com.example.travelapp.view.profile.routes.PlaceDetailScreen
-import com.example.travelapp.view.profile.routes.RouteDetailScreen
-import com.example.travelapp.view.profile.routes.RoutesScreen
 import com.example.travelapp.viewmodel.profile.BookingViewModel
 import com.example.travelapp.viewmodel.profile.ProfileViewModel
 import com.google.firebase.auth.FirebaseUser
@@ -46,6 +43,17 @@ class SharedViewModel : ViewModel() {
     var selectedHotel: HotelEntity? = null
     var selectedReview: ReviewItem? = null
 
+    fun setReviewTarget(target: ReviewTarget) {
+        selectedPlace = null
+        selectedHotel = null
+        selectedBooking = null
+
+        when (target) {
+            is ReviewTarget.Place   -> selectedPlace = target.entity
+            is ReviewTarget.Hotel   -> selectedHotel = target.entity
+            is ReviewTarget.Booking -> selectedBooking = target.entity
+        }
+    }
 }
 @Composable
 fun ProfileScreen(
@@ -67,66 +75,12 @@ fun ProfileScreen(
             ProfileContent(user = user, onSignOut = onSignOut, nav = nav, onLocaleChange )
         }
 
-        composable(ProfileNavigation.ListOfRoutes.route) {
-            LaunchedEffect(Unit) { onTitleChange(strings.myRoutes) }
-            RoutesScreen(
-                userId = user.uid,
-                onOpen = { route ->
-                    nav.navigate(ProfileNavigation.Route.createRoute(route.id, route.name, route.description))                }
-            )
-        }
-        composable(
-            route = ProfileNavigation.Route.route,
-            arguments = ProfileNavigation.Route.navArguments
-        ) { backStack ->
-            val routeId = backStack.arguments?.getString("routeId") ?: ""
-            val routeName = backStack.arguments?.getString("routeName") ?: ""
-            val routeDescription = backStack.arguments?.getString("routeDescription") ?: ""
-
-            LaunchedEffect(routeName) { onTitleChange(routeName) }
-            RouteDetailScreen(
-                routeId = routeId,
-                routeName = routeName,
-                routeDescription = routeDescription,
-                userId = user.uid,
-                onTitleChange = { newName, newDescription ->
-                    onTitleChange(newName)
-                    nav.navigate(
-                        ProfileNavigation.Route.createRoute(routeId, newName, newDescription)
-                    ) {
-                        popUpTo(ProfileNavigation.Route.route) { inclusive = true }
-                    }
-                },
-                onNext = { place ->
-                    nav.navigate(ProfileNavigation.Place.createRoute(routeId, place.id, place.name))
-                }
-            )
-        }
-
-        composable(
-            route = ProfileNavigation.Place.route,
-            arguments = ProfileNavigation.Place.navArguments
-        ) { backStack ->
-            val routeId = backStack.arguments?.getString("routeId") ?: ""
-            val placeId = backStack.arguments?.getString("placeId") ?: ""
-            val placeName = backStack.arguments?.getString("placeName") ?: ""
-            LaunchedEffect(placeName) { onTitleChange(placeName) }
-            PlaceDetailScreen(
-                placeId = placeId,
-                routeId = routeId,
-                userId = user.uid,
-                onAddReview = { place ->
-                    sharedViewModel.selectedPlace = place
-                    nav.navigate(ProfileNavigation.AddReview.route)
-                }
-            )
-        }
-
         composable(ProfileNavigation.AddReview.route) {
             val reviewTarget = sharedViewModel.selectedPlace?.let { ReviewTarget.Place(it) }
                 ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it)}
                 ?: sharedViewModel.selectedBooking?.let { ReviewTarget.Booking(it)}
 
+            LaunchedEffect(reviewTarget?.name ?: "") { onTitleChange(reviewTarget?.name ?: "") }
             reviewTarget?.let { target ->
                 AddReviewScreen(
                     target = target,
@@ -167,9 +121,7 @@ fun ProfileScreen(
                     booking = entity,
                     userId = user.uid,
                     onAddReview = { entity ->
-                        sharedViewModel.selectedBooking = entity
-                        sharedViewModel.selectedHotel = null
-                        sharedViewModel.selectedPlace = null
+                        sharedViewModel.setReviewTarget(ReviewTarget.Booking(entity))
                         nav.navigate(ProfileNavigation.AddReview.route)
                     })
             }
@@ -198,8 +150,7 @@ fun ProfileScreen(
                 hotelId = hotelId,
                 userId = user.uid,
                 onAddReview = { hotel ->
-                    sharedViewModel.selectedHotel = hotel
-                    sharedViewModel.selectedPlace = null
+                    sharedViewModel.setReviewTarget(ReviewTarget.Hotel(hotel))
                     nav.navigate(ProfileNavigation.AddReview.route)
                 }
             )
@@ -292,9 +243,6 @@ fun ProfileContent(
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileTextField(text = user.email ?: strings.email)
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(label = strings.myRoutes,  onClick = { nav.navigate(ProfileNavigation.ListOfRoutes.route) })
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(label = strings.myBooking, onClick = { nav.navigate(ProfileNavigation.Booking.route) })

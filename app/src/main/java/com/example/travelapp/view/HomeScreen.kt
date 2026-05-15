@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,25 +50,42 @@ fun HomeScreen(
     val createNav = rememberNavController()
 
     var currentDestinationName by rememberSaveable {
-        mutableStateOf(AppDestinations.PROFILE.name)
+        mutableStateOf(AppDestinations.CREATE.name)
     }
     val currentDestination =
         AppDestinations.valueOf(currentDestinationName)
 
+    val mainBackStackEntry   by mainNav.currentBackStackEntryAsState()
+    val createBackStackEntry by createNav.currentBackStackEntryAsState()
 
-    val backStackEntry by mainNav.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
+    val mainRoute = mainBackStackEntry?.destination?.route
+    val createRoute = createBackStackEntry?.destination?.route
 
-    val showTopBar = currentDestination == AppDestinations.PROFILE
-            && currentRoute != ProfileNavigation.Profile.route
-
+    val createTopBarRoutes = setOf(
+        CreateNavigation.ListOfRoutes.route,
+        CreateNavigation.Route.route,
+        CreateNavigation.Place.route,
+        CreateNavigation.AddReview.route,
+    )
+    val routeTitles = remember { mutableStateOf(mapOf<String, String>()) }
     var topBarTitle by remember { mutableStateOf("") }
-
-    val canGoBack =
-        when (currentDestination) {
-            AppDestinations.PROFILE -> mainNav.previousBackStackEntry != null
-            AppDestinations.CREATE -> createNav.previousBackStackEntry != null
+    LaunchedEffect(mainRoute, createRoute, currentDestination) {
+        topBarTitle = when (currentDestination) {
+            AppDestinations.CREATE  -> createRoute?.let { routeTitles.value[it] } ?: ""
+            AppDestinations.PROFILE -> mainRoute?.let { routeTitles.value[it] } ?: ""
         }
+    }
+
+    val showTopBar = when (currentDestination) {
+        AppDestinations.PROFILE -> mainRoute != ProfileNavigation.Profile.route
+        AppDestinations.CREATE  -> createRoute in createTopBarRoutes
+    }
+
+    val canGoBack = when (currentDestination) {
+        AppDestinations.PROFILE -> mainNav.previousBackStackEntry != null
+        AppDestinations.CREATE  -> createRoute != null
+                && createRoute != CreateNavigation.ListOfRoutes.route
+    }
 
     val strings = LocalAppStrings.current
 
@@ -114,7 +132,12 @@ fun HomeScreen(
                             if (canGoBack) {
                                 IconButton(
                                     modifier = Modifier.fillMaxHeight(),
-                                    onClick = { mainNav.popBackStack() }
+                                    onClick = {
+                                        when (currentDestination) {
+                                            AppDestinations.PROFILE -> mainNav.popBackStack()
+                                            AppDestinations.CREATE  -> createNav.popBackStack()
+                                        }
+                                    }
                                 ) {
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowBack,
@@ -140,14 +163,27 @@ fun HomeScreen(
                 when (currentDestination) {
                     AppDestinations.CREATE -> CreateScreen(
                         currentUser = user,
-                        nav = createNav
+                        nav = createNav,
+                        onTitleChange = { title ->
+                            val route = createNav.currentBackStackEntry?.destination?.route
+                            if (route != null) {
+                                routeTitles.value = routeTitles.value + (route to title)
+                                topBarTitle = title
+                            }
+                        },
                     )
 
                     AppDestinations.PROFILE -> ProfileScreen(
                         user = user,
                         onSignOut = onSignOut,
                         nav = mainNav,
-                        onTitleChange = { topBarTitle = it },
+                        onTitleChange = { title ->
+                            val route = mainNav.currentBackStackEntry?.destination?.route
+                            if (route != null) {
+                                routeTitles.value = routeTitles.value + (route to title)
+                                topBarTitle = title
+                            }
+                        },
                         onLocaleChange = onLocaleChange
                     )
                 }
