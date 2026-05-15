@@ -25,5 +25,6 @@ data class RouteEntity(
     val createdAt: Long,
     val description: String = "",
     val isFavorite: Boolean = false,
+    val isCompleted: Boolean = false,
     val isSynced: Boolean = false // для локального відстежування (в хмару не йде)
 )

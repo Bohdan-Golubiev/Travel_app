@@ -58,6 +58,17 @@ class TravelRepository(
             )
         }
     }
+
+    suspend fun setRouteCompleted(routeId: String, isCompleted: Boolean) {
+        db.routeDao().setCompleted(routeId, isCompleted)
+        if (isNetworkAvailable()) {
+            runCatching {
+                val route = db.routeDao().getById(routeId) ?: return
+                firestore.saveRoute(route)
+                db.routeDao().markSynced(routeId)
+            }
+        }
+    }
     //Місця
 
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =

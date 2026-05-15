@@ -23,7 +23,6 @@ interface RouteDao {
     @Query("SELECT * FROM routes WHERE id = :id")
     suspend fun getById(id: String): RouteEntity?
 
-    // Маршрути, які ще не синхронізовані з хмарою
     @Query("SELECT * FROM routes WHERE isSynced = 0 AND userId = :userId")
     suspend fun getUnsynced(userId: String): List<RouteEntity>
 
@@ -35,4 +34,7 @@ interface RouteDao {
 
     @Query("DELETE FROM routes WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("UPDATE routes SET isCompleted = :isCompleted, isSynced = 0 WHERE id = :id")
+    suspend fun setCompleted(id: String, isCompleted: Boolean)
 }

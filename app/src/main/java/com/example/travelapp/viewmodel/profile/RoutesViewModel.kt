@@ -21,4 +21,10 @@ class RoutesViewModel(application: Application) : AndroidViewModel(application) 
             repository.deleteRoute(userId, routeId)
         }
     }
+
+    fun setRouteCompleted(routeId: String, isCompleted: Boolean) {
+        viewModelScope.launch {
+            repository.setRouteCompleted(routeId, isCompleted)
+        }
+    }
 }

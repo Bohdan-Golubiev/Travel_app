@@ -270,7 +270,8 @@ class FirestoreRepository {
         "name"        to name,
         "createdAt"   to createdAt,
         "description" to description,
-        "isFavorite"  to isFavorite
+        "isFavorite"  to isFavorite,
+        "isCompleted" to isCompleted
     )
 
     private fun PlaceEntity.toMap() = mapOf(
@@ -336,6 +337,7 @@ class FirestoreRepository {
         createdAt   = getLong("createdAt") ?: 0L,
         description = getString("description") ?: "",
         isFavorite  = getBoolean("isFavorite") ?: false,
+        isCompleted = getBoolean("isCompleted") ?: false,
         isSynced    = true
     )
 

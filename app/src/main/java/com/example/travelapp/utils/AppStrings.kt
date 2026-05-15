@@ -155,6 +155,12 @@ data class AppStrings(
     val weatherOn: String,
     val avgTemp: String,
     val speed: String,
+
+    val complete: String,
+    val makeComplete: String,
+    val makeUnComplete: String,
+    val deleteRoute: String,
+    val deleteRouteMes: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -301,6 +307,12 @@ val EnglishStrings = AppStrings(
     weatherOn = "Weather at ",
     avgTemp = "Average temperature ",
     speed = "km/h",
+
+    complete = "Complete",
+    makeComplete = "Make complete",
+    makeUnComplete = "Make uncomplete",
+    deleteRoute = "Delete route?",
+    deleteRouteMes = " will be permanently deleted.",
 )
 
 val UkrainianStrings = AppStrings(
@@ -445,6 +457,12 @@ val UkrainianStrings = AppStrings(
     weatherOn = "Погода на ",
     avgTemp = "Середня температура ",
     speed = "км/г",
+
+    complete = "Пройдено",
+    makeComplete = "Позначити пройденим",
+    makeUnComplete = "Позначити непройденим",
+    deleteRoute = "Видалити маршрут?",
+    deleteRouteMes = " буде видалено назавжди.",
 )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

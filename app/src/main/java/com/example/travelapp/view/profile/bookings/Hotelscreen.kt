@@ -132,7 +132,7 @@ private fun HotelListItem(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = hotelWithRoute.routeName,
+                text = strings.route + hotelWithRoute.routeName,
                 fontSize = 12.sp,
                 color = Color(0xFF607D8B),
                 maxLines = 1,
