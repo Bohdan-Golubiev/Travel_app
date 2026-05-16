@@ -1,5 +1,7 @@
 package com.example.travelapp.view
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +31,7 @@ import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.view.profile.ActiveTripsScreen
 import com.example.travelapp.view.profile.EditReviewScreen
 import com.example.travelapp.view.profile.ReviewsScreen
+import com.example.travelapp.view.profile.SpendingStatsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
 import com.example.travelapp.view.profile.bookings.BookingScreen
 import com.example.travelapp.view.profile.bookings.HotelDetailScreen
@@ -57,6 +60,7 @@ class SharedViewModel : ViewModel() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ProfileScreen(
     user: FirebaseUser,
@@ -192,6 +196,11 @@ fun ProfileScreen(
             LaunchedEffect(Unit) { onTitleChange("Активні подорожі") }
             ActiveTripsScreen(userId = user.uid)
         }
+
+        composable(ProfileNavigation.SpendingStats.route) {
+            LaunchedEffect(Unit) { onTitleChange("Статистика витрат") }
+            SpendingStatsScreen(userId = user.uid)
+        }
     }
 }
 
@@ -251,6 +260,9 @@ fun ProfileContent(
             label   = "Активні подорожі",
             onClick = { nav.navigate(ProfileNavigation.ActiveTrips.route) }
         )
+        HorizontalDivider(color = Color(0xFF2A4A5E))
+
+        ProfileButton(label = "Статистика витрат", onClick = { nav.navigate(ProfileNavigation.SpendingStats.route) })
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(label = strings.myBooking, onClick = { nav.navigate(ProfileNavigation.Booking.route) })

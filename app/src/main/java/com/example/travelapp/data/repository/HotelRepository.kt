@@ -34,6 +34,9 @@ class HotelRepository(
     fun getHotelByRoute(routeId: String): Flow<List<HotelWithRoute>> =
         db.hotelDao().getHotelWithRoute(routeId)
 
+    fun getHotelsByUser(userId: String): Flow<List<HotelEntity>> =
+        db.hotelDao().getByUser(userId)
+
     suspend fun deleteHotel(userId: String, hotel: HotelEntity) {
         db.hotelDao().deleteById(hotel.id)
         if (isNetworkAvailable()) {

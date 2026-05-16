@@ -6,6 +6,7 @@ import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -29,6 +30,7 @@ class ActiveTripsViewModel(application: Application) : AndroidViewModel(applicat
         Locale.getDefault()
     ).format(Date())
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getActiveTrips(userId: String): Flow<List<ActiveTripItem>> =
         repository.getActiveTrips(userId, today)
             .flatMapLatest { routes ->

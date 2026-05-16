@@ -47,7 +47,7 @@ class ReviewRepository(
         db.hotelDao().getAll().firstOrNull { it.id.startsWith(hotelKey) } //може бути бобо
 
     suspend fun getBookingByKey(bookingKey: String): BookingEntity? =
-        db.hotelDao().getAllFromBookings().firstOrNull { it.id.startsWith(bookingKey) }
+        db.bookingDao().getAllFromBookings().firstOrNull { it.id.startsWith(bookingKey) }
 
     suspend fun deleteReview(userId: String, review: ReviewEntity) {
         db.reviewDao().deleteById(review.id)

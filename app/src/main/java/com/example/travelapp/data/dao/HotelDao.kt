@@ -18,9 +18,6 @@ interface HotelDao {
     @Query("SELECT * FROM hotels")
     suspend fun getAll(): List<HotelEntity>
 
-    @Query("SELECT * FROM bookings")
-    suspend fun getAllFromBookings(): List<BookingEntity>
-
     @Query("SELECT * FROM hotels WHERE routeId = :routeId")
     suspend fun getByRoute(routeId: String): List<HotelEntity>
 
@@ -52,6 +49,9 @@ interface HotelDao {
 
     @Query("SELECT * FROM hotels WHERE isSynced = 0")
     suspend fun getUnsynced(): List<HotelEntity>
+
+    @Query("SELECT * FROM hotels WHERE userId = :userId")
+    fun getByUser(userId: String): Flow<List<HotelEntity>>
 }
 
 data class HotelWithRoute(

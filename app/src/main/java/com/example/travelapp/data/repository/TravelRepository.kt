@@ -7,6 +7,7 @@ import com.example.travelapp.data.entity.DeletedRouteEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.db.TravelDB
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -72,6 +73,8 @@ class TravelRepository(
             }
         }
     }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getActiveTrips(
         userId: String,
         today: String
