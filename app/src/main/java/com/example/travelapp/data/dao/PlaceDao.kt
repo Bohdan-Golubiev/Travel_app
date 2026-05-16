@@ -33,4 +33,41 @@ interface PlaceDao {
 
     @Query("UPDATE places SET orderInRoute = :order, isSynced = 0 WHERE id = :id")
     suspend fun updateOrder(id: String, order: Int)
+
+    @Query("""
+        SELECT DISTINCT routeId FROM places
+        WHERE visitDate != ''
+        GROUP BY routeId
+        HAVING
+            MIN(
+                substr(visitDate, 7, 4) || '-' ||
+                substr(visitDate, 4, 2) || '-' ||
+                substr(visitDate, 1, 2)
+            ) <= :today
+            AND
+            MAX(
+                substr(visitDate, 7, 4) || '-' ||
+                substr(visitDate, 4, 2) || '-' ||
+                substr(visitDate, 1, 2)
+            ) >= :today
+    """)
+    fun getActiveRouteIds(today: String): Flow<List<String>>
+
+    @Query("""
+    SELECT * FROM places
+    WHERE routeId = :routeId
+      AND visitDate != ''
+      AND (
+        substr(visitDate, 7, 4) || '-' ||
+        substr(visitDate, 4, 2) || '-' ||
+        substr(visitDate, 1, 2)
+      ) >= :today
+    ORDER BY
+        substr(visitDate, 7, 4) || '-' ||
+        substr(visitDate, 4, 2) || '-' ||
+        substr(visitDate, 1, 2)
+    ASC
+    LIMIT 1
+""")
+    fun getNextPlace(routeId: String, today: String): Flow<PlaceEntity?>
 }

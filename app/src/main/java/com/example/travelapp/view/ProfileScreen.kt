@@ -26,6 +26,7 @@ import com.example.travelapp.model.ReviewTarget
 import com.example.travelapp.utils.AppLocale
 import com.example.travelapp.utils.LocalAppLocale
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.view.profile.ActiveTripsScreen
 import com.example.travelapp.view.profile.EditReviewScreen
 import com.example.travelapp.view.profile.ReviewsScreen
 import com.example.travelapp.view.profile.bookings.BookingDetailScreen
@@ -55,6 +56,7 @@ class SharedViewModel : ViewModel() {
         }
     }
 }
+
 @Composable
 fun ProfileScreen(
     user: FirebaseUser,
@@ -72,13 +74,13 @@ fun ProfileScreen(
         startDestination = ProfileNavigation.Profile.route,
     ) {
         composable(ProfileNavigation.Profile.route) {
-            ProfileContent(user = user, onSignOut = onSignOut, nav = nav, onLocaleChange )
+            ProfileContent(user = user, onSignOut = onSignOut, nav = nav, onLocaleChange)
         }
 
         composable(ProfileNavigation.AddReview.route) {
             val reviewTarget = sharedViewModel.selectedPlace?.let { ReviewTarget.Place(it) }
-                ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it)}
-                ?: sharedViewModel.selectedBooking?.let { ReviewTarget.Booking(it)}
+                ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it) }
+                ?: sharedViewModel.selectedBooking?.let { ReviewTarget.Booking(it) }
 
             LaunchedEffect(reviewTarget?.name ?: "") { onTitleChange(reviewTarget?.name ?: "") }
             reviewTarget?.let { target ->
@@ -90,16 +92,13 @@ fun ProfileScreen(
             }
         }
 
-        composable(ProfileNavigation.Booking.route) {backStack ->
+        composable(ProfileNavigation.Booking.route) {
             LaunchedEffect(Unit) { onTitleChange(strings.myBooking) }
             BookingScreen(
                 userId = user.uid,
                 onOpen = { booking ->
                     nav.navigate(
-                        ProfileNavigation.BookingDetail.createRoute(
-                            booking.id,
-                            booking.name
-                        )
+                        ProfileNavigation.BookingDetail.createRoute(booking.id, booking.name)
                     )
                 }
             )
@@ -188,6 +187,11 @@ fun ProfileScreen(
                 )
             }
         }
+
+        composable(ProfileNavigation.ActiveTrips.route) {
+            LaunchedEffect(Unit) { onTitleChange("Активні подорожі") }
+            ActiveTripsScreen(userId = user.uid)
+        }
     }
 }
 
@@ -233,9 +237,7 @@ fun ProfileContent(
                         profileViewModel.closeSettingsMenu()
                         onSignOut()
                     },
-                    onLocaleChange  = { locale ->
-                        onLocaleChange(locale)
-                    }
+                    onLocaleChange = { locale -> onLocaleChange(locale) }
                 )
             }
         }
@@ -243,6 +245,12 @@ fun ProfileContent(
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileTextField(text = user.email ?: strings.email)
+        HorizontalDivider(color = Color(0xFF2A4A5E))
+
+        ProfileButton(
+            label   = "Активні подорожі",
+            onClick = { nav.navigate(ProfileNavigation.ActiveTrips.route) }
+        )
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(label = strings.myBooking, onClick = { nav.navigate(ProfileNavigation.Booking.route) })
@@ -320,12 +328,7 @@ private fun SettingsDropdownMenu(
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         DropdownMenuItem(
-            text = {
-                Text(
-                    text  = strings.signOut,
-                    color = Color(0xFFEF5350)
-                )
-            },
+            text = { Text(text = strings.signOut, color = Color(0xFFEF5350)) },
             onClick = onSignOut
         )
     }

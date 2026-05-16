@@ -8,6 +8,9 @@ import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import java.util.UUID
 
 class TravelRepository(
@@ -69,7 +72,31 @@ class TravelRepository(
             }
         }
     }
+    fun getActiveTrips(
+        userId: String,
+        today: String
+    ): Flow<List<RouteEntity>?> {
+
+        return db.placeDao()
+            .getActiveRouteIds(today)
+            .flatMapLatest { activeIds ->
+
+                if (activeIds.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    db.routeDao()
+                        .getAllByUser(userId)
+                        .map { routes ->
+                            routes.filter { it.id in activeIds }
+                        }
+                }
+            }
+    }
+
     //Місця
+
+    fun getNextPlaceForRoute(routeId: String, today: String): Flow<PlaceEntity?> =
+        db.placeDao().getNextPlace(routeId, today)
 
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         db.placeDao().getAllByRoute(routeId)

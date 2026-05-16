@@ -39,4 +39,5 @@ sealed class ProfileNavigation(val route: String) {
 
     data object EditReview : ProfileNavigation("edit_review")
 
+    data object ActiveTrips : ProfileNavigation("active_trips")
 }
