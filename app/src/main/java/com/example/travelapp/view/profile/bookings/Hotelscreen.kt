@@ -7,12 +7,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,41 +27,70 @@ import com.example.travelapp.viewmodel.profile.HotelViewModel
 @Composable
 fun HotelScreen(
     userId: String,
-    onOpen: (HotelEntity) -> Unit
+    onOpen: (HotelEntity) -> Unit,
+    viewModel: HotelViewModel = viewModel()
 ) {
-    val viewModel: HotelViewModel = viewModel()
-    val hotels by viewModel.getHotelsByUser(userId).collectAsState(initial = emptyList())
-    val strings = LocalAppStrings.current
+    val hotels by viewModel.getHotelsByUser(userId).collectAsState(initial = null)
 
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            hotels == null -> Unit
 
-    if (hotels.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = strings.noHotels,
-                color = Color(0xFFB0BEC5),
-                fontSize = 16.sp
-            )
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 8.dp)
-        ) {
-            items(hotels, key = { it.hotel.id }) { hotelWithRoute ->
-                HotelListItem(
-                    hotelWithRoute = hotelWithRoute,
-                    onClick = { onOpen(hotelWithRoute.hotel) },
-                    onDelete = { viewModel.deleteHotel(userId, hotelWithRoute.hotel)}
+            hotels!!.isEmpty() -> {
+                EmptyHotelsMessage(
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    items(hotels!!, key = { it.hotel.id }) { hotelWithRoute ->
+                        HotelListItem(
+                            hotelWithRoute = hotelWithRoute,
+                            onClick = { onOpen(hotelWithRoute.hotel) },
+                            onDelete = { viewModel.deleteHotel(userId, hotelWithRoute.hotel) }
+                        )
+                        HorizontalDivider(color = Color(0xFF2A4A5E))
+                    }
+                }
             }
         }
     }
 }
-
+@Composable
+private fun EmptyHotelsMessage(modifier: Modifier = Modifier) {
+    val strings = LocalAppStrings.current
+    Column(
+        modifier            = modifier.padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector        = Icons.Outlined.ShoppingCart,
+            contentDescription = null,
+            tint               = Color(0xFF219EBC),
+            modifier           = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text       = strings.noHotelsScreen,
+            fontSize   = 17.sp,
+            fontWeight = FontWeight.Medium,
+            color      = Color(0xFFB0BEC5),
+            textAlign  = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text      = strings.createHotelMes,
+            fontSize  = 13.sp,
+            color     = Color(0xFF546E7A),
+            textAlign = TextAlign.Center
+        )
+    }
+}
 @Composable
 private fun HotelListItem(
     hotelWithRoute: HotelWithRoute,

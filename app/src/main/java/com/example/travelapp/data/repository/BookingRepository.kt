@@ -24,8 +24,8 @@ class BookingRepository(
     fun getBookingsByUser(userId: String): Flow<List<BookingWithRoute>> =
         db.bookingDao().getBookingsWithRoute(userId)
 
-    fun getBookings(routeId: String): Flow<List<BookingEntity>> =
-        db.bookingDao().getAllByRoute(routeId)
+    fun getBookings(userId: String): Flow<List<BookingEntity>> =
+        db.bookingDao().getAllByUser(userId)
 
     fun getBookingById(bookingId: String): Flow<BookingEntity?> =
         db.bookingDao().getBookingById(bookingId)

@@ -1,5 +1,7 @@
 package com.example.travelapp.view
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -39,6 +41,7 @@ import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
 import com.google.firebase.auth.FirebaseUser
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -90,7 +93,7 @@ fun HomeScreen(
     val strings = LocalAppStrings.current
 
     fun AppDestinations.label(strings: AppStrings) = when (this) {
-        AppDestinations.CREATE -> strings.create
+        AppDestinations.CREATE -> strings.trips
         AppDestinations.PROFILE -> strings.profile
     }
 

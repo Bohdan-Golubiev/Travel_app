@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.ActiveTripItem
 import com.example.travelapp.viewmodel.profile.ActiveTripsViewModel
 
@@ -46,6 +47,7 @@ fun ActiveTripsScreen(
 private fun ActiveTripCard(item: ActiveTripItem) {
     val route = item.route
     val nextPlace = item.nextPlace
+    val strings = LocalAppStrings.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -104,7 +106,7 @@ private fun ActiveTripCard(item: ActiveTripItem) {
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = "Наступна локація",
+                        text = strings.nextLocation,
                         fontSize = 11.sp,
                         color = Color(0xFF219EBC),
                         fontWeight = FontWeight.Medium,

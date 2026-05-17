@@ -27,8 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.utils.AppStrings
+import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.profile.MonthSpending
 import com.example.travelapp.viewmodel.profile.SpendingStatsViewModel
+import com.example.travelapp.viewmodel.profile.toLocalizedLabel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -38,6 +41,7 @@ fun SpendingStatsScreen(
     viewModel: SpendingStatsViewModel = viewModel(),
 ) {
     val stats by viewModel.stats.collectAsState()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(userId) { viewModel.load(userId) }
 
@@ -49,19 +53,19 @@ fun SpendingStatsScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        SummaryCards(stats)
+        SummaryCards(stats, strings)
         HorizontalDivider(color = Color(0xFF2A4A5E))
         if (stats.isNotEmpty()) {
-            SpendingBarChart(stats)
+            SpendingBarChart(stats, strings)
             HorizontalDivider(color = Color(0xFF2A4A5E))
-            MonthBreakdownList(stats)
+            MonthBreakdownList(stats, strings)
         }
     }
 }
 
 
 @Composable
-private fun SummaryCards(stats: List<MonthSpending>) {
+private fun SummaryCards(stats: List<MonthSpending>, strings: AppStrings) {
     val totalBooking = stats.sumOf { it.bookingCost }
     val totalHotel   = stats.sumOf { it.hotelCost }
     val total        = totalBooking + totalHotel
@@ -72,20 +76,20 @@ private fun SummaryCards(stats: List<MonthSpending>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatCard(
-                label  = "Рейси",
+                label  = strings.flights,
                 value  = totalBooking.formatCost(),
                 accent = Color(0xFF378ADD),
                 modifier = Modifier.weight(1f),
             )
             StatCard(
-                label  = "Готелі",
+                label  = strings.hotels,
                 value  = totalHotel.formatCost(),
                 accent = Color(0xFF1D9E75),
                 modifier = Modifier.weight(1f),
             )
         }
         StatCard(
-            label     = "Загалом за 6 місяців",
+            label     = strings.totalForMonths,
             value     = total.formatCost(),
             accent    = Color(0xFFBA7517),
             large     = true,
@@ -135,7 +139,10 @@ private val colorTotal   = Color(0xFFBA7517)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun SpendingBarChart(stats: List<MonthSpending>) {
+private fun SpendingBarChart(
+    stats: List<MonthSpending>,
+    strings: AppStrings
+) {
     var animated by remember { mutableStateOf(false) }
     LaunchedEffect(stats) { animated = true }
 
@@ -150,9 +157,9 @@ private fun SpendingBarChart(stats: List<MonthSpending>) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            LegendItem(color = colorBooking, label = "Рейси")
-            LegendItem(color = colorHotel,   label = "Готелі")
-            LegendItem(color = colorTotal,   label = "Загалом", dashed = true)
+            LegendItem(color = colorBooking, label = strings.flights)
+            LegendItem(color = colorHotel,   label = strings.hotels)
+            LegendItem(color = colorTotal,   label = strings.total, dashed = true)
         }
 
         Spacer(Modifier.height(12.dp))
@@ -217,7 +224,7 @@ private fun SpendingBarChart(stats: List<MonthSpending>) {
 
                 // X-axis
                 drawContext.canvas.nativeCanvas.drawText(
-                    month.label,
+                    month.yearMonth.toLocalizedLabel(strings.languageMonth),
                     x0 + barWidth,
                     size.height - 6f,
                     android.graphics.Paint().apply {
@@ -278,24 +285,31 @@ private fun LegendItem(color: Color, label: String, dashed: Boolean = false) {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun MonthBreakdownList(stats: List<MonthSpending>) {
+private fun MonthBreakdownList(
+    stats: List<MonthSpending>,
+    strings: AppStrings
+) {
     val maxTotal = stats.maxOf { it.total }.takeIf { it > 0 } ?: 1.0
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text      = "Деталізація по місяцях",
+            text      = strings.detailForMonths,
             fontSize  = 12.sp,
             color     = Color(0xFF8EAABE),
         )
         stats.reversed().forEach { month ->
-            MonthRow(month = month, maxTotal = maxTotal)
+            MonthRow(month = month, maxTotal = maxTotal, strings = strings)
         }
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun MonthRow(month: MonthSpending, maxTotal: Double) {
+private fun MonthRow(
+    month: MonthSpending,
+    maxTotal: Double,
+    strings: AppStrings
+) {
     val pct = (month.total / maxTotal).toFloat()
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -303,7 +317,7 @@ private fun MonthRow(month: MonthSpending, maxTotal: Double) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(text = month.label, fontSize = 13.sp, color = Color(0xFF8EAABE))
+            Text(text = month.yearMonth.toLocalizedLabel(strings.languageMonth), fontSize = 13.sp, color = Color(0xFF8EAABE))
             Text(text = month.total.formatCost(), fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color.White)
         }
 

@@ -1,11 +1,16 @@
 package com.example.travelapp.view.profile.routes
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,8 +19,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
@@ -34,6 +41,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,27 +63,38 @@ fun RoutesScreen(
     onCreateRoute: (() -> Unit)? = null,
     viewModel: RoutesViewModel = viewModel()
 ) {
-    val routes by viewModel.getRoutes(userId).collectAsState(initial = emptyList())
+    val routes by viewModel.getRoutes(userId).collectAsState(initial = null)
 
-    Box(modifier = Modifier.fillMaxSize())
-    {
-        LazyColumn(
-            modifier        = Modifier
-                .fillMaxSize(),
-            contentPadding  = PaddingValues(vertical = 4.dp)
-        ) {
-            items(routes, key = { it.id }) { route ->
-                RouteItem(
-                    route             = route,
-                    onClick           = { onOpen(route) },
-                    onDelete          = { viewModel.deleteRoute(userId, route.id) },
-                    onToggleCompleted = { isCompleted ->
-                        viewModel.setRouteCompleted(route.id, isCompleted)
-                    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            routes == null -> Unit
+
+            routes!!.isEmpty() -> {
+                EmptyRoutesMessage(
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(routes!!, key = { it.id }) { route ->
+                        RouteItem(
+                            route             = route,
+                            onClick           = { onOpen(route) },
+                            onDelete          = { viewModel.deleteRoute(userId, route.id) },
+                            onToggleCompleted = { isCompleted ->
+                                viewModel.setRouteCompleted(route.id, isCompleted)
+                            }
+                        )
+                        HorizontalDivider(color = Color(0xFF2A4A5E))
+                    }
+                }
             }
         }
+
         if (onCreateRoute != null) {
             FloatingActionButton(
                 onClick = onCreateRoute,
@@ -86,6 +106,39 @@ fun RoutesScreen(
                 Icon(Icons.Default.Add, contentDescription = "Створити маршрут")
             }
         }
+    }
+}
+
+@Composable
+private fun EmptyRoutesMessage(modifier: Modifier = Modifier) {
+    val strings = LocalAppStrings.current
+
+    Column(
+        modifier            = modifier.padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector        = Icons.Outlined.LocationOn,
+            contentDescription = null,
+            tint               = Color(0xFF219EBC),
+            modifier           = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text       = strings.noRoutes,
+            fontSize   = 17.sp,
+            fontWeight = FontWeight.Medium,
+            color      = Color(0xFFB0BEC5),
+            textAlign  = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text      = strings.createRouteMes,
+            fontSize  = 13.sp,
+            color     = Color(0xFF546E7A),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -195,8 +248,9 @@ private fun RouteItem(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text  = if (route.isCompleted) strings.makeUnComplete
-                                else strings.makeComplete,
+                                text  = if (route.isCompleted) {
+                                    strings.makeUnComplete
+                                } else strings.makeComplete,
                                 color = Color(0xFF4CAF50)
                             )
                         },

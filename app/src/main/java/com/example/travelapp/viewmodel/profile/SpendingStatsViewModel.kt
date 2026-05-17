@@ -29,11 +29,26 @@ data class MonthSpending(
     val hotelCost: Double,
 ) {
     val total: Double get() = bookingCost + hotelCost
-    val label: String @RequiresApi(Build.VERSION_CODES.O)
-    get() = yearMonth.month
-            .getDisplayName(TextStyle.SHORT, Locale("uk"))
-            .replaceFirstChar { it.uppercase() } + " " +
-                yearMonth.year.toString().takeLast(2)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun YearMonth.toLocalizedLabel(language: String): String {
+
+    val monthNames = when (language) {
+        "uk" -> listOf(
+            "Січ", "Лют", "Бер", "Квіт",
+            "Трав", "Чер", "Лип", "Серп",
+            "Вер", "Жовт", "Лист", "Груд"
+        )
+
+        else -> listOf(
+            "Jan", "Feb", "Mar", "Apr",
+            "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec"
+        )
+    }
+
+    return "${monthNames[monthValue - 1]} ${year.toString().takeLast(2)}"
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -64,12 +79,11 @@ class SpendingStatsViewModel(application: Application) : AndroidViewModel(applic
     }
 
     private fun buildStatsFlow(userId: String) = combine(
-        bookingRepository.getBookingsByUser(userId),
+        bookingRepository.getBookings(userId),
         hotelRepository.getHotelsByUser(userId)
-    ) { bookingsWithRoute, hotels ->
+    ) { bookings, hotels ->
         val now    = YearMonth.now()
         val months = (5 downTo 0).map { now.minusMonths(it.toLong()) }
-        val bookings = bookingsWithRoute.map { it.booking }
         months.map { month ->
             MonthSpending(
                 yearMonth   = month,

@@ -22,7 +22,7 @@ data class AppStrings(
     val or: String,
 
     //AppDestinations
-    val create: String,
+    val trips: String,
     val profile: String,
 
     //Profile
@@ -161,6 +161,21 @@ data class AppStrings(
     val makeUnComplete: String,
     val deleteRoute: String,
     val deleteRouteMes: String,
+
+    val activeTrips: String,
+    val nextLocation: String,
+    val statsSpending: String,
+
+    val noRoutes: String,
+    val createRouteMes: String,
+    val noBookings: String,
+    val createBookingMes: String,
+    val noHotelsScreen: String,
+    val createHotelMes: String,
+
+    val languageMonth: String,
+    val totalForMonths: String,
+    val detailForMonths: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -183,7 +198,7 @@ val EnglishStrings = AppStrings(
     or = "or",
 
     //AppDestinations
-    create = "Create",
+    trips = "Trips",
     profile = "Profile",
 
     //Profile
@@ -246,8 +261,8 @@ val EnglishStrings = AppStrings(
 
     noReviewsScreen = "Check-out",
     locations = "Duration",
-    hotels =  "day(s)",
-    flights = "Per day",
+    hotels =  "Hotels",
+    flights = "Flights",
     deleteReview = "Total",
     alertReview = "Route",
     mark = "Mark: ",
@@ -313,6 +328,21 @@ val EnglishStrings = AppStrings(
     makeUnComplete = "Make uncomplete",
     deleteRoute = "Delete route?",
     deleteRouteMes = " will be permanently deleted.",
+
+    activeTrips = "Active trips",
+    nextLocation = "Next location",
+    statsSpending = "Expense statistics",
+
+    noRoutes = "You don't have any routes yet...",
+    createRouteMes = "Tap + to create your first route",
+    noBookings = "You haven't booked any transport yet...",
+    createBookingMes = "You can add it to your itineraries when creating a trip",
+    noHotelsScreen = "You haven't booked any hotels yet...",
+    createHotelMes = "You can add them to your itineraries when creating a trip",
+
+    languageMonth = "en",
+    totalForMonths = "Total for 6 months",
+    detailForMonths = "Breakdown by month",
 )
 
 val UkrainianStrings = AppStrings(
@@ -334,7 +364,7 @@ val UkrainianStrings = AppStrings(
     hide = "Сховати",
     or = "або",
 
-    create = "Створити",
+    trips = "Подорожі",
     profile = "Профіль",
 
     signOut = "Вийти",
@@ -391,7 +421,7 @@ val UkrainianStrings = AppStrings(
     duration = "Тривалість",
     days = "дн.",
     perDay = "За день",
-    total = "Всього",
+    total = "Загалом",
     routeUp = "Маршрут",
 
     noReviewsScreen = "Відгуків ще немає",
@@ -463,6 +493,21 @@ val UkrainianStrings = AppStrings(
     makeUnComplete = "Позначити непройденим",
     deleteRoute = "Видалити маршрут?",
     deleteRouteMes = " буде видалено назавжди.",
+
+    activeTrips = "Активні подорожі",
+    nextLocation = "Наступна локація",
+    statsSpending = "Статистика витрат",
+
+    noRoutes = "Поки що у вас немає маршрутів...",
+    createRouteMes = "Натисніть + щоб створити перший маршрут",
+    noBookings = "Поки що у вас немає заброньованого транспорту...",
+    createBookingMes = "Ви можете додати його до власних маршрутів при створенні подорожі",
+    noHotelsScreen = "Поки що у вас немає заброньованих готелів...",
+    createHotelMes = "Ви можете додати їх до власних маршрутів при створенні подорожі",
+
+    languageMonth = "uk",
+    totalForMonths = "Загалом за 6 місяців",
+    detailForMonths = "Деталізація по місяцях",
 )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

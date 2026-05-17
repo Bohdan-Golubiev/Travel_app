@@ -193,12 +193,12 @@ fun ProfileScreen(
         }
 
         composable(ProfileNavigation.ActiveTrips.route) {
-            LaunchedEffect(Unit) { onTitleChange("Активні подорожі") }
+            LaunchedEffect(Unit) { onTitleChange(strings.activeTrips) }
             ActiveTripsScreen(userId = user.uid)
         }
 
         composable(ProfileNavigation.SpendingStats.route) {
-            LaunchedEffect(Unit) { onTitleChange("Статистика витрат") }
+            LaunchedEffect(Unit) { onTitleChange(strings.statsSpending) }
             SpendingStatsScreen(userId = user.uid)
         }
     }
@@ -257,12 +257,12 @@ fun ProfileContent(
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(
-            label   = "Активні подорожі",
+            label   = strings.activeTrips,
             onClick = { nav.navigate(ProfileNavigation.ActiveTrips.route) }
         )
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
-        ProfileButton(label = "Статистика витрат", onClick = { nav.navigate(ProfileNavigation.SpendingStats.route) })
+        ProfileButton(label = strings.statsSpending, onClick = { nav.navigate(ProfileNavigation.SpendingStats.route) })
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
         ProfileButton(label = strings.myBooking, onClick = { nav.navigate(ProfileNavigation.Booking.route) })

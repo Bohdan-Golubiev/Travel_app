@@ -90,7 +90,7 @@ class TravelRepository(
                     db.routeDao()
                         .getAllByUser(userId)
                         .map { routes ->
-                            routes.filter { it.id in activeIds }
+                            routes.filter { it.id in activeIds && !it.isCompleted }
                         }
                 }
             }
