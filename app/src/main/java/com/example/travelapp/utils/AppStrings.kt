@@ -176,6 +176,11 @@ data class AppStrings(
     val languageMonth: String,
     val totalForMonths: String,
     val detailForMonths: String,
+
+    val deleteBookingTitle: String,
+    val deleteBookingMessage: String,
+    val bookingExpired: String,
+    val inProgress: String
 )
 
 val EnglishStrings = AppStrings(
@@ -343,6 +348,11 @@ val EnglishStrings = AppStrings(
     languageMonth = "en",
     totalForMonths = "Total for 6 months",
     detailForMonths = "Breakdown by month",
+
+    deleteBookingTitle = "Delete booking?",
+    deleteBookingMessage = "This action cannot be undone.",
+    bookingExpired = "Finished",
+    inProgress = "In process",
 )
 
 val UkrainianStrings = AppStrings(
@@ -508,6 +518,11 @@ val UkrainianStrings = AppStrings(
     languageMonth = "uk",
     totalForMonths = "Загалом за 6 місяців",
     detailForMonths = "Деталізація по місяцях",
+
+    deleteBookingTitle = "Видалити бронювання?",
+    deleteBookingMessage = "Ця дія незворотна.",
+    bookingExpired = "Завершено",
+    inProgress = "В процесі",
 )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

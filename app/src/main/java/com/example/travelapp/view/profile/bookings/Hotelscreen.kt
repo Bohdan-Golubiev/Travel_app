@@ -22,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.dao.HotelWithRoute
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.viewmodel.profile.HotelStatus
 import com.example.travelapp.viewmodel.profile.HotelViewModel
 
 @Composable
@@ -51,7 +52,8 @@ fun HotelScreen(
                         HotelListItem(
                             hotelWithRoute = hotelWithRoute,
                             onClick = { onOpen(hotelWithRoute.hotel) },
-                            onDelete = { viewModel.deleteHotel(userId, hotelWithRoute.hotel) }
+                            onDelete = { viewModel.deleteHotel(userId, hotelWithRoute.hotel) },
+                            viewModel = viewModel
                         )
                         HorizontalDivider(color = Color(0xFF2A4A5E))
                     }
@@ -95,31 +97,27 @@ private fun EmptyHotelsMessage(modifier: Modifier = Modifier) {
 private fun HotelListItem(
     hotelWithRoute: HotelWithRoute,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    viewModel: HotelViewModel,
 ) {
     val hotel = hotelWithRoute.hotel
     var menuExpanded by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val strings = LocalAppStrings.current
 
+    val status = remember(hotel.dateFrom, hotel.dateTo) {
+        viewModel.getHotelStatus(hotel.dateFrom, hotel.dateTo)
+    }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(strings.deleteHotel, color = Color.White) },
+            title = { Text(strings.deleteHotel, fontWeight = FontWeight.Medium) },
             text = {
-                Text(
-                    strings.alertHotel + hotelWithRoute.hotel.name + strings.fromHotel +  hotelWithRoute.routeName + strings.routeLow,
-                    color = Color(0xFFB0BEC5)
-                )
+                Text(strings.alertHotel + hotel.name + strings.fromHotel + hotelWithRoute.routeName + strings.routeLow)
             },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteDialog = false
-                    }
-                ) {
+                TextButton(onClick = { onDelete(); showDeleteDialog = false }) {
                     Text(strings.delete, color = Color(0xFFEF5350))
                 }
             },
@@ -128,7 +126,6 @@ private fun HotelListItem(
                     Text(strings.cancel, color = Color(0xFF4FC3F7))
                 }
             },
-            containerColor = Color(0xFF0D2535),
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -142,7 +139,6 @@ private fun HotelListItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-
             Text(
                 text = hotel.name,
                 fontSize = 15.sp,
@@ -151,17 +147,13 @@ private fun HotelListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-
             Spacer(modifier = Modifier.height(4.dp))
-
             Text(
                 text = "${hotel.dateFrom}  →  ${hotel.dateTo}",
                 fontSize = 13.sp,
-                color = Color(0xFFB0BEC5)
+                color = if (status == HotelStatus.COMPLETED) Color(0xFF546E7A) else Color(0xFFB0BEC5)
             )
-
             Spacer(modifier = Modifier.height(2.dp))
-
             Text(
                 text = strings.route + hotelWithRoute.routeName,
                 fontSize = 12.sp,
@@ -173,18 +165,55 @@ private fun HotelListItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = Color(0xFF1A3A4E)
-        ) {
-            Text(
-                text = "${"%.0f".format(hotel.totalCost)} ₴",
-                fontSize = 13.sp,
-                color = Color(0xFF4FC3F7),
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-            )
+        when (status) {
+            HotelStatus.UPCOMING -> {
+                Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF1A3A4E)) {
+                    Text(
+                        text = "${"%.0f".format(hotel.totalCost)} ₴",
+                        fontSize = 13.sp,
+                        color = Color(0xFF4FC3F7),
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            HotelStatus.IN_PROGRESS -> {
+                Surface(shape = RoundedCornerShape(8.dp), color = Color(0xFF1A3A4E)) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "${"%.0f".format(hotel.totalCost)} ₴",
+                            fontSize = 13.sp,
+                            color = Color(0xFF4FC3F7),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = strings.inProgress,
+                            fontSize = 11.sp,
+                            color = Color(0xFF4CAF50)
+                        )
+                    }
+                }
+            }
+
+            HotelStatus.COMPLETED -> {
+                Surface(shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF1A3A4E)
+                ) {
+                    Text(
+                        text = strings.bookingExpired,
+                        fontSize = 13.sp,
+                        color = Color(0xFFFF6B6B),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+            }
         }
+
         Box {
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
@@ -193,7 +222,6 @@ private fun HotelListItem(
                     tint = Color(0xFFB0BEC5)
                 )
             }
-
             DropdownMenu(
                 expanded = menuExpanded,
                 onDismissRequest = { menuExpanded = false }

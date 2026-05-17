@@ -19,7 +19,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
+enum class HotelStatus { UPCOMING, IN_PROGRESS, COMPLETED }
 class HotelViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = HotelRepository(
@@ -33,6 +37,29 @@ class HotelViewModel(application: Application) : AndroidViewModel(application) {
     val reviews: StateFlow<List<ReviewEntity>> = _reviews.asStateFlow()
     private val _isLoadingReviews = MutableStateFlow(false)
     val isLoadingReviews: StateFlow<Boolean> = _isLoadingReviews.asStateFlow()
+
+    fun getHotelStatus(dateFromStr: String, dateToStr: String): HotelStatus {
+        val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).apply {
+            isLenient = false
+        }
+
+        val dateFrom = try { format.parse(dateFromStr) } catch (e: Exception) { null }
+        val dateTo   = try { format.parse(dateToStr)   } catch (e: Exception) { null }
+
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+
+        return when {
+            dateTo   != null && dateTo.before(today) -> HotelStatus.COMPLETED
+            dateFrom != null && !dateFrom.after(today)
+                    && (dateTo == null || !dateTo.before(today)) -> HotelStatus.IN_PROGRESS
+            else -> HotelStatus.UPCOMING
+        }
+    }
 
     fun getHotelsByUser(userId: String): Flow<List<HotelWithRoute>> =
         dao.getHotelWithRoute(userId)

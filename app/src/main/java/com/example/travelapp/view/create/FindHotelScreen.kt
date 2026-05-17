@@ -398,7 +398,8 @@ private fun HotelOptionItem(
                         ) {
                             Text(
                                 text     = if (isAlreadySelected) strings.update else strings.addToTrip,
-                                fontSize = 13.sp
+                                fontSize = 13.sp,
+                                maxLines = 1
                             )
                         }
                     }

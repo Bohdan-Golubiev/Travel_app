@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -80,7 +81,8 @@ fun BookingScreen(
                                     routeId = item.booking.routeId,
                                     bookingId = item.booking.id
                                 )
-                            }
+                            },
+                            viewModel
                         )
                         HorizontalDivider(color = Color(0xFF2A4A5E))
                     }
@@ -126,15 +128,52 @@ private fun BookingItem(
     booking: BookingEntity,
     routeName: String,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    viewModel: BookingViewModel
 ) {
     val strings = LocalAppStrings.current
     var menuExpanded by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val isExpired = remember(booking.date) { viewModel.isBookingExpired(booking.date) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = strings.deleteBookingTitle,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            text = {
+                Text(
+                    text = strings.deleteBookingMessage,
+                    color = Color(0xFFB0BEC5)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFFF6B6B))
+                ) {
+                    Text(strings.delete)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(strings.cancel)
+                }
+            }
+        )
+    }
 
     TextButton(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(0.dp),
         colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
     ) {
@@ -158,17 +197,32 @@ private fun BookingItem(
                         fontWeight = FontWeight.Medium,
                         color = Color.White
                     )
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFF1A3A4E)
-                    ) {
-                        Text(
-                            text = "${booking.cost} ₴",
-                            fontSize = 13.sp,
-                            color = Color(0xFF4FC3F7),
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
+                    if (isExpired) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF1A3A4E)
+                        ) {
+                            Text(
+                                text = strings.bookingExpired,
+                                fontSize = 13.sp,
+                                color = Color(0xFFFF6B6B),
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF1A3A4E)
+                        ) {
+                            Text(
+                                text = "${booking.cost} ₴",
+                                fontSize = 13.sp,
+                                color = Color(0xFF4FC3F7),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                 }
 
@@ -184,7 +238,7 @@ private fun BookingItem(
                     Text(
                         text = booking.date,
                         fontSize = 13.sp,
-                        color = Color(0xFFB0BEC5)
+                        color = if (isExpired) Color(0xFF546E7A) else Color(0xFFB0BEC5)
                     )
                 }
             }
@@ -197,7 +251,6 @@ private fun BookingItem(
                         tint = Color(0xFFB0BEC5)
                     )
                 }
-
                 DropdownMenu(
                     expanded = menuExpanded,
                     onDismissRequest = { menuExpanded = false }
@@ -206,7 +259,7 @@ private fun BookingItem(
                         text = { Text(strings.delete, color = Color(0xFFFF6B6B)) },
                         onClick = {
                             menuExpanded = false
-                            onDelete()
+                            showDeleteDialog = true
                         }
                     )
                 }
