@@ -22,7 +22,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,12 +33,36 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.travelapp.utils.AppLocale
 import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
 import com.google.firebase.auth.FirebaseUser
+
+object RootRoutes {
+    const val CREATE = "root_create"
+    const val PROFILE = "root_profile"
+}
+
+private val TAB_ROOT_ROUTES = setOf(
+    CreateNavigation.ListOfRoutes.route,
+    ProfileNavigation.Profile.route,
+)
+
+private val CREATE_TOPBAR_ROUTES = setOf(
+    CreateNavigation.ListOfRoutes.route,
+    CreateNavigation.Route.route,
+    CreateNavigation.Place.route,
+    CreateNavigation.AddReview.route,
+)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,46 +72,52 @@ fun HomeScreen(
     onSignOut: () -> Unit,
     onLocaleChange: (AppLocale) -> Unit
 ) {
-    val mainNav = rememberNavController()
-    val createNav = rememberNavController()
+    val nav = rememberNavController()
+    val sharedViewModel: SharedViewModel = viewModel()
 
-    var currentDestinationName by rememberSaveable {
-        mutableStateOf(AppDestinations.CREATE.name)
+    val backStackEntry by nav.currentBackStackEntryAsState()
+    val currentDestination = backStackEntry?.destination
+
+    var selectedDestination by rememberSaveable {
+        mutableStateOf(AppDestinations.CREATE)
     }
-    val currentDestination =
-        AppDestinations.valueOf(currentDestinationName)
 
-    val mainBackStackEntry   by mainNav.currentBackStackEntryAsState()
-    val createBackStackEntry by createNav.currentBackStackEntryAsState()
+    selectedDestination = when {
+        currentDestination.isInHierarchy(RootRoutes.PROFILE) -> {
+            AppDestinations.PROFILE
+        }
 
-    val mainRoute = mainBackStackEntry?.destination?.route
-    val createRoute = createBackStackEntry?.destination?.route
+        currentDestination.isInHierarchy(RootRoutes.CREATE) -> {
+            AppDestinations.CREATE
+        }
 
-    val createTopBarRoutes = setOf(
-        CreateNavigation.ListOfRoutes.route,
-        CreateNavigation.Route.route,
-        CreateNavigation.Place.route,
-        CreateNavigation.AddReview.route,
-    )
+        else -> selectedDestination
+    }
+
+    val currentRoute = currentDestination?.route
+
     val routeTitles = remember { mutableStateOf(mapOf<String, String>()) }
     var topBarTitle by remember { mutableStateOf("") }
-    LaunchedEffect(mainRoute, createRoute, currentDestination) {
-        topBarTitle = when (currentDestination) {
-            AppDestinations.CREATE  -> createRoute?.let { routeTitles.value[it] } ?: ""
-            AppDestinations.PROFILE -> mainRoute?.let { routeTitles.value[it] } ?: ""
+
+    val titleForCurrentRoute = currentRoute?.let { routeTitles.value[it] }
+
+    if (titleForCurrentRoute != null && titleForCurrentRoute != topBarTitle) {
+        topBarTitle = titleForCurrentRoute
+    }
+
+    val showTopBar = when (selectedDestination) {
+
+        AppDestinations.PROFILE -> {
+            currentRoute != ProfileNavigation.Profile.route
+        }
+
+        AppDestinations.CREATE -> {
+            currentRoute in CREATE_TOPBAR_ROUTES
         }
     }
 
-    val showTopBar = when (currentDestination) {
-        AppDestinations.PROFILE -> mainRoute != ProfileNavigation.Profile.route
-        AppDestinations.CREATE  -> createRoute in createTopBarRoutes
-    }
-
-    val canGoBack = when (currentDestination) {
-        AppDestinations.PROFILE -> mainNav.previousBackStackEntry != null
-        AppDestinations.CREATE  -> createRoute != null
-                && createRoute != CreateNavigation.ListOfRoutes.route
-    }
+    val canGoBack = currentRoute != null &&
+            currentRoute !in TAB_ROOT_ROUTES
 
     val strings = LocalAppStrings.current
 
@@ -107,9 +136,26 @@ fun HomeScreen(
                             contentDescription = destination.label(strings)
                         )
                     },
-                    label = { Text(destination.label(strings)) },
-                    selected = currentDestination == destination,
-                    onClick = { currentDestinationName = destination.name }
+                    label = {
+                        Text(destination.label(strings))
+                    },
+                    selected = selectedDestination == destination,
+                    onClick = {
+                        selectedDestination = destination
+
+                        val rootRoute = when (destination) {
+                            AppDestinations.CREATE -> RootRoutes.CREATE
+                            AppDestinations.PROFILE -> RootRoutes.PROFILE
+                        }
+
+                        nav.navigate(rootRoute) {
+                            popUpTo(nav.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }
@@ -128,7 +174,10 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxHeight(),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = topBarTitle, color = Color.White)
+                                Text(
+                                    text = topBarTitle,
+                                    color = Color.White
+                                )
                             }
                         },
                         navigationIcon = {
@@ -136,10 +185,7 @@ fun HomeScreen(
                                 IconButton(
                                     modifier = Modifier.fillMaxHeight(),
                                     onClick = {
-                                        when (currentDestination) {
-                                            AppDestinations.PROFILE -> mainNav.popBackStack()
-                                            AppDestinations.CREATE  -> createNav.popBackStack()
-                                        }
+                                        nav.popBackStack()
                                     }
                                 ) {
                                     Icon(
@@ -160,40 +206,89 @@ fun HomeScreen(
                     .padding(innerPadding)
                     .background(
                         Brush.verticalGradient(
-                        colors = listOf(Color(0xFF0D1B2A), Color(0xFF25485E))
-                    ))
+                            colors = listOf(
+                                Color(0xFF0D1B2A),
+                                Color(0xFF25485E)
+                            )
+                        )
+                    )
             ) {
-                when (currentDestination) {
-                    AppDestinations.CREATE -> CreateScreen(
-                        currentUser = user,
-                        nav = createNav,
-                        onTitleChange = { title ->
-                            val route = createNav.currentBackStackEntry?.destination?.route
-                            if (route != null) {
-                                routeTitles.value = routeTitles.value + (route to title)
-                                topBarTitle = title
-                            }
-                        },
-                    )
+                AppNavHost(
+                    nav = nav,
+                    user = user,
+                    sharedViewModel = sharedViewModel,
+                    onSignOut = onSignOut,
+                    onLocaleChange = onLocaleChange,
+                    onTitleChange = { title ->
 
-                    AppDestinations.PROFILE -> ProfileScreen(
-                        user = user,
-                        onSignOut = onSignOut,
-                        nav = mainNav,
-                        onTitleChange = { title ->
-                            val route = mainNav.currentBackStackEntry?.destination?.route
-                            if (route != null) {
-                                routeTitles.value = routeTitles.value + (route to title)
-                                topBarTitle = title
-                            }
-                        },
-                        onLocaleChange = onLocaleChange
-                    )
-                }
+                        val route =
+                            nav.currentBackStackEntry?.destination?.route
+
+                        if (route != null) {
+
+                            routeTitles.value =
+                                routeTitles.value + (route to title)
+
+                            topBarTitle = title
+                        }
+                    }
+                )
             }
         }
     }
 }
+
+private fun NavDestination?.isInHierarchy(route: String): Boolean {
+
+    return this?.hierarchy?.any {
+        it.route == route
+    } == true
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+private fun AppNavHost(
+    nav: NavHostController,
+    user: FirebaseUser,
+    sharedViewModel: SharedViewModel,
+    onSignOut: () -> Unit,
+    onLocaleChange: (AppLocale) -> Unit,
+    onTitleChange: (String) -> Unit,
+) {
+
+    NavHost(
+        navController = nav,
+        startDestination = RootRoutes.CREATE
+    ) {
+
+        navigation(
+            route = RootRoutes.CREATE,
+            startDestination = CreateNavigation.ListOfRoutes.route
+        ) {
+            createGraph(
+                nav = nav,
+                currentUser = user,
+                sharedViewModel = sharedViewModel,
+                onTitleChange = onTitleChange
+            )
+        }
+
+        navigation(
+            route = RootRoutes.PROFILE,
+            startDestination = ProfileNavigation.Profile.route
+        ) {
+            profileGraph(
+                nav = nav,
+                user = user,
+                sharedViewModel = sharedViewModel,
+                onSignOut = onSignOut,
+                onTitleChange = onTitleChange,
+                onLocaleChange = onLocaleChange
+            )
+        }
+    }
+}
+
 enum class AppDestinations(val icon: ImageVector) {
     CREATE(Icons.Default.Create),
     PROFILE(Icons.Default.Person),

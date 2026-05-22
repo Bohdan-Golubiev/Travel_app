@@ -188,12 +188,13 @@ private fun HotelListItem(
                             text = "${"%.0f".format(hotel.totalCost)} ₴",
                             fontSize = 13.sp,
                             color = Color(0xFF4FC3F7),
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = strings.inProgress,
-                            fontSize = 11.sp,
-                            color = Color(0xFF4CAF50)
+                            fontSize = 12.sp,
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
