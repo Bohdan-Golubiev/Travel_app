@@ -1,12 +1,16 @@
 package com.example.travelapp.viewmodel.profile
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.data.dao.BookingWithRoute
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.repository.BookingRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.notification.TravelAlarmManager
+import com.example.travelapp.notification.removeAlarm
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -17,6 +21,8 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
 
     private val repository = BookingRepository(TravelDB.getInstance(application), application)
 
+    @SuppressLint("StaticFieldLeak")
+    private val ctx = application.applicationContext
     fun isBookingExpired(dateStr: String): Boolean {
         val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).apply {
             isLenient = false
@@ -40,6 +46,7 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
     fun deleteBooking(userId: String, routeId: String, bookingId: String) {
         viewModelScope.launch {
             repository.deleteBooking(userId, routeId, bookingId)
+            cancelTransportReminder(bookingId)
         }
     }
 
@@ -48,4 +55,11 @@ class BookingViewModel(application: Application) : AndroidViewModel(application)
 
     fun getBookings(userId: String): Flow<List<BookingWithRoute>> =
         repository.getBookingsByUser(userId)
+
+    fun cancelTransportReminder(bookingId: String) {
+        val alarmId = bookingId.hashCode()
+        TravelAlarmManager.cancel(ctx, alarmId, TravelAlarmManager.ReminderType.TRANSPORT)
+        removeAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.TRANSPORT)
+        Log.d("DeleteAlarm", "Видалено $bookingId")
+    }
 }

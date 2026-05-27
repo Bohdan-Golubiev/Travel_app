@@ -1,5 +1,6 @@
 package com.example.travelapp.viewmodel.profile
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -11,6 +12,8 @@ import com.example.travelapp.data.repository.FirestoreRepository
 import com.example.travelapp.data.repository.HotelRepository
 import com.example.travelapp.data.repository.ReviewRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.notification.TravelAlarmManager
+import com.example.travelapp.notification.removeAlarm
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,6 +40,8 @@ class HotelViewModel(application: Application) : AndroidViewModel(application) {
     val reviews: StateFlow<List<ReviewEntity>> = _reviews.asStateFlow()
     private val _isLoadingReviews = MutableStateFlow(false)
     val isLoadingReviews: StateFlow<Boolean> = _isLoadingReviews.asStateFlow()
+    @SuppressLint("StaticFieldLeak")
+    private val ctx = application.applicationContext
 
     fun getHotelStatus(dateFromStr: String, dateToStr: String): HotelStatus {
         val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).apply {
@@ -70,6 +75,7 @@ class HotelViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteHotel(userId: String, hotel: HotelEntity) {
         viewModelScope.launch {
             repository.deleteHotel(userId, hotel)
+            cancelCheckInReminder(hotel)
         }
     }
 
@@ -99,5 +105,16 @@ class HotelViewModel(application: Application) : AndroidViewModel(application) {
             }
             _isLoadingReviews.value = false
         }
+    }
+
+    fun cancelCheckInReminder(hotel: HotelEntity) {
+        val alarmIdIn = (hotel.id+hotel.dateFrom).hashCode()
+        TravelAlarmManager.cancel(ctx, alarmIdIn, TravelAlarmManager.ReminderType.CHECK_IN)
+        removeAlarm(ctx, alarmIdIn, TravelAlarmManager.ReminderType.CHECK_IN)
+
+        val alarmIdOut = (hotel.id+hotel.dateTo).hashCode()
+        TravelAlarmManager.cancel(ctx, alarmIdOut, TravelAlarmManager.ReminderType.CHECK_OUT)
+        removeAlarm(ctx, alarmIdOut, TravelAlarmManager.ReminderType.CHECK_OUT)
+        Log.d("DeleteAlarm", "Видалено ${hotel.name}")
     }
 }

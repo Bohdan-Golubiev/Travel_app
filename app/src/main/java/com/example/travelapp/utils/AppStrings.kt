@@ -180,7 +180,16 @@ data class AppStrings(
     val deleteBookingTitle: String,
     val deleteBookingMessage: String,
     val bookingExpired: String,
-    val inProgress: String
+    val inProgress: String,
+
+    val notifTransportTitle: String,
+    val notifTransportMessage: String,
+    val notifCheckInTitle: String,
+    val notifCheckInMessage: String,
+    val notifCheckOutTitle: String,
+    val notifCheckOutMessage: String,
+    val notifLocationTitle: String,
+    val notifLocationMessage: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -353,6 +362,15 @@ val EnglishStrings = AppStrings(
     deleteBookingMessage = "This action cannot be undone.",
     bookingExpired = "Finished",
     inProgress = "In process",
+
+    notifTransportTitle = "Transport reminder",
+    notifTransportMessage = "Departure in 3 hours",
+    notifCheckInTitle = "Check-in day",
+    notifCheckInMessage = "Today is check-in day — at 09:00",
+    notifCheckOutTitle = "Last day of stay",
+    notifCheckOutMessage = "Today is your last day at the hotel",
+    notifLocationTitle = "Location reminder",
+    notifLocationMessage = "Today's location visit — at 08:00",
 )
 
 val UkrainianStrings = AppStrings(
@@ -523,6 +541,15 @@ val UkrainianStrings = AppStrings(
     deleteBookingMessage = "Ця дія незворотна.",
     bookingExpired = "Завершено",
     inProgress = "В процесі",
+
+    notifTransportTitle = "Нагадування про транспорт",
+    notifTransportMessage = "До відправлення залишилось 3 години",
+    notifCheckInTitle = "Час заселятись",
+    notifCheckInMessage = "Сьогодні день заселення — о 09:00",
+    notifCheckOutTitle = "Останній день перебування",
+    notifCheckOutMessage = "У вас залишився останній день перебування в готелі",
+    notifLocationTitle = "Нагадування про локацію",
+    notifLocationMessage = "Сьогодні відвідування локації — о 08:00",
 )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

@@ -1,14 +1,21 @@
 package com.example.travelapp.view.profile
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,6 +41,14 @@ fun ReviewsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val strings = LocalAppStrings.current
 
+    val listState = rememberSaveable(saver = LazyListState.Saver) {
+        LazyListState()
+    }
+
+    var placesExpanded by rememberSaveable { mutableStateOf(true) }
+    var hotelsExpanded by rememberSaveable { mutableStateOf(true) }
+    var bookingsExpanded by rememberSaveable { mutableStateOf(true) }
+
     LaunchedEffect(userId) {
         viewModel.loadReviews(userId)
     }
@@ -46,7 +61,9 @@ fun ReviewsScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
 
-            uiState.placeReviews.isEmpty() && uiState.hotelReviews.isEmpty() -> {
+            uiState.placeReviews.isEmpty() &&
+                    uiState.hotelReviews.isEmpty() &&
+                    uiState.bookingReviews.isEmpty() -> {
                 Text(
                     text = strings.noReviewsScreen,
                     modifier = Modifier.align(Alignment.Center),
@@ -57,64 +74,86 @@ fun ReviewsScreen(
 
             else -> {
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     if (uiState.placeReviews.isNotEmpty()) {
-                        item {
-                            SectionHeader(title = strings.locations)
-                        }
-                        items(
-                            items = uiState.placeReviews,
-                            key = { it.review.id }
-                        ) { item ->
-                            ReviewCard(
-                                title    = item.placeName,
-                                subtitle = item.placeLocation,
-                                review   = item.review,
-                                onDelete = { viewModel.deleteReview(userId, item.review) },
-                                onEdit   = { onEdit(item) }
+                        item(key = "header_places") {
+                            CollapsibleSectionHeader(
+                                title    = strings.locations,
+                                expanded = placesExpanded,
+                                count    = uiState.placeReviews.size,
+                                onToggle = { placesExpanded = !placesExpanded }
                             )
-                            HorizontalDivider(color = Color(0xFF2A4A5E))
+                        }
+                        if (placesExpanded) {
+                            items(
+                                items = uiState.placeReviews,
+                                key   = { "place_${it.review.id}" }
+                            ) { item ->
+                                ReviewCard(
+                                    title    = item.placeName,
+                                    subtitle = item.placeLocation,
+                                    review   = item.review,
+                                    onDelete = { viewModel.deleteReview(userId, item.review) },
+                                    onEdit   = { onEdit(item) }
+                                )
+                                HorizontalDivider(color = Color(0xFF2A4A5E))
+                            }
                         }
                     }
 
                     if (uiState.hotelReviews.isNotEmpty()) {
-                        item {
-                            SectionHeader(title = strings.hotels)
-                        }
-                        items(
-                            items = uiState.hotelReviews,
-                            key = { it.review.id }
-                        ) { item ->
-                            ReviewCard(
-                                title    = item.hotelName,
-                                subtitle = item.hotelAddress,
-                                review   = item.review,
-                                onDelete = { viewModel.deleteReview(userId, item.review) },
-                                onEdit   = { onEdit(item) }
+                        item(key = "header_hotels") {
+                            CollapsibleSectionHeader(
+                                title    = strings.hotels,
+                                expanded = hotelsExpanded,
+                                count    = uiState.hotelReviews.size,
+                                onToggle = { hotelsExpanded = !hotelsExpanded }
                             )
-                            HorizontalDivider(color = Color(0xFF2A4A5E))
+                        }
+                        if (hotelsExpanded) {
+                            items(
+                                items = uiState.hotelReviews,
+                                key   = { "hotel_${it.review.id}" }
+                            ) { item ->
+                                ReviewCard(
+                                    title    = item.hotelName,
+                                    subtitle = item.hotelAddress,
+                                    review   = item.review,
+                                    onDelete = { viewModel.deleteReview(userId, item.review) },
+                                    onEdit   = { onEdit(item) }
+                                )
+                                HorizontalDivider(color = Color(0xFF2A4A5E))
+                            }
                         }
                     }
 
                     if (uiState.bookingReviews.isNotEmpty()) {
-                        item {
-                            SectionHeader(title = strings.flights)
-                        }
-                        items(
-                            items = uiState.bookingReviews,
-                            key = { it.review.id }
-                        ) { item ->
-                            ReviewCard(
-                                title    = strings.from + item.from + " ${strings.toLow} " + item.to,
-                                subtitle = strings.flyBy + item.nameBooking + "\n" +
-                                        strings.In + item.date,
-                                review   = item.review,
-                                onDelete = { viewModel.deleteReview(userId, item.review) },
-                                onEdit   = { onEdit(item) }
+                        item(key = "header_bookings") {
+                            CollapsibleSectionHeader(
+                                title    = strings.flights,
+                                expanded = bookingsExpanded,
+                                count    = uiState.bookingReviews.size,
+                                onToggle = { bookingsExpanded = !bookingsExpanded }
                             )
-                            HorizontalDivider(color = Color(0xFF2A4A5E))
+                        }
+                        if (bookingsExpanded) {
+                            items(
+                                items = uiState.bookingReviews,
+                                key   = { "booking_${it.review.id}" }
+                            ) { item ->
+                                ReviewCard(
+                                    title    = strings.from + item.from + " ${strings.toLow} " + item.to,
+                                    subtitle = strings.flyBy + item.nameBooking + "\n" +
+                                            strings.In + item.date,
+                                    review   = item.review,
+                                    onDelete = { viewModel.deleteReview(userId, item.review) },
+                                    onEdit   = { onEdit(item) }
+                                )
+                                HorizontalDivider(color = Color(0xFF2A4A5E))
+                            }
                         }
                     }
                 }
@@ -124,17 +163,53 @@ fun ReviewsScreen(
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium,
-        color = Color(0xFF219EBC),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+private fun CollapsibleSectionHeader(
+    title: String,
+    expanded: Boolean,
+    count: Int,
+    onToggle: () -> Unit
+) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (expanded) 0f else -90f,
+        animationSpec = tween(durationMillis = 200),
+        label = "arrow_rotation"
     )
-    HorizontalDivider(color = Color(0xFF2A4A5E))
+
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onToggle)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text       = title,
+                    fontSize   = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color      = Color(0xFF219EBC)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text     = "($count)",
+                    fontSize = 12.sp,
+                    color    = Color(0xFF219EBC).copy(alpha = 0.6f)
+                )
+            }
+
+            Icon(
+                imageVector        = Icons.Default.KeyboardArrowDown,
+                contentDescription = if (expanded) "Згорнути" else "Розгорнути",
+                tint               = Color(0xFF219EBC),
+                modifier           = Modifier
+                    .size(20.dp)
+                    .rotate(arrowRotation)
+            )
+        }
+        HorizontalDivider(color = Color(0xFF2A4A5E))
+    }
 }
 
 @Composable

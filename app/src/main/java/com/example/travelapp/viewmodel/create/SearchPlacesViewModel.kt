@@ -1,5 +1,6 @@
 package com.example.travelapp.viewmodel.create
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
@@ -22,7 +23,12 @@ import com.example.travelapp.BuildConfig
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.notification.TravelAlarmManager
+import com.example.travelapp.notification.removeAlarm
+import com.example.travelapp.notification.saveAlarm
 import kotlinx.coroutines.CancellationException
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.UUID
 
 data class PlaceItem(
@@ -48,6 +54,9 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
 
     private val placesClient: PlacesClient
     private val repository = TravelRepository(TravelDB.getInstance(application),application)
+    @SuppressLint("StaticFieldLeak")
+    private val ctx = application.applicationContext
+    private val placeDateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
     init {
         if (!Places.isInitialized()) {
@@ -190,6 +199,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                         ),
                         userId = userId
                     )
+                    setAlert(placeItem)
                 }
                 onSuccess(route.id)
             } catch (e: Exception) {
@@ -198,5 +208,23 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+
+    private fun setAlert(place: PlaceItem)
+    {
+        val visitMs = parsePlaceDate(place.visitDate) ?: return
+        val alarmId = place.id.hashCode()
+
+        TravelAlarmManager.scheduleLocationReminder(ctx, alarmId, visitMs)
+        saveAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION, visitMs)
+    }
+    private fun parsePlaceDate(dateStr: String): Long? {
+        if (dateStr.isBlank()) return null
+        return runCatching { placeDateFormat.parse(dateStr)?.time }.getOrNull()
+    }
+    fun cancelLocationReminder(place: PlaceEntity) {
+        val alarmId = place.id.hashCode()
+        TravelAlarmManager.cancel(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION)
+        removeAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION)
     }
 }

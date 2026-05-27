@@ -1,11 +1,16 @@
 package com.example.travelapp.viewmodel.profile
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.notification.TravelAlarmManager
+import com.example.travelapp.notification.removeAlarm
+import com.example.travelapp.notification.saveAlarm
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +44,10 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     private val _editedIsFavorite = MutableStateFlow(false)
     val editedIsFavorite: StateFlow<Boolean> = _editedIsFavorite.asStateFlow()
+
+    @SuppressLint("StaticFieldLeak")
+    private val ctx = application.applicationContext
+    private val placeDateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         repository.getPlaces(routeId)
 
@@ -85,7 +94,6 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
             list.toMutableList().also { it.removeAt(index) }
         }
     }
-
     fun saveChanges(
         userId: String,
         routeId: String,
@@ -112,9 +120,13 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
                 )
 
                 val editedIds = _editedPlaces.value.map { it.id }.toSet()
-                originalPlaces.filter { it.id !in editedIds }.forEach { place ->
+                val deletedPlaces = originalPlaces.filter { it.id !in editedIds }
+
+                deletedPlaces.forEach { place ->
+                    cancelLocationReminder(place)
                     repository.deletePlace(userId, routeId, place.id)
                 }
+
                 _editedPlaces.value.forEachIndexed { index, place ->
                     if (place.orderInRoute != index)
                         repository.updatePlaceOrder(place.id, index, userId, routeId)
@@ -122,6 +134,8 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
                 _editedPlaces.value.forEachIndexed { index, place ->
                     repository.updatePlaceDate(place.id, index, place.visitDate, userId, routeId)
                 }
+
+                _editedPlaces.value.forEach { place -> scheduleLocationReminderIfFuture(place) }
 
                 _isEditing.value = false
                 onSuccess(_editedName.value, cleanedDescription)
@@ -159,5 +173,32 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
 
     fun dismissTimelineError() {
         _timelineError.value = false
+    }
+    private fun scheduleLocationReminderIfFuture(place: PlaceEntity) {
+        val visitMs = parsePlaceDate(place.visitDate) ?: return
+        val startOfToday = System.currentTimeMillis().let {
+            val cal = java.util.Calendar.getInstance()
+            cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            cal.set(java.util.Calendar.MINUTE, 0)
+            cal.set(java.util.Calendar.SECOND, 0)
+            cal.set(java.util.Calendar.MILLISECOND, 0)
+            cal.timeInMillis
+        }
+        if (visitMs < startOfToday) return
+
+        val alarmId = place.id.hashCode()
+        TravelAlarmManager.scheduleLocationReminder(ctx, alarmId, visitMs)
+        saveAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION, visitMs)
+    }
+
+    private fun parsePlaceDate(dateStr: String): Long? {
+        if (dateStr.isBlank()) return null
+        return runCatching { placeDateFormat.parse(dateStr)?.time }.getOrNull()
+    }
+    fun cancelLocationReminder(place: PlaceEntity) {
+        val alarmId = place.id.hashCode()
+        TravelAlarmManager.cancel(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION)
+        removeAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION)
+        Log.d("DeleteAlarm", "Видалено ${place.name}")
     }
 }

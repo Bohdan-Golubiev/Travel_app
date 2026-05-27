@@ -1,12 +1,17 @@
 package com.example.travelapp.viewmodel.create
 
+import android.annotation.SuppressLint
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.BuildConfig
 import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.repository.HotelRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.notification.TravelAlarmManager
+import com.example.travelapp.notification.removeAlarm
+import com.example.travelapp.notification.saveAlarm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,6 +92,9 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _uiState = MutableStateFlow(FindHotelUiState())
     val uiState: StateFlow<FindHotelUiState> = _uiState.asStateFlow()
+
+    @SuppressLint("StaticFieldLeak")
+    private val ctx = application.applicationContext
 
     fun onStartPlaceChange(value: String) {
         _uiState.update { it.copy(startPlace = value) }
@@ -225,6 +233,8 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 repository.saveHotels(userId, entities)
 
+                entities.forEach { scheduleCheckInReminder(it) }
+
                 _uiState.update { it.copy(saveState = SaveState.Success) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -236,6 +246,29 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun resetSaveState() {
         _uiState.update { it.copy(saveState = SaveState.Idle) }
+    }
+    private fun scheduleCheckInReminder(hotel: HotelEntity) {
+        val checkInMs = parseDateMillis(hotel.dateFrom)
+        if (checkInMs == null) {
+            Log.w("FindHotelVM", "Не вдалось розпарсити дату заселення для ${hotel.id}")
+            return
+        }
+
+        val checkOutMs = parseDateMillis(hotel.dateTo)
+        if (checkOutMs == null) {
+            Log.w("FindHotelVM", "Не вдалось розпарсити дату заселення для ${hotel.id}")
+            return
+        }
+
+        val alarmIdIn = (hotel.id+hotel.dateFrom).hashCode()
+        TravelAlarmManager.scheduleCheckInReminder(ctx, alarmIdIn, checkInMs)
+        saveAlarm(ctx, alarmIdIn, TravelAlarmManager.ReminderType.CHECK_IN, checkInMs)
+
+        val alarmIdOut = (hotel.id+hotel.dateTo).hashCode()
+        TravelAlarmManager.scheduleCheckOutReminder(ctx, alarmIdOut, checkOutMs)
+        saveAlarm(ctx, alarmIdOut, TravelAlarmManager.ReminderType.CHECK_OUT, checkOutMs)
+
+        Log.d("FindHotelVM", "CHECK_IN сповіщення заплановано: ${hotel.name} (${hotel.dateFrom}) (${hotel.dateTo})")
     }
 }
 

@@ -30,6 +30,7 @@ import com.example.travelapp.view.AuthScreen
 import com.example.travelapp.view.HomeScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
         if (isFirstRun) {
             FirebaseAuth.getInstance().signOut()
-            prefs.edit().putBoolean("is_first_run", false).apply()
+            prefs.edit { putBoolean("is_first_run", false) }
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)

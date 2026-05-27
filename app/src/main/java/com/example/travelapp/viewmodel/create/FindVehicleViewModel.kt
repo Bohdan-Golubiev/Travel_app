@@ -1,6 +1,7 @@
 package com.example.travelapp.viewmodel.create
 
-import androidx.lifecycle.ViewModel
+import android.annotation.SuppressLint
+import android.app.Application
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.data.repository.AirportRepository
 import com.example.travelapp.data.repository.AirTransportRepository
@@ -11,13 +12,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import android.content.Context
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.lifecycle.AndroidViewModel
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.repository.BookingRepository
 import com.example.travelapp.db.TravelDB
+import com.example.travelapp.notification.TravelAlarmManager
+import com.example.travelapp.notification.removeAlarm
+import com.example.travelapp.notification.saveAlarm
+import java.text.SimpleDateFormat
+import java.util.Locale
+import android.util.Log
 
 data class FindVehicleUiState(
     val selectedTransport: String? = null,
@@ -33,14 +37,17 @@ data class FindVehicleUiState(
     val error: String? = null
 )
 
-class FindVehicleViewModel(
-    private val airTransportRepository: AirTransportRepository = AirTransportRepository(),
-    private val airportRepository: AirportRepository,
-    private val bookingRepository: BookingRepository
-) : ViewModel() {
+class FindVehicleViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val airTransportRepository = AirTransportRepository()
+    private val airportRepository = AirportRepository(application)
+    private val bookingRepository = BookingRepository(TravelDB.getInstance(application), application)
     private val _uiState = MutableStateFlow(FindVehicleUiState())
     val uiState: StateFlow<FindVehicleUiState> = _uiState.asStateFlow()
+
+    @SuppressLint("StaticFieldLeak")
+    private val ctx = application.applicationContext
+    private val departureDateTimeFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
     fun onStartPlaceChange(value: String) {
         _uiState.update {
             it.copy(
@@ -95,20 +102,6 @@ class FindVehicleViewModel(
             }
         }
     }
-    companion object {
-        fun factory(context: Context): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                FindVehicleViewModel(
-                    airTransportRepository = AirTransportRepository(),
-                    airportRepository      = AirportRepository(context),
-                    bookingRepository      = BookingRepository(
-                        db      = TravelDB.getInstance(context),
-                        context = context
-                    )
-                )
-            }
-        }
-    }
 
     fun onNextClick(
         userId: String,
@@ -126,17 +119,17 @@ class FindVehicleViewModel(
                 option.toBookingEntity(
                     userId  = userId,
                     routeId = routeId,
-                    type    = when (_uiState.value.selectedTransport) {
-                        "Plane" -> "Pl"
-                        "Train" -> "Tr"
-                        "Bus"   -> "Bs"
-                        else    -> "Pl"
-                    },
+                    type    =  "Pl",
                     from = option.from,
                     to = option.to
                 )
             }
             bookingRepository.saveBookings(bookings, userId)
+
+            bookings.forEach { booking ->
+                scheduleTransportReminder(booking)
+            }
+
             onDone()
         }
     }
@@ -186,5 +179,32 @@ class FindVehicleViewModel(
                 )
             }
         }
+    }
+
+    private fun scheduleTransportReminder(booking: BookingEntity) {
+        val departureMs = parseDepartureMs(booking.date, booking.departureTime)
+        if (departureMs == null) {
+            Log.w("FindVehicleVM", "Не вдалось розпарсити час вильоту для ${booking.id}")
+            return
+        }
+
+        val alarmId = booking.id.hashCode()
+        TravelAlarmManager.scheduleTransportReminder(ctx, alarmId, departureMs)
+        saveAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.TRANSPORT, departureMs)
+
+        Log.d("FindVehicleVM", "Сповіщення заплановано для рейсу ${booking.id} на ${departureDateTimeFormat.parse("${booking.date} ${booking.departureTime}")?.time}")
+    }
+
+    fun cancelTransportReminder(booking: BookingEntity) {
+        val alarmId = booking.id.hashCode()
+        TravelAlarmManager.cancel(ctx, alarmId, TravelAlarmManager.ReminderType.TRANSPORT)
+        removeAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.TRANSPORT)
+    }
+
+    private fun parseDepartureMs(date: String, time: String): Long? {
+        if (date.isBlank() || time.isBlank()) return null
+        return runCatching {
+            departureDateTimeFormat.parse("$date $time")?.time
+        }.getOrNull()
     }
 }

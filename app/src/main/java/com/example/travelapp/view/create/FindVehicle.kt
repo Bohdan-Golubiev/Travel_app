@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.model.dataclasses.Airport
 import com.example.travelapp.viewmodel.create.FindVehicleViewModel
-import androidx.compose.ui.platform.LocalContext
 import com.example.travelapp.utils.LocalAppStrings
 
 data class BookingOption(
@@ -38,9 +37,7 @@ fun FindVehicleScreen(
     userId: String,
     routeId: String,
     onNextClick: (List<BookingOption>) -> Unit = {},
-    viewModel: FindVehicleViewModel = viewModel(
-        factory = FindVehicleViewModel.factory(LocalContext.current)
-    )
+    viewModel: FindVehicleViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val strings = LocalAppStrings.current

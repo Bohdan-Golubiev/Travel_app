@@ -7,14 +7,9 @@ import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 data class ActiveTripItem(
     val route: RouteEntity,
@@ -25,10 +20,7 @@ class ActiveTripsViewModel(application: Application) : AndroidViewModel(applicat
 
     private val repository = TravelRepository(TravelDB.getInstance(application), application)
 
-    private val today = SimpleDateFormat(
-        "yyyy-MM-dd",
-        Locale.getDefault()
-    ).format(Date())
+    private val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getActiveTrips(userId: String): Flow<List<ActiveTripItem>> =
