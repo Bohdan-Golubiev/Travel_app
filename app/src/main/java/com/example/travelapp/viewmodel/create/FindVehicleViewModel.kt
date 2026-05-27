@@ -18,7 +18,6 @@ import com.example.travelapp.data.repository.BookingRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
-import com.example.travelapp.notification.saveAlarm
 import java.text.SimpleDateFormat
 import java.util.Locale
 import android.util.Log
@@ -190,7 +189,6 @@ class FindVehicleViewModel(application: Application) : AndroidViewModel(applicat
 
         val alarmId = booking.id.hashCode()
         TravelAlarmManager.scheduleTransportReminder(ctx, alarmId, departureMs)
-        saveAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.TRANSPORT, departureMs)
 
         Log.d("FindVehicleVM", "Сповіщення заплановано для рейсу ${booking.id} на ${departureDateTimeFormat.parse("${booking.date} ${booking.departureTime}")?.time}")
     }

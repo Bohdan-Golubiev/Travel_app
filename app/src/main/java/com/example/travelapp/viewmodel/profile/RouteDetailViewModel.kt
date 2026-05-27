@@ -10,7 +10,6 @@ import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
-import com.example.travelapp.notification.saveAlarm
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -188,7 +187,6 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
 
         val alarmId = place.id.hashCode()
         TravelAlarmManager.scheduleLocationReminder(ctx, alarmId, visitMs)
-        saveAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION, visitMs)
     }
 
     private fun parsePlaceDate(dateStr: String): Long? {

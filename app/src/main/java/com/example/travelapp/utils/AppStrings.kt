@@ -190,6 +190,8 @@ data class AppStrings(
     val notifCheckOutMessage: String,
     val notifLocationTitle: String,
     val notifLocationMessage: String,
+
+    val notifications: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -371,6 +373,8 @@ val EnglishStrings = AppStrings(
     notifCheckOutMessage = "Today is your last day at the hotel",
     notifLocationTitle = "Location reminder",
     notifLocationMessage = "Today's location visit — at 08:00",
+
+    notifications = "Notifications",
 )
 
 val UkrainianStrings = AppStrings(
@@ -550,6 +554,8 @@ val UkrainianStrings = AppStrings(
     notifCheckOutMessage = "У вас залишився останній день перебування в готелі",
     notifLocationTitle = "Нагадування про локацію",
     notifLocationMessage = "Сьогодні відвідування локації — о 08:00",
+
+    notifications = "Сповіщення",
 )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

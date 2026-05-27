@@ -25,7 +25,6 @@ import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
-import com.example.travelapp.notification.saveAlarm
 import kotlinx.coroutines.CancellationException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -216,7 +215,6 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
         val alarmId = place.id.hashCode()
 
         TravelAlarmManager.scheduleLocationReminder(ctx, alarmId, visitMs)
-        saveAlarm(ctx, alarmId, TravelAlarmManager.ReminderType.LOCATION, visitMs)
     }
     private fun parsePlaceDate(dateStr: String): Long? {
         if (dateStr.isBlank()) return null

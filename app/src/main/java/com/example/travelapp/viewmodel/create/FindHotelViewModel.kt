@@ -10,8 +10,6 @@ import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.repository.HotelRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.notification.TravelAlarmManager
-import com.example.travelapp.notification.removeAlarm
-import com.example.travelapp.notification.saveAlarm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -262,11 +260,9 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
 
         val alarmIdIn = (hotel.id+hotel.dateFrom).hashCode()
         TravelAlarmManager.scheduleCheckInReminder(ctx, alarmIdIn, checkInMs)
-        saveAlarm(ctx, alarmIdIn, TravelAlarmManager.ReminderType.CHECK_IN, checkInMs)
 
         val alarmIdOut = (hotel.id+hotel.dateTo).hashCode()
         TravelAlarmManager.scheduleCheckOutReminder(ctx, alarmIdOut, checkOutMs)
-        saveAlarm(ctx, alarmIdOut, TravelAlarmManager.ReminderType.CHECK_OUT, checkOutMs)
 
         Log.d("FindHotelVM", "CHECK_IN сповіщення заплановано: ${hotel.name} (${hotel.dateFrom}) (${hotel.dateTo})")
     }

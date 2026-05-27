@@ -258,7 +258,8 @@ fun ProfileContent(
                         profileViewModel.closeSettingsMenu()
                         onSignOut()
                     },
-                    onLocaleChange = onLocaleChange
+                    onLocaleChange = onLocaleChange,
+                    profileViewModel = profileViewModel,
                 )
             }
         }
@@ -292,7 +293,8 @@ private fun SettingsDropdownMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
     onSignOut: () -> Unit,
-    onLocaleChange: (AppLocale) -> Unit
+    onLocaleChange: (AppLocale) -> Unit,
+    profileViewModel: ProfileViewModel
 ) {
     val strings       = LocalAppStrings.current
     val currentLocale = LocalAppLocale.current
@@ -349,6 +351,39 @@ private fun SettingsDropdownMenu(
         }
 
         HorizontalDivider(color = Color(0xFF2A4A5E))
+
+        DropdownMenuItem(
+            text = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = strings.notifications,
+                        color = Color.White
+                    )
+                    Switch(
+                        checked = profileViewModel.notificationsEnabled,
+                        onCheckedChange = { profileViewModel.toggleNotifications(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFF219EBC),
+                            checkedTrackColor = Color(0xFF1A3550),
+                            uncheckedThumbColor = Color(0xFFB0BEC5),
+                            uncheckedTrackColor = Color(0xFF2A4A5E)
+                        )
+                    )
+                }
+            },
+            onClick = {
+                profileViewModel.toggleNotifications(
+                    !profileViewModel.notificationsEnabled
+                )
+            }
+        )
+
+        HorizontalDivider(color = Color(0xFF2A4A5E))
+
         DropdownMenuItem(
             text = { Text(text = strings.signOut, color = Color(0xFFEF5350)) },
             onClick = onSignOut

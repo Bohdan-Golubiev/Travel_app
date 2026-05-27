@@ -61,7 +61,7 @@ object TravelAlarmManager {
         bookingId: Int,
         checkOutDayMs: Long,
     ) {
-        val triggerAt = buildTimeOnDay(checkOutDayMs, hour = 8, minute = 0)
+        val triggerAt = buildTimeOnDay(checkOutDayMs, hour = 9, minute = 0)
         schedule(context, bookingId, ReminderType.CHECK_OUT, triggerAt)
     }
 
@@ -82,11 +82,6 @@ object TravelAlarmManager {
         pi.cancel()
     }
 
-
-    fun cancelAll(context: Context, bookingId: Int) {
-        ReminderType.entries.forEach { cancel(context, bookingId, it) }
-    }
-
     private fun schedule(
         context: Context,
         bookingId: Int,
@@ -97,6 +92,7 @@ object TravelAlarmManager {
             Log.w("TravelAlarm", "[$type] Час уже минув, пропускаємо")
             return
         }
+        saveAlarm(context, bookingId, type, triggerAtMs)
 
         val strings = LocaleManager.getSavedLocale(context).toStrings()
 
@@ -117,8 +113,72 @@ object TravelAlarmManager {
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
             Log.d("TravelAlarm", "[$type] Заплановано на ${Date(triggerAtMs)}")
         }
+        scheduleSystemAlarm(context, bookingId, type, triggerAtMs)
     }
 
+    private fun scheduleSystemAlarm(
+        context: Context,
+        bookingId: Int,
+        type: ReminderType,
+        triggerAtMs: Long,
+    ) {
+        val strings = LocaleManager.getSavedLocale(context).toStrings()
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pi = buildPendingIntent(context, requestCode(bookingId, type), type, bookingId, strings)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (am.canScheduleExactAlarms()) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
+            } else {
+                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
+            }
+        } else {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
+        }
+    }
+    fun cancelSystemAlarmOnly(context: Context, bookingId: Int, type: ReminderType) {
+        val strings = LocaleManager.getSavedLocale(context).toStrings()
+        val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pi = buildPendingIntent(context, requestCode(bookingId, type), type, bookingId, strings)
+        am.cancel(pi)
+        pi.cancel()
+    }
+
+    fun cancelAllSystemAlarms(context: Context) {
+        val prefs = context.getSharedPreferences("travel_alarms", Context.MODE_PRIVATE)
+        prefs.all.keys.forEach { key ->
+            val parts = key.split("_")
+            if (parts.size < 2) return@forEach
+            val bookingId = parts[0].toIntOrNull() ?: return@forEach
+            val type = runCatching {
+                ReminderType.valueOf(parts.drop(1).joinToString("_"))
+            }.getOrNull() ?: return@forEach
+            cancelSystemAlarmOnly(context, bookingId, type)
+        }
+    }
+    fun restoreAllSavedAlarms(context: Context) {
+        val prefs = context.getSharedPreferences("travel_alarms", Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+
+        prefs.all.forEach { (key, value) ->
+            Log.d("TravelAlarm", "  key=$key value=$value")
+            if (value !is String) return@forEach
+            val parts = key.split("_")
+            if (parts.size < 2) return@forEach
+            val bookingId = parts[0].toIntOrNull() ?: return@forEach
+            val type = runCatching {
+                ReminderType.valueOf(parts.drop(1).joinToString("_"))
+            }.getOrNull() ?: return@forEach
+            val triggerMs = value.toLongOrNull() ?: return@forEach
+
+            if (triggerMs <= now) {
+                removeAlarm(context, bookingId, type)
+                return@forEach
+            }
+
+            scheduleSystemAlarm(context, bookingId, type, triggerMs)
+        }
+    }
     private fun buildPendingIntent(
         context: Context,
         requestCode: Int,
