@@ -276,7 +276,7 @@ val EnglishStrings = AppStrings(
     routeUp = "Route",
 
     noReviewsScreen = "Check-out",
-    locations = "Duration",
+    locations = "Locations",
     hotels =  "Hotels",
     flights = "Flights",
     deleteReview = "Total",

@@ -34,52 +34,26 @@ class ReviewsViewModel(application: Application) : AndroidViewModel(application)
             runCatching {
                 val reviews = repository.getReviewsByUserId(userId)
 
-                val placeReviews = mutableListOf<ReviewItem.PlaceReview>()
-                val hotelReviews = mutableListOf<ReviewItem.HotelReview>()
+                val placeReviews   = mutableListOf<ReviewItem.PlaceReview>()
+                val hotelReviews   = mutableListOf<ReviewItem.HotelReview>()
                 val bookingReviews = mutableListOf<ReviewItem.BookingReview>()
 
                 reviews.forEach { review ->
                     when (review.targetType) {
-                        "place" -> {
-                            val place = repository.getPlaceById(review.targetId)
-                            placeReviews += ReviewItem.PlaceReview(
-                                review       = review,
-                                placeName    = place?.name ?: review.targetId,
-                                placeLocation = place?.location ?: ""
-                            )
-                        }
-                        "hotel" -> {
-                            val hotel = repository.getHotelByKey(review.targetId)
-                            hotelReviews += ReviewItem.HotelReview(
-                                review       = review,
-                                hotelName    = hotel?.name ?: review.targetId,
-                                hotelAddress = hotel?.address ?: ""
-                            )
-                        }
-                        "booking" -> {
-                            val booking = repository.getBookingByKey(review.targetId)
-                            bookingReviews += ReviewItem.BookingReview(
-                                review       = review,
-                                nameBooking  = booking?.name ?: "Unknown",
-                                from         = booking?.from ?: "Unknown",
-                                to           = booking?.to ?: "Unknown",
-                                date         = booking?.date ?: ""
-                            )
-                        }
+                        "place"   -> placeReviews   += ReviewItem.PlaceReview(review)
+                        "hotel"   -> hotelReviews   += ReviewItem.HotelReview(review)
+                        "booking" -> bookingReviews += ReviewItem.BookingReview(review)
                     }
                 }
 
                 _uiState.value = _uiState.value.copy(
-                    placeReviews = placeReviews,
-                    hotelReviews = hotelReviews,
+                    placeReviews   = placeReviews,
+                    hotelReviews   = hotelReviews,
                     bookingReviews = bookingReviews,
-                    isLoading    = false
+                    isLoading      = false
                 )
             }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error     = e.message
-                )
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
             }
         }
     }
@@ -89,8 +63,9 @@ class ReviewsViewModel(application: Application) : AndroidViewModel(application)
             repository.deleteReview(userId, review)
         }
         _uiState.value = _uiState.value.copy(
-            placeReviews = _uiState.value.placeReviews.filter { it.review.id != review.id },
-            hotelReviews = _uiState.value.hotelReviews.filter { it.review.id != review.id }
+            placeReviews   = _uiState.value.placeReviews.filter   { it.review.id != review.id },
+            hotelReviews   = _uiState.value.hotelReviews.filter   { it.review.id != review.id },
+            bookingReviews = _uiState.value.bookingReviews.filter { it.review.id != review.id }
         )
     }
 }

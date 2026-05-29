@@ -185,17 +185,18 @@ fun NavGraphBuilder.profileGraph(
         val strings = LocalAppStrings.current
         LaunchedEffect(Unit) { onTitleChange(strings.editReview) }
         sharedViewModel.selectedReview?.let { item ->
+            val review = item.review
             EditReviewScreen(
-                review        = item.review,
+                review        = review,
                 placeName     = when (item) {
-                    is ReviewItem.PlaceReview   -> item.placeName
-                    is ReviewItem.HotelReview   -> item.hotelName
-                    is ReviewItem.BookingReview -> strings.from + item.from + " ${strings.toLow} " + item.to
+                    is ReviewItem.PlaceReview   -> review.targetName
+                    is ReviewItem.HotelReview   -> review.targetName
+                    is ReviewItem.BookingReview -> strings.from + review.from + " ${strings.toLow} " + review.to
                 },
                 placeLocation = when (item) {
-                    is ReviewItem.PlaceReview   -> item.placeLocation
-                    is ReviewItem.HotelReview   -> item.hotelAddress
-                    is ReviewItem.BookingReview -> strings.flyBy + item.nameBooking + " " + strings.In + item.date
+                    is ReviewItem.PlaceReview   -> review.location
+                    is ReviewItem.HotelReview   -> review.location
+                    is ReviewItem.BookingReview -> strings.flyBy + review.targetName + " " + strings.In + review.date
                 },
                 userId   = user.uid,
                 onSubmit = { nav.popBackStack() }

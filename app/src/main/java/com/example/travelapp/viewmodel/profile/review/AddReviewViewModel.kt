@@ -59,11 +59,30 @@ class AddReviewViewModel(application: Application) : AndroidViewModel(applicatio
                     userName   = user?.name ?: "Unknown",
                     targetId   = target.googlePlaceId,
                     targetType = target.targetType,
-                    mark       = state.selectedRating,
-                    text       = state.commentText
+                    targetName = target.name,
+                    location   = when (target) {
+                        is ReviewTarget.Place   -> target.entity.location
+                        is ReviewTarget.Hotel   -> target.entity.address
+                        is ReviewTarget.Booking -> ""
+                    },
+                    from = when (target) {
+                        is ReviewTarget.Booking -> target.entity.from
+                        else                    -> ""
+                    },
+                    to = when (target) {
+                        is ReviewTarget.Booking -> target.entity.to
+                        else                    -> ""
+                    },
+                    date = when (target) {
+                        is ReviewTarget.Booking -> target.entity.date
+                        is ReviewTarget.Place   -> ""
+                        is ReviewTarget.Hotel   -> ""
+                    },
+                    mark      = state.selectedRating,
+                    text      = state.commentText
                         .replace(Regex("\\n\\s*\\n+"), "\n")
                         .trim(),
-                    createdAt  = System.currentTimeMillis()
+                    createdAt = System.currentTimeMillis()
                 )
 
                 repository.addReview(review)

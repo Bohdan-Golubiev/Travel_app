@@ -6,22 +6,14 @@ sealed class ReviewItem {
     abstract val review: ReviewEntity
 
     data class PlaceReview(
-        override val review: ReviewEntity,
-        val placeName: String,
-        val placeLocation: String
+        override val review: ReviewEntity
     ) : ReviewItem()
 
     data class HotelReview(
-        override val review: ReviewEntity,
-        val hotelName: String,
-        val hotelAddress: String
+        override val review: ReviewEntity
     ) : ReviewItem()
 
     data class BookingReview(
-        override val review: ReviewEntity,
-        var nameBooking: String,
-        val from: String,
-        val to: String,
-        val date: String
+        override val review: ReviewEntity
     ) : ReviewItem()
 }

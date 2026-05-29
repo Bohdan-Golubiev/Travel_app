@@ -93,8 +93,8 @@ fun ReviewsScreen(
                                 key   = { "place_${it.review.id}" }
                             ) { item ->
                                 ReviewCard(
-                                    title    = item.placeName,
-                                    subtitle = item.placeLocation,
+                                    title    = item.review.targetName,
+                                    subtitle = item.review.location,
                                     review   = item.review,
                                     onDelete = { viewModel.deleteReview(userId, item.review) },
                                     onEdit   = { onEdit(item) }
@@ -119,8 +119,8 @@ fun ReviewsScreen(
                                 key   = { "hotel_${it.review.id}" }
                             ) { item ->
                                 ReviewCard(
-                                    title    = item.hotelName,
-                                    subtitle = item.hotelAddress,
+                                    title    = item.review.targetName,
+                                    subtitle = item.review.location,
                                     review   = item.review,
                                     onDelete = { viewModel.deleteReview(userId, item.review) },
                                     onEdit   = { onEdit(item) }
@@ -145,9 +145,8 @@ fun ReviewsScreen(
                                 key   = { "booking_${it.review.id}" }
                             ) { item ->
                                 ReviewCard(
-                                    title    = strings.from + item.from + " ${strings.toLow} " + item.to,
-                                    subtitle = strings.flyBy + item.nameBooking + "\n" +
-                                            strings.In + item.date,
+                                    title    = strings.from + item.review.from + " ${strings.toLow} " + item.review.to,
+                                    subtitle = strings.flyBy + item.review.targetName + "\n" + strings.In + item.review.date,
                                     review   = item.review,
                                     onDelete = { viewModel.deleteReview(userId, item.review) },
                                     onEdit   = { onEdit(item) }
