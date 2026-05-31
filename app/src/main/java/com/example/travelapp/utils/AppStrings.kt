@@ -117,6 +117,9 @@ data class AppStrings(
 
     val createdSuccessful: String,
     val makeBooking: String,
+    val toRoutes: String,
+    val addBookings: String,
+    val aboutRoute: String,
 
     val startPlace: String,
     val endPlace: String,
@@ -300,6 +303,9 @@ val EnglishStrings = AppStrings(
 
     createdSuccessful = "created successful",
     makeBooking = "Make booking for trip",
+    toRoutes = "To list of routes",
+    addBookings = "Add bookings",
+    aboutRoute = "About route",
 
     startPlace = "Start place (city)",
     endPlace = "End place (city)",
@@ -481,6 +487,9 @@ val UkrainianStrings = AppStrings(
 
     createdSuccessful = "успішно збережено",
     makeBooking = "Створити бронювання для подорожі",
+    toRoutes = "До списку маршрутів",
+    addBookings = "Додати бронювання",
+    aboutRoute = "Про маршрут",
 
     startPlace = "Початкове місце (місто)",
     endPlace = "Кінцеве місце (місто)",

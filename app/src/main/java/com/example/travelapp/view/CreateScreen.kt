@@ -107,7 +107,11 @@ fun NavGraphBuilder.createGraph(
             },
             onNext = { place ->
                 nav.navigate(CreateNavigation.Place.createRoute(routeId, place.id, place.name))
-            }
+            },
+            onMakeBooking = {
+                sharedViewModel.pendingRouteId = routeId
+                nav.navigate(CreateNavigation.FindVehicle.withArgs(routeId))
+            },
         )
     }
 
@@ -166,6 +170,11 @@ fun NavGraphBuilder.createGraph(
             routeName     = routeName,
             onMakeBooking = {
                 nav.navigate(CreateNavigation.FindVehicle.withArgs(sharedViewModel.pendingRouteId))
+            },
+            onDoneClick = {
+                nav.navigate(CreateNavigation.ListOfRoutes.route) {
+                    popUpTo(RootRoutes.CREATE) { inclusive = false }
+                }
             }
         )
     }

@@ -1,5 +1,6 @@
 package com.example.travelapp.view.create
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,7 +29,8 @@ private val CardBackground  = Color(0xFFDDDDDD)
 @Composable
 fun RouteCreatedScreen(
     routeName: String,
-    onMakeBooking: () -> Unit
+    onMakeBooking: () -> Unit,
+    onDoneClick: () -> Unit,
 ) {
     val strings = LocalAppStrings.current
     Box(
@@ -74,6 +77,22 @@ fun RouteCreatedScreen(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center
+                )
+            }
+            OutlinedButton(
+                onClick = onDoneClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color(0xFF219EBC))
+            ) {
+                Text(
+                    text = strings.toRoutes,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                    color = Color(0xFF219EBC)
                 )
             }
         }
