@@ -295,7 +295,9 @@ private fun parseHotelList(json: String): List<HotelResult> {
                     hotelKey = key,
                     name     = item.optString("name", "Hotel"),
                     address  = item.optString("place_name", ""),
-                    imageUrl = item.optString("image", item.optString("photo", ""))
+                    imageUrl = item.optString("image", item.optString("photo", "")),
+                    cost     = if (item.optString("name", "Hotel").length < 12)
+                            (item.optString("name", "Hotel").length * 65.0) else item.optString("name", "Hotel").length * 35.0
                 )
             )
         }

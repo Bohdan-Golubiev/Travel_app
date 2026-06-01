@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -275,7 +276,7 @@ private fun SelectedHotelItem(
                 color    = Color.DarkGray
             )
             Text(
-                text     = strings.total + ": ${entry.totalCost} $",
+                text     = strings.total + ": ${entry.totalCost} ₴",
                 fontSize = 12.sp,
                 color    = Color.Black
             )
@@ -343,7 +344,7 @@ private fun HotelOptionItem(
 
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text     = strings.costPerDay + "${hotel.cost} $",
+                text     = strings.costPerDay + "${hotel.cost} ₴",
                 fontSize = 14.sp,
                 color    = Color.Black,
                 modifier = Modifier.weight(1f)
@@ -380,7 +381,7 @@ private fun HotelOptionItem(
                             color    = Color.Black
                         )
                         Text(
-                            text     = strings.totalCost +"${itemState.days * hotel.cost} $",
+                            text     = strings.totalCost +"${itemState.days * hotel.cost} ₴",
                             fontSize = 13.sp,
                             color    = Color.Black
                         )
@@ -393,13 +394,15 @@ private fun HotelOptionItem(
                                 containerColor = if (isAlreadySelected) Color(0xFF388E3C) else Color(0xFF4CAF50),
                                 contentColor   = Color.White
                             ),
-                            contentPadding  = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                            contentPadding  = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                             modifier        = Modifier.height(36.dp)
                         ) {
                             Text(
                                 text     = if (isAlreadySelected) strings.update else strings.addToTrip,
                                 fontSize = 13.sp,
-                                maxLines = 1
+                                maxLines = 1,
+                                softWrap = false,
+                                overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }

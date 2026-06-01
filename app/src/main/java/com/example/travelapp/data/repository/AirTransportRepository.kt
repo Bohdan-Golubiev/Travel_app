@@ -44,6 +44,8 @@ class AirTransportRepository {
         val flightCode = flight.iata ?: return null
         if (!isValidFlightCode(flightCode)) return null
 
+        val name = "${airline.name ?: "Unknown"} · $flightCode".trim()
+
         val depTime = departure.scheduled
             ?.substringAfter("T")
             ?.substring(0, 5)
@@ -68,10 +70,12 @@ class AirTransportRepository {
             ?.let { "${it[2]}.${it[1]}.${it[0]}" }
 
         return BookingOption(
-            name = "${airline.name ?: "Unknown"} · $flightCode".trim(),
+            name = name,
             time = "$depTime → $arrTime",
             date = "$date",
-            cost = flight_status,
+            cost = if (name.length < 10) name.length * 180.0
+            else name.length * 120.0,
+            status = flight_status,
             from = from,
             to = to
         )

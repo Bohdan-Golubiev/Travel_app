@@ -24,7 +24,8 @@ data class BookingOption(
     val name: String,
     val time: String,
     val date: String,
-    val cost: String,
+    val status: String,
+    val cost: Double,
     val from: String,
     val to  :String
 )
@@ -167,6 +168,7 @@ private fun BookingOptionItem(
     isSelected: Boolean,
     onAddClick: () -> Unit
 ) {
+    val strings = LocalAppStrings.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -180,39 +182,85 @@ private fun BookingOptionItem(
                 shape = RoundedCornerShape(10.dp)
             )
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
-        Text(
-            text = option.name,
-            fontSize = 15.sp,
-            color = Color.Black,
-            modifier = Modifier.weight(1f)
-        )
-
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(end = 12.dp)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = option.time, fontSize = 13.sp, color = Color.Black)
-            Text(text = option.date, fontSize = 13.sp, color = Color.Black)
-            Text(text = option.cost, fontSize = 13.sp, color = Color.Black)
-        }
 
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    if (isSelected) Color.DarkGray else ButtonBackground,
-                    RoundedCornerShape(8.dp)
-                )
-                .border(1.dp, Color.Gray.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            IconButton(onClick = onAddClick, modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = strings.name + option.name,
+                        fontSize = 15.sp,
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = strings.time + ": " + option.time,
+                        fontSize = 13.sp,
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = strings.date + ": " + option.date,
+                        fontSize = 13.sp,
+                        color = Color.Black
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            if (isSelected) Color.DarkGray else ButtonBackground,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            1.dp,
+                            Color.Gray.copy(alpha = 0.4f),
+                            RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = onAddClick,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Text(
+                            text = if (isSelected) "✓" else "+",
+                            fontSize = 22.sp,
+                            color = if (isSelected) Color.White else Color.Black
+                        )
+                    }
+                }
+            }
+
+            HorizontalDivider()
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
-                    text = if (isSelected) "✓" else "+",
-                    fontSize = 22.sp,
-                    color = if (isSelected) Color.White else Color.Black
+                    text = "Вартість",
+                    fontSize = 13.sp,
+                    color = Color.Gray
+                )
+
+                Text(
+                    text = "${option.cost} ₴",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
                 )
             }
         }

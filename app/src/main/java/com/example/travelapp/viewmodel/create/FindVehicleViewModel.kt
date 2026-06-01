@@ -144,7 +144,7 @@ class FindVehicleViewModel(application: Application) : AndroidViewModel(applicat
         val flightCode = name.substringAfterLast("·").trim()
 
         return BookingEntity(
-            id            = "${type}_${flightCode}_${date}_${routeId}".uppercase()
+            id            = "${type}_${flightCode}_${System.currentTimeMillis()}_${routeId}".uppercase()
                 .replace(" ", "")
                 .replace("·", ""),
             userId        = userId,
@@ -157,8 +157,8 @@ class FindVehicleViewModel(application: Application) : AndroidViewModel(applicat
             from          = from,
             to            = to,
             createdAt     = System.currentTimeMillis(),
-            cost          = 100.0,
-            status        = cost,
+            cost          = cost,
+            status        = status,
             isSynced      = false
         )
     }

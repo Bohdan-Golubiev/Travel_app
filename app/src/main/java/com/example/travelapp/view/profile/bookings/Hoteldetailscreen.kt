@@ -98,10 +98,10 @@ private fun HotelDetailContent(
         }
 
         InfoCard(title = strings.cost) {
-            InfoRow(label = strings.perDay, value = "%.2f".format(hotel.costPerDay))
+            InfoRow(label = strings.perDay, value = "%.2f".format(hotel.costPerDay) + "  ₴")
             InfoRow(
                 label = strings.total,
-                value = "%.2f".format(hotel.totalCost),
+                value = "%.2f".format(hotel.totalCost) + "  ₴",
                 valueColor = Color(0xFF4FC3F7),
             )
         }

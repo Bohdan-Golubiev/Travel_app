@@ -1,27 +1,11 @@
 package com.example.travelapp.view.profile.bookings
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,7 +21,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingDetailScreen(
     booking: BookingEntity,
@@ -47,7 +30,6 @@ fun BookingDetailScreen(
     val viewModel: BookingDetailViewModel = viewModel()
     val reviews by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
-
     val avg by viewModel.avgRating.collectAsState()
 
     val targetId = remember(booking.id) { booking.id.removeSuffix(booking.routeId.uppercase()) }
@@ -57,89 +39,98 @@ fun BookingDetailScreen(
         viewModel.loadReviews(targetId)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            item {
-                BookingDetailRow(leftText = strings.direction, rightText = "${booking.from} → ${booking.to}")
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-            item {
-                BookingDetailRow(
-                    leftText = strings.service,
-                    rightText = when (booking.type) {
-                        "Pl" -> strings.plane
-                        "Tr" -> "Train"
-                        "Bs" -> "Bus"
-                        else -> "Unknown"
-                    }
-                )
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-            item {
-                BookingDetailRow(leftText = strings.cost, rightText = "${booking.cost} $")
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-            item {
-                BookingDetailRow(leftText = strings.status, rightText = booking.status)
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-            item {
-                BookingDetailRow(leftText = strings.createdAt, rightText = booking.date)
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-            item {
-                BookingDetailRow(leftText = strings.departure, rightText = booking.departureTime)
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-            item {
-                BookingDetailRow(leftText = strings.arrival, rightText = booking.arrivalTime)
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
+    val serviceLabel = when (booking.type) {
+        "Pl" -> strings.plane
+        "Tr" -> "Train"
+        "Bs" -> "Bus"
+        else -> "Unknown"
+    }
 
-            item {
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF1A3A4E),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = strings.reviews + "( " + reviews.size + " )",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
+                        text = "${booking.from} → ${booking.to}",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    if (isLoadingReviews) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
-                            color = Color(0xFF219EBC)
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "⭐ ${"%.1f".format(avg)}",
-                        color = Color.White)
-                }
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-            }
-
-            if (!isLoadingReviews && reviews.isEmpty()) {
-                item {
-                    Text(
-                        text = strings.noReviews,
-                        fontSize = 13.sp,
-                        color = Color(0xFF5E7A8A),
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                        text = serviceLabel,
+                        fontSize = 14.sp,
+                        color = Color(0xFFB0BEC5)
                     )
                 }
+            }
+
+            InfoCard(title = strings.departure.uppercase()) {
+                InfoRow(label = strings.departure, value = booking.departureTime)
+                InfoRow(label = strings.arrival, value = booking.arrivalTime)
+            }
+
+            InfoCard(title = strings.cost.uppercase()) {
+                InfoRow(
+                    label = strings.cost,
+                    value = "${booking.cost}  ₴",
+                    valueColor = Color(0xFF4FC3F7)
+                )
+                InfoRow(label = strings.status, value = booking.status)
+            }
+
+            InfoCard(title = strings.createdAt.uppercase()) {
+                InfoRow(label = strings.createdAt, value = booking.date)
+            }
+
+            HorizontalDivider(color = Color(0xFF2A4A5E))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = strings.reviews + " (${reviews.size})",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
+                )
+                if (isLoadingReviews) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFF219EBC)
+                    )
+                }
+                Text(
+                    text = "⭐ ${"%.1f".format(avg)}",
+                    color = Color.White
+                )
+            }
+
+            HorizontalDivider(color = Color(0xFF2A4A5E))
+
+            if (!isLoadingReviews && reviews.isEmpty()) {
+                Text(
+                    text = strings.noReviews,
+                    fontSize = 13.sp,
+                    color = Color(0xFF5E7A8A),
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
             } else {
-                items(reviews.size) { index ->
-                    BookingReviewItem(review = reviews[index], currentUserId = userId)
+                reviews.forEach { review ->
+                    BookingReviewItem(review = review, currentUserId = userId)
                     HorizontalDivider(color = Color(0xFF2A4A5E))
                 }
             }
@@ -152,7 +143,7 @@ fun BookingDetailScreen(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
         ) {
             Text(strings.addReview)
         }
@@ -166,14 +157,10 @@ private fun BookingReviewItem(review: ReviewEntity, currentUserId: String) {
             .format(Date(review.createdAt))
     }
     val strings = LocalAppStrings.current
-
-
     val displayName = if (review.userId == currentUserId) strings.you else review.userName
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Row(
@@ -201,15 +188,53 @@ private fun BookingReviewItem(review: ReviewEntity, currentUserId: String) {
 }
 
 @Composable
-private fun BookingDetailRow(leftText: String, rightText: String) {
+private fun InfoCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = Color(0xFF132D3E),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF607D8B),
+                letterSpacing = 0.8.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            content()
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String,
+    valueColor: Color = Color.White,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = leftText, fontSize = 15.sp, color = Color.White, fontWeight = FontWeight.Medium)
-        Text(text = rightText, fontSize = 15.sp, color = Color(0xFFB0BEC5))
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = Color(0xFFB0BEC5),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            color = valueColor,
+            fontWeight = FontWeight.Normal
+        )
     }
 }

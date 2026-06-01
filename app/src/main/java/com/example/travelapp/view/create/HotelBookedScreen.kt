@@ -188,7 +188,7 @@ private fun BookedHotelCard(entry: SelectedHotelEntry) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text       = "${entry.totalCost} $",
+                    text       = "${entry.totalCost} ₴",
                     fontSize   = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color      = GreenOk
@@ -226,11 +226,11 @@ private fun BookedVehicleCard(vehicle: BookingOption) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 InfoRow(label = strings.from + ": ", value = vehicle.from)
                 InfoRow(label = strings.to + ": ",   value = vehicle.to)
-                InfoRow(label = strings.daysBooked + ": ", value = vehicle.date)
+                InfoRow(label = strings.date + ": ", value = vehicle.date)
                 InfoRow(label = strings.time + ": ", value = vehicle.time)
             }
             Text(
-                text       = "100 $",
+                text       = vehicle.cost.toString() + " ₴",
                 fontSize   = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color      = GreenOk

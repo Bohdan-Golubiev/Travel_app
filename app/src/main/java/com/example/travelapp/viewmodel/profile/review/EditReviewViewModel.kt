@@ -58,6 +58,7 @@ class EditReviewViewModel(application: Application) : AndroidViewModel(applicati
                     text = state.commentText
                         .replace(Regex("\\n\\s*\\n+"), "\n")
                         .trim(),
+                    createdAt = System.currentTimeMillis(),
                     isSynced = false
                 )
                 repository.addReview(updated)
