@@ -21,19 +21,25 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
-import com.example.travelapp.viewmodel.profile.RouteDetailViewModel
+import com.example.travelapp.viewmodel.create.routes.RouteDetailViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.text.SimpleDateFormat
@@ -52,6 +58,8 @@ fun RouteDetailScreen(
     viewModel: RouteDetailViewModel = viewModel()
 ) {
     val places by viewModel.getPlaces(routeId).collectAsState(initial = emptyList())
+    val bookings by viewModel.getBookingsForRoute(userId, routeId).collectAsState(initial = emptyList())
+    val hotels by viewModel.getHotelsForRoute(userId, routeId).collectAsState(initial = emptyList())
     val isEditing by viewModel.isEditing.collectAsState()
     val editedName by viewModel.editedName.collectAsState()
     val editedDescription by viewModel.editedDescription.collectAsState()
@@ -80,6 +88,7 @@ fun RouteDetailScreen(
     val strings = LocalAppStrings.current
 
     var routeInfoExpanded by remember { mutableStateOf(true) }
+    var bookingsExpanded by remember { mutableStateOf(false) }
     var searchFieldOffsetY by remember { mutableIntStateOf(0) }
 
     if (timelineError) {
@@ -313,7 +322,87 @@ fun RouteDetailScreen(
                 } else {
                     PlaceItem(place = place, onClick = { onNext(place) })
                 }
-                HorizontalDivider(color = Color(0xFF2A4A5E))
+            }
+
+            if (!isEditing && (bookings.isNotEmpty() || hotels.isNotEmpty())) {
+                item(key = "bookings_header") {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { bookingsExpanded = !bookingsExpanded },
+                        color = Color.Transparent
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = strings.bookings,
+                                fontSize = 14.sp,
+                                color = Color(0xFFB0BEC5)
+                            )
+                            Icon(
+                                imageVector = if (bookingsExpanded)
+                                    Icons.Default.KeyboardArrowUp
+                                else
+                                    Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = Color(0xFFB0BEC5)
+                            )
+                        }
+                    }
+                    HorizontalDivider(color = Color(0xFF2A4A5E))
+                }
+
+                item(key = "bookings_content") {
+                    AnimatedVisibility(
+                        visible = bookingsExpanded,
+                        enter = expandVertically(animationSpec = tween(200)),
+                        exit = shrinkVertically(animationSpec = tween(200))
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            if (bookings.isNotEmpty()) {
+                                Text(
+                                    text = strings.flights,
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF219EBC),
+                                    modifier = Modifier.padding(
+                                        start = 16.dp,
+                                        top = 10.dp,
+                                        bottom = 4.dp
+                                    )
+                                )
+                                bookings.forEach { booking ->
+                                    BookingItem(
+                                        booking = booking,
+                                        strings = strings
+                                    )
+                                }
+                            }
+                            if (hotels.isNotEmpty()) {
+                                Text(
+                                    text = strings.hotels,
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF219EBC),
+                                    modifier = Modifier.padding(
+                                        start = 16.dp,
+                                        top = 10.dp,
+                                        bottom = 4.dp
+                                    )
+                                )
+                                hotels.forEach { hotel ->
+                                    HotelItem(
+                                        hotel = hotel,
+                                        strings = strings,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -362,43 +451,37 @@ fun RouteDetailScreen(
 
         //кнопки додання/редагування
         if (!isEditing) {
-            Column(
+            Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(Color.Transparent)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                HorizontalDivider(color = Color(0xFF2A4A5E))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Button(
+                    onClick = onMakeBooking,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
                 ) {
-                    Button(
-                        onClick = onMakeBooking,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF219EBC))
-                    ) {
-                        Text(strings.addBookings)
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.startEditing(
-                                routeName,
-                                routeDescription,
-                                places,
-                                routeId
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = ButtonDefaults.outlinedButtonBorder,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
-                    ) {
-                        Text(strings.edit)
-                    }
+                    Text(strings.addBookings)
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.startEditing(
+                            routeName,
+                            routeDescription,
+                            places,
+                            routeId
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = ButtonDefaults.outlinedButtonBorder,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Text(strings.edit)
                 }
             }
         }
@@ -513,26 +596,334 @@ private fun EditablePlaceItem(
 
 @Composable
 private fun PlaceItem(place: PlaceEntity, onClick: () -> Unit) {
-    TextButton(
+    Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(0.dp),
-        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF112233)),
+        border = BorderStroke(1.dp, Color(0xFF1E3A50))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(text = place.name, fontSize = 15.sp, color = Color.White)
-                Text(text = place.location, fontSize = 13.sp, color = Color(0xFFB0BEC5))
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0xFF1B3A4B),
+                modifier = Modifier.size(42.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Text(text = "📍", fontSize = 20.sp)
+                }
             }
-            Text(text = place.visitDate, fontSize = 13.sp, color = Color(0xFFB0BEC5))
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = place.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = place.location,
+                    fontSize = 12.sp,
+                    color = Color(0xFFB0BEC5),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            if (place.visitDate.isNotBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF1B3A4B)
+                ) {
+                    Text(
+                        text = place.visitDate,
+                        fontSize = 12.sp,
+                        color = Color(0xFF219EBC),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+@Composable
+private fun BookingItem(booking: BookingEntity, strings: AppStrings) {
+
+    val formattedCost = "%.0f ₴".format(booking.cost)
+    val formattedDate = runCatching {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outSdf = SimpleDateFormat("dd MMM yyyy", Locale("uk"))
+        outSdf.format(sdf.parse(booking.date)!!)
+    }.getOrElse { booking.date }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF112233)),
+        border = BorderStroke(1.dp, Color(0xFF1E3A50))
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF1B3A4B)
+                    ) {
+                        Text(
+                            text = "✈",
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Color(0xFFFFFFFF)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = booking.name,
+                            fontSize = 14.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formattedDate,
+                                fontSize = 12.sp,
+                                color = Color(0xFFB0BEC5)
+                            )
+                        }
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF1A3D2B)
+                ) {
+                    Text(
+                        text = formattedCost,
+                        fontSize = 14.sp,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFF1E3A50))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = booking.from,
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = booking.departureTime,
+                        fontSize = 14.sp,
+                        color = Color(0xFF219EBC)
+                    )
+                    Text(text = strings.departure, fontSize = 12.sp, color = Color(0xFF6B8FA8))
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.weight(1f)) {
+                    Text(text = "─ ─ ─ ✈ ─ ─ ─", fontSize = 10.sp, color = Color(0xFF2A4A5E))
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = booking.to,
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = booking.arrivalTime,
+                        fontSize = 14.sp,
+                        color = Color(0xFF219EBC)
+                    )
+                    Text(text = strings.arrival, fontSize = 12.sp, color = Color(0xFF6B8FA8))
+                }
+            }
+        }
+    }
+}
+@Composable
+private fun HotelItem(hotel: HotelEntity, strings: AppStrings) {
+    val formattedTotal = "%.0f ₴".format(hotel.totalCost)
+    val formattedPerDay = "%.0f ₴/".format(hotel.costPerDay) + strings.day
+
+    fun formatDate(raw: String): String = runCatching {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outSdf = SimpleDateFormat("dd MMM", Locale("uk"))
+        outSdf.format(sdf.parse(raw)!!)
+    }.getOrElse { raw }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF112233)),
+        border = BorderStroke(1.dp, Color(0xFF1E3A50))
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF1B3A4B)
+                    ) {
+                        Text(
+                            text = "🏨",
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = hotel.name,
+                            fontSize = 14.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = formattedPerDay,
+                            fontSize = 11.sp,
+                            color = Color(0xFF219EBC)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF1A3D2B)
+                ) {
+                    Text(
+                        text = formattedTotal,
+                        fontSize = 14.sp,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = Color(0xFF1E3A50))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "📍", fontSize = 12.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = hotel.address,
+                    fontSize = 12.sp,
+                    color = Color(0xFFB0BEC5)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Заїзд
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFF1B3A4B),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = strings.checkInLet, fontSize = 12.sp, color = Color(0xFF6B8FA8))
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = formatDate(hotel.dateFrom),
+                            fontSize = 15.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Text(text = strings.total, fontSize = 14.sp, color = Color.White)
+                    Text(
+                        text = "${hotel.days} " + strings.days,
+                        fontSize = 11.sp,
+                        color = Color(0xFF219EBC),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Виїзд
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFF1B3A4B),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = strings.checkOutLet, fontSize = 12.sp, color = Color(0xFF6B8FA8))
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = formatDate(hotel.dateTo),
+                            fontSize = 15.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
         }
     }
 }

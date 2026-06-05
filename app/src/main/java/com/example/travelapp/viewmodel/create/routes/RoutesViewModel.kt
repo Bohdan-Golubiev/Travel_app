@@ -1,4 +1,4 @@
-package com.example.travelapp.viewmodel.profile
+package com.example.travelapp.viewmodel.create.routes
 
 import android.annotation.SuppressLint
 import android.app.Application

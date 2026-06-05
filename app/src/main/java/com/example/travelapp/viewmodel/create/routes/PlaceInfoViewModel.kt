@@ -1,0 +1,95 @@
+package com.example.travelapp.viewmodel.create.routes
+
+import android.app.Application
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.travelapp.data.entity.ReviewEntity
+import com.example.travelapp.data.repository.FirestoreRepository
+import com.example.travelapp.data.repository.ReviewRepository
+import com.example.travelapp.data.repository.WeatherInfo
+import com.example.travelapp.data.repository.WeatherRepository
+import com.example.travelapp.db.TravelDB
+import com.example.travelapp.viewmodel.create.PlaceItem
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class PlaceInfoViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val reviewRepository = ReviewRepository(TravelDB.getInstance(application), application)
+    private val weatherRepository = WeatherRepository()
+
+    private val _weather = MutableStateFlow<WeatherInfo?>(null)
+    val weather: StateFlow<WeatherInfo?> = _weather.asStateFlow()
+
+    private val _isLoadingWeather = MutableStateFlow(false)
+    val isLoadingWeather: StateFlow<Boolean> = _isLoadingWeather.asStateFlow()
+
+    private val _reviews = MutableStateFlow<List<ReviewEntity>>(emptyList())
+    val reviews: StateFlow<List<ReviewEntity>> = _reviews.asStateFlow()
+
+    private val _isLoadingReviews = MutableStateFlow(false)
+    val isLoadingReviews: StateFlow<Boolean> = _isLoadingReviews.asStateFlow()
+
+    val avgRating: StateFlow<Double> = _reviews
+        .map { list ->
+            if (list.isEmpty()) 0.0
+            else list.sumOf { it.mark }.toDouble() / list.size
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0.0)
+
+    fun load(place: PlaceItem) {
+        loadReviews(place.googlePlaceId)
+
+        if (place.visitDate.isNotBlank()) {
+            loadWeather(place)
+        }
+    }
+
+
+    private fun loadReviews(googlePlaceId: String) {
+        if (googlePlaceId.isBlank()) return
+        viewModelScope.launch {
+            _isLoadingReviews.value = true
+            _reviews.value = reviewRepository.getReviewByTargetId(googlePlaceId)
+
+            runCatching {
+                val remote = FirestoreRepository().getReviewsByTargetId(googlePlaceId)
+                if (remote.isNotEmpty()) {
+                    _reviews.value = remote
+                }
+            }.onFailure {
+                Log.e("PlaceInfoVM", "Firestore reviews error", it)
+            }
+
+            _isLoadingReviews.value = false
+        }
+    }
+
+
+    private fun loadWeather(place: PlaceItem) {
+        viewModelScope.launch {
+            _isLoadingWeather.value = true
+            _weather.value = null
+
+            val query = if (place.location.isNotBlank()) {
+                "${place.name}, ${place.location}"
+            } else {
+                place.name
+            }
+
+            runCatching {
+                _weather.value = weatherRepository.getForecast(query, place.visitDate)
+            }.onFailure {
+                Log.e("PlaceInfoVM", "Weather error", it)
+            }
+
+            _isLoadingWeather.value = false
+        }
+    }
+}

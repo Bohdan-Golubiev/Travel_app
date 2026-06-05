@@ -1,4 +1,4 @@
-package com.example.travelapp.viewmodel.profile
+package com.example.travelapp.viewmodel.create.routes
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -9,9 +9,14 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.BuildConfig
+import com.example.travelapp.data.entity.BookingEntity
+import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
+import com.example.travelapp.data.repository.BookingRepository
+import com.example.travelapp.data.repository.HotelRepository
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
+import kotlinx.coroutines.flow.map
 import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
 import com.google.android.libraries.places.api.Places
@@ -29,12 +34,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 
 class RouteDetailViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = TravelRepository(TravelDB.getInstance(application), application)
+    private val bookingRepository = BookingRepository(TravelDB.getInstance(application), application)
+    private val hotelRepository = HotelRepository(TravelDB.getInstance(application), application)
     private val placesClient: PlacesClient
     init {
         if (!Places.isInitialized()) {
@@ -83,6 +91,12 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val placeDateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     fun getPlaces(routeId: String): Flow<List<PlaceEntity>> =
         repository.getPlaces(routeId)
+
+    fun getBookingsForRoute(userId: String, routeId: String): Flow<List<BookingEntity>> =
+        bookingRepository.getBookings(userId).map { list -> list.filter { it.routeId == routeId } }
+
+    fun getHotelsForRoute(userId: String, routeId: String): Flow<List<HotelEntity>> =
+        hotelRepository.getHotelsByUser(userId).map { list -> list.filter { it.routeId == routeId } }
 
     fun startEditing(
         currentName: String,
@@ -288,11 +302,11 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     private fun scheduleLocationReminderIfFuture(place: PlaceEntity) {
         val visitMs = parsePlaceDate(place.visitDate) ?: return
         val startOfToday = System.currentTimeMillis().let {
-            val cal = java.util.Calendar.getInstance()
-            cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-            cal.set(java.util.Calendar.MINUTE, 0)
-            cal.set(java.util.Calendar.SECOND, 0)
-            cal.set(java.util.Calendar.MILLISECOND, 0)
+            val cal = Calendar.getInstance()
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
             cal.timeInMillis
         }
         if (visitMs < startOfToday) return

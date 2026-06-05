@@ -1,4 +1,4 @@
-package com.example.travelapp.viewmodel.profile
+package com.example.travelapp.viewmodel.create.routes
 
 import android.app.Application
 import android.util.Log

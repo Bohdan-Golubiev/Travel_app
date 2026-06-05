@@ -69,6 +69,9 @@ class AirTransportRepository {
             ?.split("-")
             ?.let { "${it[2]}.${it[1]}.${it[0]}" }
 
+        val fromIATA = " (" + departure.iata + ")"
+        val toIATA = " (" +  arrival.iata + ")"
+
         return BookingOption(
             name = name,
             time = "$depTime → $arrTime",
@@ -76,8 +79,8 @@ class AirTransportRepository {
             cost = if (name.length < 10) name.length * 180.0
             else name.length * 120.0,
             status = flight_status,
-            from = from,
-            to = to
+            from = from + fromIATA,
+            to = to + toIATA
         )
     }
     private fun isValidFlightCode(code: String): Boolean {

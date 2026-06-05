@@ -18,7 +18,7 @@ import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.repository.WeatherInfo
 import com.example.travelapp.utils.LocalAppStrings
-import com.example.travelapp.viewmodel.profile.PlaceDetailViewModel
+import com.example.travelapp.viewmodel.create.routes.PlaceDetailViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 

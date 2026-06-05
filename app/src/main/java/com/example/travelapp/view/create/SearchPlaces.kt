@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.view.profile.routes.PlaceInfoBottomSheet
 import com.example.travelapp.viewmodel.create.PlaceItem
 import com.example.travelapp.viewmodel.create.SearchPlacesViewModel
 import sh.calvin.reorderable.ReorderableItem
@@ -39,6 +41,16 @@ fun SearchPlaces(
 ) {
     val state by viewModel.uiState.collectAsState()
     val strings = LocalAppStrings.current
+
+    var selectedPlace by remember { mutableStateOf<PlaceItem?>(null) }
+
+    selectedPlace?.let { place ->
+        PlaceInfoBottomSheet(
+            place = place,
+            currentUserId = userId,
+            onDismiss = { selectedPlace = null }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -135,6 +147,7 @@ fun SearchPlaces(
                             place = place,
                             onRemove = { viewModel.removePlace(index) },
                             onDateChange = { date -> viewModel.updatePlaceDate(index, date) },
+                            onInfoClick = { selectedPlace = place },
                             dragHandle = {
                                 Icon(
                                     imageVector = Icons.Default.Menu,
@@ -240,6 +253,7 @@ private fun PlaceListItem(
     place: PlaceItem,
     onRemove: () -> Unit,
     onDateChange: (String) -> Unit,
+    onInfoClick: () -> Unit,
     dragHandle: @Composable () -> Unit,
     isDragging: Boolean
 ) {
@@ -273,6 +287,16 @@ private fun PlaceListItem(
                 label = strings.date,
                 value = place.visitDate,
                 onClick = { showDatePicker = true }
+            )
+        }
+        IconButton(
+            onClick = onInfoClick,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Деталі",
+                tint = Color(0xFF219EBC)
             )
         }
         IconButton(

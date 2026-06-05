@@ -86,6 +86,7 @@ data class AppStrings(
     val checkOut: String,
     val duration: String,
     val days: String,
+    val day: String,
     val perDay: String,
     val total: String,
     val routeUp: String,
@@ -196,6 +197,14 @@ data class AppStrings(
 
     val notifications: String,
     val name: String,
+
+    val loadWeather: String,
+    val weatherUnavailable: String,
+    val noMark: String,
+    val bookings: String,
+    val checkInLet: String,
+    val checkOutLet: String,
+    val plannedDate: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -275,6 +284,7 @@ val EnglishStrings = AppStrings(
     checkOut = "Check-out",
     duration = "Duration",
     days =  "day(s)",
+    day = "day",
     perDay = "Per day",
     total = "Total",
     routeUp = "Route",
@@ -383,6 +393,14 @@ val EnglishStrings = AppStrings(
 
     notifications = "Notifications",
     name = "Name ",
+
+    loadWeather = "Loading forecast…",
+    weatherUnavailable = "Forecast unavailable",
+    noMark = "This location has not yet been rated",
+    bookings = "Bookings",
+    checkInLet = "Check-in",
+    checkOutLet = "Check-out",
+    plannedDate = "Scheduled at ",
 )
 
 val UkrainianStrings = AppStrings(
@@ -460,6 +478,7 @@ val UkrainianStrings = AppStrings(
     checkOut = "Дата виїзду",
     duration = "Тривалість",
     days = "дн.",
+    day = "день",
     perDay = "За день",
     total = "Загалом",
     routeUp = "Маршрут",
@@ -568,7 +587,15 @@ val UkrainianStrings = AppStrings(
 
     notifications = "Сповіщення",
     name = "Назва ",
-)
+
+    loadWeather = "Завантаження прогнозу…",
+    weatherUnavailable = "Прогноз недоступний",
+    noMark = "Дана локація ще не була оцінена",
+    bookings = "Бронювання",
+    checkInLet = "Заїзд",
+    checkOutLet = "Виїзд",
+    plannedDate = "Заплановано на ",
+    )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {
     AppLocale.ENGLISH -> EnglishStrings

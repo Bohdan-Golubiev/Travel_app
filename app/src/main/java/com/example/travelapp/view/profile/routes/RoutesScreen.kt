@@ -1,5 +1,6 @@
 package com.example.travelapp.view.profile.routes
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,15 +24,18 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,7 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.RouteEntity
 import com.example.travelapp.utils.LocalAppStrings
-import com.example.travelapp.viewmodel.profile.RoutesViewModel
+import com.example.travelapp.viewmodel.create.routes.RoutesViewModel
 
 fun Long.toFormattedDate(): String {
     val sdf = java.text.SimpleDateFormat("dd.MM.yyyy", java.util.Locale.getDefault())
@@ -88,7 +93,6 @@ fun RoutesScreen(
                                 viewModel.setRouteCompleted(route.id, isCompleted)
                             }
                         )
-                        HorizontalDivider(color = Color(0xFF2A4A5E))
                     }
                 }
             }
@@ -172,64 +176,94 @@ private fun RouteItem(
                 TextButton(onClick = { showDeleteDialog = false }) {
                     Text(strings.cancel)
                 }
-            }
+            },
+            containerColor = Color(0xFF1B3A4B),
+            titleContentColor = Color.White,
+            textContentColor = Color(0xFFB0BEC5)
         )
     }
-    TextButton(
+
+    Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 2.dp, vertical = 10.dp),
-        shape = RoundedCornerShape(0.dp),
-        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (route.isCompleted) Color(0xFF0F1F2E) else Color(0xFF112233)
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (route.isCompleted) Color(0xFF1A2D3D) else Color(0xFF1E3A50)
+        )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                modifier = Modifier.padding(end = 8.dp),
                 imageVector = if (route.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                 contentDescription = "Favorite",
-                tint = if (route.isFavorite) Color(0xFFFF0000) else Color.Gray
+                tint = if (route.isFavorite) Color(0xFFFF5252) else Color(0xFF4A6A80),
+                modifier = Modifier.size(20.dp)
             )
-            Text(
-                text = route.name,
-                fontSize = 15.sp,
-                style = if (route.isCompleted) {
-                    LocalTextStyle.current.copy(
-                        textDecoration = TextDecoration.LineThrough,
-                        color = Color(0xFF78909C)
-                    )
-                } else {
-                    LocalTextStyle.current.copy(color = Color.White)
-                },
-                modifier = Modifier.weight(1f)
-            )
-            if (route.isCompleted) {
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = strings.complete,
-                    fontSize = 13.sp,
-                    color = Color(0xFF4CAF50),
-                    modifier = Modifier.padding(end = 8.dp)
+                    text = route.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = if (route.isCompleted) {
+                        LocalTextStyle.current.copy(
+                            textDecoration = TextDecoration.LineThrough,
+                            color = Color(0xFF4A6A80)
+                        )
+                    } else {
+                        LocalTextStyle.current.copy(color = Color.White)
+                    }
                 )
-            } else {
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = route.createdAt.toFormattedDate(),
+                    text = strings.createdAt + " " + route.createdAt.toFormattedDate(),
                     fontSize = 13.sp,
-                    color = Color(0xFFB0BEC5),
-                    modifier = Modifier.padding(end = 8.dp)
+                    color = Color(0xFF52738D)
                 )
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
+
+            if (route.isCompleted) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFF1A3D2B)
+                ) {
+                    Text(
+                        text = strings.complete,
+                        fontSize = 12.sp,
+                        color = Color(0xFF4CAF50),
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+            }
+
             Box {
-                IconButton(onClick = { menuExpanded = true }) {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
                     Icon(
                         imageVector        = Icons.Default.MoreVert,
                         contentDescription = "More",
-                        tint               = Color(0xFFB0BEC5)
+                        tint               = Color(0xFF4A6A80),
+                        modifier           = Modifier.size(20.dp)
                     )
                 }
 
@@ -247,9 +281,7 @@ private fun RouteItem(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text  = if (route.isCompleted) {
-                                    strings.makeUnComplete
-                                } else strings.makeComplete,
+                                text  = if (route.isCompleted) strings.makeUnComplete else strings.makeComplete,
                                 color = Color(0xFF4CAF50)
                             )
                         },

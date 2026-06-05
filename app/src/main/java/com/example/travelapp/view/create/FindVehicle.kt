@@ -199,7 +199,7 @@ private fun BookingOptionItem(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = strings.name + option.name,
+                        text = option.name,
                         fontSize = 15.sp,
                         color = Color.Black
                     )

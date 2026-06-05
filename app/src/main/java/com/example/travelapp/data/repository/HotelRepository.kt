@@ -59,7 +59,7 @@ class HotelRepository(
         if (unsyncedHotels.isNotEmpty()) {
             runCatching {
                 firestore.saveHotels(userId, unsyncedHotels)
-                unsyncedHotels.forEach { db.bookingDao().markSynced(it.id) }
+                unsyncedHotels.forEach { db.hotelDao().markSynced(it.id) }
             }
         }
 

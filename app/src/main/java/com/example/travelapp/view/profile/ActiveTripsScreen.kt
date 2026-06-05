@@ -132,7 +132,7 @@ private fun ActiveTripCard(item: ActiveTripItem) {
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = nextPlace.visitDate,
+                        text = strings.plannedDate + nextPlace.visitDate,
                         fontSize = 13.sp,
                         color = Color(0xFFB0BEC5)
                     )
