@@ -17,6 +17,7 @@ import com.example.travelapp.view.create.SearchPlaces
 import com.example.travelapp.view.profile.routes.AddReviewScreen
 import com.example.travelapp.view.profile.routes.PlaceDetailScreen
 import com.example.travelapp.view.profile.routes.RouteDetailScreen
+import com.example.travelapp.view.profile.routes.RouteMapScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
 import com.google.firebase.auth.FirebaseUser
 
@@ -35,6 +36,12 @@ sealed class CreateNavigation(val route: String) {
         )
     }
 
+    data object RouteMap : CreateNavigation("route_map/{routeId}") {
+        fun withArgs(routeId: String) = "route_map/$routeId"
+        val navArguments = listOf(
+            navArgument("routeId") { type = NavType.StringType }
+        )
+    }
     data object Place : CreateNavigation("place/{routeId}/{placeId}/{placeName}") {
         fun createRoute(routeId: String, placeId: String, placeName: String) =
             "place/$routeId/$placeId/$placeName"
@@ -69,6 +76,7 @@ fun NavGraphBuilder.createGraph(
     sharedViewModel: SharedViewModel,
     onTitleChange: (String) -> Unit,
 ) {
+
     composable(CreateNavigation.ListOfRoutes.route) {
         val strings = LocalAppStrings.current
         LaunchedEffect(Unit) { onTitleChange(strings.myRoutes) }
@@ -112,7 +120,18 @@ fun NavGraphBuilder.createGraph(
                 sharedViewModel.pendingRouteId = routeId
                 nav.navigate(CreateNavigation.FindVehicle.withArgs(routeId))
             },
+            onShowMap = {
+                nav.navigate(CreateNavigation.RouteMap.withArgs(routeId))
+            }
         )
+    }
+
+    composable(
+        route     = CreateNavigation.RouteMap.route,
+        arguments = CreateNavigation.RouteMap.navArguments
+    ) { backStack ->
+        val routeId = backStack.arguments?.getString("routeId") ?: ""
+        RouteMapScreen(routeId = routeId)
     }
 
     composable(
@@ -155,7 +174,9 @@ fun NavGraphBuilder.createGraph(
             userId      = currentUser.uid,
             onSaveRoute = { routeName, routeId ->
                 sharedViewModel.pendingRouteId = routeId
-                nav.navigate(CreateNavigation.SaveRoute.withArgs(routeName))
+                nav.navigate(CreateNavigation.SaveRoute.withArgs(routeName)) {
+                    popUpTo(CreateNavigation.CreateRoute.route) { inclusive = true }
+                }
             }
         )
     }
@@ -184,7 +205,9 @@ fun NavGraphBuilder.createGraph(
         arguments = listOf(navArgument("routeId") { type = NavType.StringType })
     ) { backStackEntry ->
         val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
+        val strings = LocalAppStrings.current
 
+        LaunchedEffect("vehicle") { onTitleChange(strings.findVehicle) }
         FindVehicleScreen(
             userId      = currentUser.uid,
             routeId     = routeId,
@@ -200,7 +223,9 @@ fun NavGraphBuilder.createGraph(
         arguments = listOf(navArgument("routeId") { type = NavType.StringType })
     ) { backStackEntry ->
         val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
+        val strings = LocalAppStrings.current
 
+        LaunchedEffect("hotel") { onTitleChange(strings.findHotel) }
         FindHotelScreen(
             userId      = currentUser.uid,
             routeId     = routeId,

@@ -25,6 +25,8 @@ import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
 import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import kotlinx.coroutines.CancellationException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -35,7 +37,9 @@ data class PlaceItem(
     val googlePlaceId: String,
     val name: String,
     val location: String,
-    val visitDate: String = ""
+    val visitDate: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
 )
 
 data class SearchPlacesUiState(
@@ -131,18 +135,27 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun onSuggestionSelected(prediction: AutocompletePrediction) {
-        val newPlace = PlaceItem(
-            id = UUID.randomUUID().toString(),
-            googlePlaceId = prediction.placeId,
-            name = prediction.getPrimaryText(null).toString(),
-            location = prediction.getSecondaryText(null).toString()
-        )
-        _uiState.update {
-            it.copy(
-                places = it.places + newPlace,
-                suggestions = emptyList(),
-                searchQuery = ""
+        viewModelScope.launch {
+            val placeFields = listOf(Place.Field.ID, Place.Field.LAT_LNG)
+            val request = FetchPlaceRequest.newInstance(prediction.placeId, placeFields)
+            val result = runCatching { placesClient.fetchPlace(request).await() }
+            val latLng = result.getOrNull()?.place?.latLng
+
+            val newPlace = PlaceItem(
+                id = UUID.randomUUID().toString(),
+                googlePlaceId = prediction.placeId,
+                name = prediction.getPrimaryText(null).toString(),
+                location = prediction.getSecondaryText(null).toString(),
+                latitude = latLng?.latitude,
+                longitude = latLng?.longitude
             )
+            _uiState.update {
+                it.copy(
+                    places = it.places + newPlace,
+                    suggestions = emptyList(),
+                    searchQuery = ""
+                )
+            }
         }
     }
 
@@ -193,6 +206,8 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                             routeId = route.id,
                             name = placeItem.name,
                             location = placeItem.location,
+                            latitude = placeItem.latitude,
+                            longitude = placeItem.longitude,
                             orderInRoute = index,
                             visitDate = placeItem.visitDate
                         ),

@@ -205,6 +205,11 @@ data class AppStrings(
     val checkInLet: String,
     val checkOutLet: String,
     val plannedDate: String,
+
+    val viewOnMap: String,
+    val map: String,
+    val findVehicle: String,
+    val findHotel: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -401,6 +406,11 @@ val EnglishStrings = AppStrings(
     checkInLet = "Check-in",
     checkOutLet = "Check-out",
     plannedDate = "Scheduled at ",
+
+    viewOnMap = "View route on the map",
+    map = "Map",
+    findVehicle = "Find vehicle",
+    findHotel = "Find hotel",
 )
 
 val UkrainianStrings = AppStrings(
@@ -595,6 +605,11 @@ val UkrainianStrings = AppStrings(
     checkInLet = "Заїзд",
     checkOutLet = "Виїзд",
     plannedDate = "Заплановано на ",
+
+    viewOnMap = "Переглянути маршрут на карті",
+    map = "Карта",
+    findVehicle = "Знайти транспорт",
+    findHotel = "Знайти готелі",
     )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

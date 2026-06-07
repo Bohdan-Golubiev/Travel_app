@@ -1,23 +1,35 @@
 package com.example.travelapp.view.profile.routes
 
+import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.travelapp.data.entity.ReviewEntity
@@ -48,6 +60,8 @@ fun PlaceInfoBottomSheet(
     val reviews         by viewModel.reviews.collectAsState()
     val isLoadingReviews by viewModel.isLoadingReviews.collectAsState()
     val avgRating       by viewModel.avgRating.collectAsState()
+    val photos by viewModel.photos.collectAsState()
+    val isLoadingPhotos by viewModel.isLoadingPhotos.collectAsState()
 
     LaunchedEffect(place.id) {
         viewModel.load(place)
@@ -103,6 +117,16 @@ fun PlaceInfoBottomSheet(
                 }
                 Spacer(Modifier.height(4.dp))
                 HorizontalDivider(color = DividerColor)
+            }
+
+            if (isLoadingPhotos || photos.isNotEmpty()) {
+                item {
+                    PlacePhotosSection(
+                        photos = photos,
+                        isLoading = isLoadingPhotos
+                    )
+                    HorizontalDivider(color = Color(0xFF2A4A5E))
+                }
             }
 
             if (place.visitDate.isNotBlank() && isWithinTenDays(place.visitDate)) {
@@ -205,7 +229,118 @@ fun PlaceInfoBottomSheet(
         }
     }
 }
+@Composable
+private fun PlacePhotosSection(
+    photos: List<Bitmap>,
+    isLoading: Boolean
+) {
+    var selectedPhoto by remember { mutableStateOf<Bitmap?>(null) }
 
+    selectedPhoto?.let { bitmap ->
+        FullScreenPhotoDialog(
+            bitmap = bitmap,
+            onDismiss = { selectedPhoto = null }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Фото локації",
+            fontSize = 16.sp,
+            color = Color.White,
+        )
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF219EBC)
+                )
+            }
+        } else {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(photos) { bitmap ->
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(width = 260.dp, height = 160.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable { selectedPhoto = bitmap },
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FullScreenPhotoDialog(
+    bitmap: Bitmap,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.9f))
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { /* не закривати при кліку на фото */ },
+                contentScale = ContentScale.FillWidth
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(36.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .clickable { onDismiss() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Закрити",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun WeatherBlock(

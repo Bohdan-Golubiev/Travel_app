@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
@@ -62,6 +63,8 @@ private val CREATE_TOPBAR_ROUTES = setOf(
     CreateNavigation.Route.route,
     CreateNavigation.Place.route,
     CreateNavigation.AddReview.route,
+    CreateNavigation.FindVehicle.route,
+    CreateNavigation.FindHotel.route,
 )
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -165,7 +168,7 @@ fun HomeScreen(
             topBar = {
                 if (showTopBar) {
                     TopAppBar(
-                        modifier = Modifier.height(64.dp),
+                        modifier = Modifier.height(80.dp),
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color(0xFF0D1B2A)
                         ),
@@ -176,7 +179,9 @@ fun HomeScreen(
                             ) {
                                 Text(
                                     text = topBarTitle,
-                                    color = Color.White
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         },

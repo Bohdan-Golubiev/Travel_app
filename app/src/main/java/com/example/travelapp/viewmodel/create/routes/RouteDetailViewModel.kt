@@ -21,6 +21,8 @@ import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import kotlinx.coroutines.CancellationException
@@ -180,18 +182,27 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun onSuggestionSelected(prediction: AutocompletePrediction, routeId: String) {
-        val newPlace = PlaceEntity(
-            id = UUID.randomUUID().toString(),
-            googlePlaceId = prediction.placeId,
-            routeId = routeId,
-            name = prediction.getPrimaryText(null).toString(),
-            location = prediction.getSecondaryText(null).toString(),
-            orderInRoute = _editedPlaces.value.size,
-            visitDate = ""
-        )
-        _editedPlaces.update { it + newPlace }
-        _suggestions.value = emptyList()
-        _searchQuery.value = ""
+        viewModelScope.launch {
+            val placeFields = listOf(Place.Field.ID, Place.Field.LAT_LNG)
+            val request = FetchPlaceRequest.newInstance(prediction.placeId, placeFields)
+            val result = runCatching { placesClient.fetchPlace(request).await() }
+            val latLng = result.getOrNull()?.place?.latLng
+
+            val newPlace = PlaceEntity(
+                id = UUID.randomUUID().toString(),
+                googlePlaceId = prediction.placeId,
+                routeId = routeId,
+                name = prediction.getPrimaryText(null).toString(),
+                location = prediction.getSecondaryText(null).toString(),
+                orderInRoute = _editedPlaces.value.size,
+                visitDate = "",
+                latitude = latLng?.latitude,
+                longitude = latLng?.longitude
+            )
+            _editedPlaces.update { it + newPlace }
+            _suggestions.value = emptyList()
+            _searchQuery.value = ""
+        }
     }
 
     fun clearSearch() {

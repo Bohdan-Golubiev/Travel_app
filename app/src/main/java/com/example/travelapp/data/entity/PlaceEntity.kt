@@ -24,6 +24,8 @@ data class PlaceEntity(
     val routeId: String,
     val name: String,
     val location: String,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val orderInRoute: Int,
     val visitDate: String = "", // "dd.MM.yyyy"
     val isSynced: Boolean = false // для локального відстежування (в хмару не йде)

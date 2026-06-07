@@ -280,6 +280,8 @@ class FirestoreRepository {
         "routeId"      to routeId,
         "name"         to name,
         "location"     to location,
+        "latitude"     to latitude,
+        "longitude"    to longitude,
         "orderInRoute" to orderInRoute,
         "visitDate"    to visitDate
     )
@@ -352,6 +354,8 @@ class FirestoreRepository {
         routeId       = routeId,
         name          = getString("name") ?: "",
         location      = getString("location") ?: "",
+        latitude      = getDouble("latitude") ?: 0.0,
+        longitude     = getDouble("longitude") ?: 0.0,
         orderInRoute  = getLong("orderInRoute")?.toInt() ?: 0,
         visitDate     = getString("visitDate") ?: "",
         isSynced      = true

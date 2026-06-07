@@ -1,6 +1,7 @@
 package com.example.travelapp.viewmodel.create.routes
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,10 @@ import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.data.repository.WeatherInfo
 import com.example.travelapp.data.repository.WeatherRepository
 import com.example.travelapp.db.TravelDB
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPhotoRequest
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +24,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 class PlaceDetailViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -40,6 +47,10 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val _isLoadingWeather = MutableStateFlow(false)
     val isLoadingWeather: StateFlow<Boolean> = _isLoadingWeather.asStateFlow()
 
+    private val _photos = MutableStateFlow<List<Bitmap>>(emptyList())
+    val photos: StateFlow<List<Bitmap>> = _photos.asStateFlow()
+    private val _isLoadingPhotos = MutableStateFlow(false)
+    val isLoadingPhotos: StateFlow<Boolean> = _isLoadingPhotos.asStateFlow()
     val avgRating: StateFlow<Double> = reviews
         .map { list ->
             if (list.isEmpty()) 0.0
@@ -60,6 +71,7 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
                     found?.let {
                         it.googlePlaceId.takeIf { id -> id.isNotEmpty() }?.let { id ->
                             loadReviews(id)
+                            loadPhotos(id)
                         }
                         if (it.visitDate.isNotBlank()) {
                             loadWeather(it)
@@ -98,6 +110,56 @@ class PlaceDetailViewModel(application: Application) : AndroidViewModel(applicat
 
             _weather.value = weatherRepository.getForecast(query, place.visitDate)
             _isLoadingWeather.value = false
+        }
+    }
+    private fun loadPhotos(googlePlaceId: String) {
+        viewModelScope.launch {
+            _isLoadingPhotos.value = true
+            _photos.value = emptyList()
+
+            runCatching {
+                val placesClient = Places.createClient(getApplication())
+
+                val metaRequest = FetchPlaceRequest.newInstance(
+                    googlePlaceId,
+                    listOf(Place.Field.PHOTO_METADATAS)
+                )
+
+                placesClient.fetchPlace(metaRequest)
+                    .addOnSuccessListener { response ->
+                        val metadatas = response.place.photoMetadatas
+                            ?.take(7)
+                            ?: run {
+                                _isLoadingPhotos.value = false
+                                return@addOnSuccessListener
+                            }
+
+                        viewModelScope.launch {
+                            val bitmaps = metadatas.mapNotNull { meta ->
+                                runCatching {
+                                    val photoRequest = FetchPhotoRequest.builder(meta)
+                                        .setMaxWidth(1080)
+                                        .setMaxHeight(810)
+                                        .build()
+                                    suspendCancellableCoroutine { cont ->
+                                        placesClient.fetchPhoto(photoRequest)
+                                            .addOnSuccessListener { cont.resume(it.bitmap) }
+                                            .addOnFailureListener { cont.resume(null) }
+                                    }
+                                }.getOrNull()
+                            }
+                            _photos.value = bitmaps
+                            _isLoadingPhotos.value = false
+                        }
+                    }
+                    .addOnFailureListener {
+                        Log.e("PLACES", "Error fetching place metadata", it)
+                        _isLoadingPhotos.value = false
+                    }
+            }.onFailure {
+                Log.e("PLACES", "Error loading photos", it)
+                _isLoadingPhotos.value = false
+            }
         }
     }
 }

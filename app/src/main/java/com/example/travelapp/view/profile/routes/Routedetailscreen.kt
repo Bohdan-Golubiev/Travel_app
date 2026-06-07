@@ -54,6 +54,7 @@ fun RouteDetailScreen(
     userId: String,
     onNext: (PlaceEntity) -> Unit,
     onMakeBooking: () -> Unit,
+    onShowMap: () -> Unit,
     onTitleChange: (String, String) -> Unit,
     viewModel: RouteDetailViewModel = viewModel()
 ) {
@@ -159,6 +160,31 @@ fun RouteDetailScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                     HorizontalDivider(color = Color(0xFF2A4A5E))
+                }
+                if (!isEditing)
+                {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    )
+                    {
+                        Text(
+                            text = strings.viewOnMap,
+                            fontSize = 14.sp,
+                            color = Color(0xFFB0BEC5),
+                            modifier = Modifier
+                                .weight(2f)
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                        OutlinedButton(
+                            onClick = onShowMap,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color(0xFF219EBC)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF219EBC))
+                        ) {
+                            Text(strings.map)
+                        }
+                    }
                 }
             }
 
