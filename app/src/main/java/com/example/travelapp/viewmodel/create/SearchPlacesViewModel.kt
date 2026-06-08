@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.libraries.places.api.Places
@@ -66,6 +67,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
             Places.initializeWithNewPlacesApiEnabled(application, BuildConfig.MAPS_API_KEY)
         }
         placesClient = Places.createClient(application)
+        Log.d("VM_TEST", "SearchPlacesViewModel created")
     }
 
     private val _uiState = MutableStateFlow(SearchPlacesUiState())

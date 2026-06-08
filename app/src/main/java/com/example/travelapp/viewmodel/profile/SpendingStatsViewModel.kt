@@ -1,8 +1,6 @@
 package com.example.travelapp.viewmodel.profile
 
 import android.app.Application
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.travelapp.data.entity.BookingEntity
@@ -20,8 +18,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
 
 data class MonthSpending(
     val yearMonth: YearMonth,
@@ -31,7 +27,6 @@ data class MonthSpending(
     val total: Double get() = bookingCost + hotelCost
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun YearMonth.toLocalizedLabel(language: String): String {
 
     val monthNames = when (language) {
@@ -51,7 +46,6 @@ fun YearMonth.toLocalizedLabel(language: String): String {
     return "${monthNames[monthValue - 1]} ${year.toString().takeLast(2)}"
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalCoroutinesApi::class)
 class SpendingStatsViewModel(application: Application) : AndroidViewModel(application) {
 

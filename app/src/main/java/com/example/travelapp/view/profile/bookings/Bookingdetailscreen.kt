@@ -14,12 +14,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.entity.BookingEntity
-import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.view.ReviewItem
 import com.example.travelapp.viewmodel.profile.BookingDetailViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun BookingDetailScreen(
@@ -67,11 +64,7 @@ fun BookingDetailScreen(
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = serviceLabel,
-                        fontSize = 14.sp,
-                        color = Color(0xFFB0BEC5)
-                    )
+                    Text(text = serviceLabel, fontSize = 14.sp, color = Color(0xFFB0BEC5))
                 }
             }
 
@@ -81,11 +74,7 @@ fun BookingDetailScreen(
             }
 
             InfoCard(title = strings.cost.uppercase()) {
-                InfoRow(
-                    label = strings.cost,
-                    value = "${booking.cost}  ₴",
-                    valueColor = Color(0xFF4FC3F7)
-                )
+                InfoRow(label = strings.cost, value = "${booking.cost}  ₴", valueColor = Color(0xFF4FC3F7))
                 InfoRow(label = strings.status, value = booking.status)
             }
 
@@ -107,16 +96,9 @@ fun BookingDetailScreen(
                     color = Color.White
                 )
                 if (isLoadingReviews) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = Color(0xFF219EBC)
-                    )
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color(0xFF219EBC))
                 }
-                Text(
-                    text = "⭐ ${"%.1f".format(avg)}",
-                    color = Color.White
-                )
+                Text(text = "⭐ ${"%.1f".format(avg)}", color = Color.White)
             }
 
             HorizontalDivider(color = Color(0xFF2A4A5E))
@@ -130,8 +112,11 @@ fun BookingDetailScreen(
                 )
             } else {
                 reviews.forEach { review ->
-                    BookingReviewItem(review = review, currentUserId = userId)
-                    HorizontalDivider(color = Color(0xFF2A4A5E))
+                    ReviewItem(
+                        review = review,
+                        currentUserId = userId,
+                        youLabel = strings.you
+                    )
                 }
             }
         }
@@ -151,43 +136,6 @@ fun BookingDetailScreen(
 }
 
 @Composable
-private fun BookingReviewItem(review: ReviewEntity, currentUserId: String) {
-    val formattedDate = remember(review.createdAt) {
-        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            .format(Date(review.createdAt))
-    }
-    val strings = LocalAppStrings.current
-    val displayName = if (review.userId == currentUserId) strings.you else review.userName
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = displayName, fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.Medium)
-            Text(text = "${review.mark}/5", fontSize = 13.sp, color = Color(0xFFB0BEC5))
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = review.text,
-                fontSize = 13.sp,
-                color = Color(0xFFB0BEC5),
-                modifier = Modifier.weight(1f)
-            )
-            Text(text = formattedDate, fontSize = 12.sp, color = Color(0xFF5E7A8A))
-        }
-    }
-}
-
-@Composable
 private fun InfoCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
@@ -198,13 +146,7 @@ private fun InfoCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF607D8B),
-                letterSpacing = 0.8.sp
-            )
+            Text(text = title, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF607D8B), letterSpacing = 0.8.sp)
             Spacer(modifier = Modifier.height(10.dp))
             content()
         }
@@ -212,29 +154,13 @@ private fun InfoCard(
 }
 
 @Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    valueColor: Color = Color.White,
-) {
+private fun InfoRow(label: String, value: String, valueColor: Color = Color.White) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = Color(0xFFB0BEC5),
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            color = valueColor,
-            fontWeight = FontWeight.Normal
-        )
+        Text(text = label, fontSize = 14.sp, color = Color(0xFFB0BEC5), modifier = Modifier.weight(1f))
+        Text(text = value, fontSize = 14.sp, color = valueColor, fontWeight = FontWeight.Normal)
     }
 }

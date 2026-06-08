@@ -1,7 +1,6 @@
 package com.example.travelapp.view
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,7 +66,6 @@ class SharedViewModel : ViewModel() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.profileGraph(
     nav: NavHostController,
     user: FirebaseUser,
@@ -227,68 +225,103 @@ fun ProfileContent(
     val strings = LocalAppStrings.current
     val profileViewModel: ProfileViewModel = viewModel()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-
-        Row(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment     = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 24.dp)
         ) {
-            Text(
-                text       = user.displayName ?: "Name Surname",
-                fontSize   = 16.sp,
-                color      = Color.White,
-                fontWeight = FontWeight.Medium
-            )
+            Column {
+                Row(
+                    modifier              = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment     = Alignment.Top
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text       = user.displayName ?: "Name Surname",
+                            fontSize   = 20.sp,
+                            color      = Color.White,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.3.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text      = user.email ?: strings.email,
+                            fontSize  = 13.sp,
+                            color     = Color(0xFF7EA8BE),
+                            letterSpacing = 0.2.sp
+                        )
+                    }
 
-            Box {
-                IconButton(onClick = { profileViewModel.openSettingsMenu() }) {
-                    Icon(
-                        imageVector        = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        tint               = Color.White
-                    )
+                    Box {
+                        IconButton(
+                            onClick  = { profileViewModel.openSettingsMenu() },
+                            modifier = Modifier
+                                .size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint               = Color(0xFF219EBC),
+                                modifier           = Modifier.size(30.dp)
+                            )
+                        }
+
+                        SettingsDropdownMenu(
+                            expanded         = profileViewModel.isSettingsMenuOpen,
+                            onDismiss        = { profileViewModel.closeSettingsMenu() },
+                            onSignOut        = {
+                                profileViewModel.closeSettingsMenu()
+                                onSignOut()
+                            },
+                            onLocaleChange   = onLocaleChange,
+                            profileViewModel = profileViewModel,
+                        )
+                    }
                 }
-
-                SettingsDropdownMenu(
-                    expanded        = profileViewModel.isSettingsMenuOpen,
-                    onDismiss       = { profileViewModel.closeSettingsMenu() },
-                    onSignOut       = {
-                        profileViewModel.closeSettingsMenu()
-                        onSignOut()
-                    },
-                    onLocaleChange = onLocaleChange,
-                    profileViewModel = profileViewModel,
-                )
             }
         }
 
-        HorizontalDivider(color = Color(0xFF2A4A5E))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        ProfileTextField(text = user.email ?: strings.email)
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(
-            label   = strings.activeTrips,
-            onClick = { nav.navigate(ProfileNavigation.ActiveTrips.route) }
-        )
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(label = strings.statsSpending, onClick = { nav.navigate(ProfileNavigation.SpendingStats.route) })
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(label = strings.myBooking, onClick = { nav.navigate(ProfileNavigation.Booking.route) })
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(label = strings.myHotels,  onClick = { nav.navigate(ProfileNavigation.Hotel.route) })
-        HorizontalDivider(color = Color(0xFF2A4A5E))
-
-        ProfileButton(label = strings.myReviews, onClick = { nav.navigate(ProfileNavigation.Review.route) })
-        HorizontalDivider(color = Color(0xFF2A4A5E))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            ProfileButton(
+                label   = strings.activeTrips,
+                icon    = "✈",
+                onClick = { nav.navigate(ProfileNavigation.ActiveTrips.route) }
+            )
+            ProfileButton(
+                label   = strings.statsSpending,
+                icon    = "📊",
+                onClick = { nav.navigate(ProfileNavigation.SpendingStats.route) }
+            )
+            ProfileButton(
+                label   = strings.myBooking,
+                icon    = "🎫",
+                onClick = { nav.navigate(ProfileNavigation.Booking.route) }
+            )
+            ProfileButton(
+                label   = strings.myHotels,
+                icon    = "🏨",
+                onClick = { nav.navigate(ProfileNavigation.Hotel.route) }
+            )
+            ProfileButton(
+                label   = strings.myReviews,
+                icon    = "⭐",
+                onClick = { nav.navigate(ProfileNavigation.Review.route) }
+            )
+        }
     }
 }
+
 @Composable
 private fun SettingsDropdownMenu(
     expanded: Boolean,
@@ -305,7 +338,8 @@ private fun SettingsDropdownMenu(
         onDismissRequest = onDismiss,
         modifier         = Modifier
             .background(Color(0xFF162032))
-            .widthIn(min = 220.dp)
+            .widthIn(min = 220.dp),
+        border = BorderStroke(1.dp, Color(0xFF7EA8BE))
     ) {
         DropdownMenuItem(
             text = {
@@ -392,29 +426,49 @@ private fun SettingsDropdownMenu(
     }
 }
 @Composable
-private fun ProfileTextField(text: String) {
-    Box(
-        modifier = Modifier
+private fun ProfileButton(label: String, icon: String, onClick: () -> Unit) {
+    Surface(
+        onClick   = onClick,
+        modifier  = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 24.dp)
+            .padding(vertical = 4.dp),
+        shape     = RoundedCornerShape(14.dp),
+        color     = Color(0xFF162032),
+        tonalElevation = 0.dp
     ) {
-        Text(text = text, fontSize = 15.sp, color = Color(0xFFB0BEC5))
-    }
-}
-
-@Composable
-private fun ProfileButton(label: String, onClick: () -> Unit) {
-    TextButton(
-        onClick  = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape    = RoundedCornerShape(0.dp),
-        colors   = ButtonDefaults.textButtonColors(contentColor = Color.White)
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier              = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            color = Color(0xFF1A3550),
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = icon, fontSize = 16.sp, color = Color.White)
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Text(
+                    text       = label,
+                    fontSize   = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color      = Color(0xFFDCECF4),
+                    letterSpacing = 0.2.sp
+                )
+            }
             Text(
-                text     = label,
-                fontSize = 15.sp,
-                modifier = Modifier.padding(vertical = 16.dp)
+                text     = "›",
+                fontSize = 30.sp,
+                color    = Color(0xFF4A7A96),
+                fontWeight = FontWeight.Light
             )
         }
     }

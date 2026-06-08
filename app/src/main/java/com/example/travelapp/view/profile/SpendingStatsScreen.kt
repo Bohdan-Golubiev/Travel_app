@@ -1,7 +1,5 @@
 package com.example.travelapp.view.profile
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -33,8 +31,6 @@ import com.example.travelapp.viewmodel.profile.MonthSpending
 import com.example.travelapp.viewmodel.profile.SpendingStatsViewModel
 import com.example.travelapp.viewmodel.profile.toLocalizedLabel
 
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SpendingStatsScreen(
     userId: String,
@@ -137,7 +133,6 @@ private val colorBooking = Color(0xFF378ADD)
 private val colorHotel   = Color(0xFF1D9E75)
 private val colorTotal   = Color(0xFFBA7517)
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun SpendingBarChart(
     stats: List<MonthSpending>,
@@ -283,7 +278,6 @@ private fun LegendItem(color: Color, label: String, dashed: Boolean = false) {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun MonthBreakdownList(
     stats: List<MonthSpending>,
@@ -303,7 +297,6 @@ private fun MonthBreakdownList(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun MonthRow(
     month: MonthSpending,

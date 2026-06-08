@@ -1,7 +1,6 @@
 package com.example.travelapp.view
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -67,7 +66,6 @@ private val CREATE_TOPBAR_ROUTES = setOf(
     CreateNavigation.FindHotel.route,
 )
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -250,7 +248,6 @@ private fun NavDestination?.isInHierarchy(route: String): Boolean {
     } == true
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun AppNavHost(
     nav: NavHostController,

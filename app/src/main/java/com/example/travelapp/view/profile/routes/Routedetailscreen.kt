@@ -327,23 +327,25 @@ fun RouteDetailScreen(
             itemsIndexed(displayedPlaces, key = { _, place -> place.id }) { index, place ->
                 if (isEditing) {
                     ReorderableItem(reorderableLazyListState, key = place.id) { isDragging ->
-                        EditablePlaceItem(
-                            number = index + 1,
-                            place = place,
-                            isDragging = isDragging,
-                            onRemove = { viewModel.removePlace(index) },
-                            dragHandle = {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "Drag",
-                                    tint = Color.Gray,
-                                    modifier = Modifier
-                                        .draggableHandle()
-                                        .size(24.dp)
-                                )
-                            },
-                            onDateChange = { date -> viewModel.updatePlaceDate(index, date) }
-                        )
+                        Box(modifier = Modifier.padding(bottom = 8.dp)) {
+                            EditablePlaceItem(
+                                number = index + 1,
+                                place = place,
+                                isDragging = isDragging,
+                                onRemove = { viewModel.removePlace(index) },
+                                dragHandle = {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "Drag",
+                                        tint = Color.Gray,
+                                        modifier = Modifier
+                                            .draggableHandle()
+                                            .size(24.dp)
+                                    )
+                                },
+                                onDateChange = { date -> viewModel.updatePlaceDate(index, date) }
+                            )
+                        }
                     }
                 } else {
                     PlaceItem(place = place, onClick = { onNext(place) })

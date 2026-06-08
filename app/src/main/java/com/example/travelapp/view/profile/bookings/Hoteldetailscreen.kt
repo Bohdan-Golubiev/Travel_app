@@ -15,12 +15,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.data.dao.HotelWithRoute
 import com.example.travelapp.data.entity.HotelEntity
-import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.view.ReviewItem
 import com.example.travelapp.viewmodel.profile.HotelViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun HotelDetailScreen(
@@ -67,27 +64,18 @@ private fun HotelDetailContent(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 80.dp), // bottom для кнопки
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 80.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
-    ){
+    ) {
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Color(0xFF1A3A4E),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = hotel.name,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Text(text = hotel.name, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = hotel.address,
-                    fontSize = 14.sp,
-                    color = Color(0xFFB0BEC5)
-                )
+                Text(text = hotel.address, fontSize = 14.sp, color = Color(0xFFB0BEC5))
             }
         }
 
@@ -99,11 +87,7 @@ private fun HotelDetailContent(
 
         InfoCard(title = strings.cost) {
             InfoRow(label = strings.perDay, value = "%.2f".format(hotel.costPerDay) + "  ₴")
-            InfoRow(
-                label = strings.total,
-                value = "%.2f".format(hotel.totalCost) + "  ₴",
-                valueColor = Color(0xFF4FC3F7),
-            )
+            InfoRow(label = strings.total, value = "%.2f".format(hotel.totalCost) + "  ₴", valueColor = Color(0xFF4FC3F7))
         }
 
         InfoCard(title = strings.routeUp) {
@@ -112,31 +96,27 @@ private fun HotelDetailContent(
 
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
+        // ── Заголовок секції відгуків ─────────────────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = strings.reviews + "(${reviews.size})",
+                text = strings.reviews + " (${reviews.size})",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White
             )
             if (isLoadingReviews) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
-                    color = Color(0xFF219EBC)
-                )
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color(0xFF219EBC))
             }
-            Text(
-                text = "⭐ ${"%.1f".format(avg)}",
-                color = Color.White)
+            Text(text = "⭐ ${"%.1f".format(avg)}", color = Color.White)
         }
 
         HorizontalDivider(color = Color(0xFF2A4A5E))
 
+        // ── Картки відгуків ───────────────────────────────────────────────────
         if (!isLoadingReviews && reviews.isEmpty()) {
             Text(
                 text = strings.noReviews,
@@ -146,8 +126,11 @@ private fun HotelDetailContent(
             )
         } else {
             reviews.forEach { review ->
-                ReviewItem(review = review, currentUserId = userId)
-                HorizontalDivider(color = Color(0xFF2A4A5E))
+                ReviewItem(                          // ← новий компонент
+                    review = review,
+                    currentUserId = userId,
+                    youLabel = strings.you
+                )
             }
         }
     }
@@ -167,61 +150,8 @@ private fun HotelDetailContent(
     }
 }
 
-@Composable
-private fun ReviewItem(review: ReviewEntity, currentUserId: String) {
-    val formattedDate = remember(review.createdAt) {
-        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            .format(Date(review.createdAt))
-    }
-    val strings = LocalAppStrings.current
+// ── InfoCard / InfoRow (без змін) ─────────────────────────────────────────────
 
-
-    val displayName = if (review.userId == currentUserId) {
-        strings.you
-    } else {
-        review.userName
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = displayName,
-                fontSize = 14.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = "${review.mark}/5",
-                fontSize = 13.sp,
-                color = Color(0xFFB0BEC5)
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = review.text,
-                fontSize = 13.sp,
-                color = Color(0xFFB0BEC5),
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = formattedDate,
-                fontSize = 12.sp,
-                color = Color(0xFF5E7A8A)
-            )
-        }
-    }
-}
 @Composable
 private fun InfoCard(
     title: String,
@@ -233,13 +163,7 @@ private fun InfoCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF607D8B),
-                letterSpacing = 0.8.sp
-            )
+            Text(text = title, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF607D8B), letterSpacing = 0.8.sp)
             Spacer(modifier = Modifier.height(10.dp))
             content()
         }
@@ -247,29 +171,13 @@ private fun InfoCard(
 }
 
 @Composable
-private fun InfoRow(
-    label: String,
-    value: String,
-    valueColor: Color = Color.White,
-) {
+private fun InfoRow(label: String, value: String, valueColor: Color = Color.White) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = Color(0xFFB0BEC5),
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            fontSize = 14.sp,
-            color = valueColor,
-            fontWeight = FontWeight.Normal
-        )
+        Text(text = label, fontSize = 14.sp, color = Color(0xFFB0BEC5), modifier = Modifier.weight(1f))
+        Text(text = value, fontSize = 14.sp, color = valueColor, fontWeight = FontWeight.Normal)
     }
 }
