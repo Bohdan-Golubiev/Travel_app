@@ -57,6 +57,12 @@ fun AddReviewScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                Text(
+                    text = target.name,
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
 
                 if (target is ReviewTarget.Booking) {
                     Text(
@@ -65,6 +71,7 @@ fun AddReviewScreen(
                         color = Color(0xFFB0BEC5)
                     )
                 }
+
 
                 Text(
                     text = target.subtitle,

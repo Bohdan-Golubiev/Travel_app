@@ -1,13 +1,15 @@
 package com.example.travelapp.view.profile.bookings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -79,14 +81,22 @@ fun HotelScreen(
                                 onToggle = { inProgressExpanded = !inProgressExpanded }
                             )
                         }
-                        if (inProgressExpanded) {
-                            items(inProgress, key = { "inp_${it.hotel.id}" }) { item ->
-                                HotelCard(
-                                    hotelWithRoute = item,
-                                    status  = HotelStatus.IN_PROGRESS,
-                                    onClick = { onOpen(item.hotel) },
-                                    onDelete = { viewModel.deleteHotel(userId, item.hotel) }
-                                )
+                        item(key = "anim_inprogress") {
+                            AnimatedVisibility(
+                                visible = inProgressExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    inProgress.forEach { item ->
+                                        HotelCard(
+                                            hotelWithRoute = item,
+                                            status  = HotelStatus.IN_PROGRESS,
+                                            onClick = { onOpen(item.hotel) },
+                                            onDelete = { viewModel.deleteHotel(userId, item.hotel) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -100,14 +110,22 @@ fun HotelScreen(
                                 onToggle = { upcomingExpanded = !upcomingExpanded }
                             )
                         }
-                        if (upcomingExpanded) {
-                            items(upcoming, key = { "upc_${it.hotel.id}" }) { item ->
-                                HotelCard(
-                                    hotelWithRoute = item,
-                                    status  = HotelStatus.UPCOMING,
-                                    onClick = { onOpen(item.hotel) },
-                                    onDelete = { viewModel.deleteHotel(userId, item.hotel) }
-                                )
+                        item(key = "anim_upcoming") {
+                            AnimatedVisibility(
+                                visible = upcomingExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    upcoming.forEach { item ->
+                                        HotelCard(
+                                            hotelWithRoute = item,
+                                            status  = HotelStatus.UPCOMING,
+                                            onClick = { onOpen(item.hotel) },
+                                            onDelete = { viewModel.deleteHotel(userId, item.hotel) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -121,14 +139,22 @@ fun HotelScreen(
                                 onToggle = { completedExpanded = !completedExpanded }
                             )
                         }
-                        if (completedExpanded) {
-                            items(completed, key = { "cmp_${it.hotel.id}" }) { item ->
-                                HotelCard(
-                                    hotelWithRoute = item,
-                                    status  = HotelStatus.COMPLETED,
-                                    onClick = { onOpen(item.hotel) },
-                                    onDelete = { viewModel.deleteHotel(userId, item.hotel) }
-                                )
+                        item(key = "anim_completed") {
+                            AnimatedVisibility(
+                                visible = completedExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    completed.forEach { item ->
+                                        HotelCard(
+                                            hotelWithRoute = item,
+                                            status  = HotelStatus.COMPLETED,
+                                            onClick = { onOpen(item.hotel) },
+                                            onDelete = { viewModel.deleteHotel(userId, item.hotel) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

@@ -1,14 +1,12 @@
 package com.example.travelapp.view
 
 import android.net.Uri
-import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.travelapp.model.ReviewTarget
-import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.view.create.FindHotelScreen
 import com.example.travelapp.view.create.FindVehicleScreen
 import com.example.travelapp.view.create.HotelBookedScreen
@@ -28,12 +26,6 @@ sealed class CreateNavigation(val route: String) {
     data object Route : CreateNavigation("route/{routeId}/{routeName}/{routeDescription}") {
         fun createRoute(routeId: String, routeName: String, routeDescription: String) =
             "route/$routeId/${Uri.encode(routeName)}/${Uri.encode(routeDescription)}"
-
-        val navArguments = listOf(
-            navArgument("routeId") { type = NavType.StringType },
-            navArgument("routeName") { type = NavType.StringType },
-            navArgument("routeDescription") { type = NavType.StringType }
-        )
     }
 
     data object RouteMap : CreateNavigation("route_map/{routeId}") {
@@ -78,8 +70,6 @@ fun NavGraphBuilder.createGraph(
 ) {
 
     composable(CreateNavigation.ListOfRoutes.route) {
-        val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.myRoutes) }
         RoutesScreen(
             userId        = currentUser.uid,
             onOpen        = { route ->
@@ -91,15 +81,11 @@ fun NavGraphBuilder.createGraph(
         )
     }
 
-    composable(
-        route     = CreateNavigation.Route.route,
-        arguments = CreateNavigation.Route.navArguments
-    ) { backStack ->
-        val routeId          = backStack.arguments?.getString("routeId") ?: ""
-        val routeName        = backStack.arguments?.getString("routeName") ?: ""
+    composable(CreateNavigation.Route.route) { backStack ->
+        val routeId = backStack.arguments?.getString("routeId") ?: ""
+        val routeName = backStack.arguments?.getString("routeName") ?: ""
         val routeDescription = backStack.arguments?.getString("routeDescription") ?: ""
 
-        LaunchedEffect(routeName) { onTitleChange(routeName) }
         RouteDetailScreen(
             routeId          = routeId,
             routeName        = routeName,
@@ -140,9 +126,7 @@ fun NavGraphBuilder.createGraph(
     ) { backStack ->
         val routeId   = backStack.arguments?.getString("routeId") ?: ""
         val placeId   = backStack.arguments?.getString("placeId") ?: ""
-        val placeName = backStack.arguments?.getString("placeName") ?: ""
 
-        LaunchedEffect(placeName) { onTitleChange(placeName) }
         PlaceDetailScreen(
             placeId     = placeId,
             routeId     = routeId,
@@ -159,7 +143,6 @@ fun NavGraphBuilder.createGraph(
             ?: sharedViewModel.selectedHotel?.let              { ReviewTarget.Hotel(it) }
             ?: sharedViewModel.selectedBooking?.let            { ReviewTarget.Booking(it) }
 
-        LaunchedEffect(reviewTarget?.name ?: "") { onTitleChange(reviewTarget?.name ?: "") }
         reviewTarget?.let { target ->
             AddReviewScreen(
                 target   = target,
@@ -205,9 +188,7 @@ fun NavGraphBuilder.createGraph(
         arguments = listOf(navArgument("routeId") { type = NavType.StringType })
     ) { backStackEntry ->
         val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
-        val strings = LocalAppStrings.current
 
-        LaunchedEffect("vehicle") { onTitleChange(strings.findVehicle) }
         FindVehicleScreen(
             userId      = currentUser.uid,
             routeId     = routeId,
@@ -223,9 +204,7 @@ fun NavGraphBuilder.createGraph(
         arguments = listOf(navArgument("routeId") { type = NavType.StringType })
     ) { backStackEntry ->
         val routeId = backStackEntry.arguments?.getString("routeId") ?: ""
-        val strings = LocalAppStrings.current
 
-        LaunchedEffect("hotel") { onTitleChange(strings.findHotel) }
         FindHotelScreen(
             userId      = currentUser.uid,
             routeId     = routeId,

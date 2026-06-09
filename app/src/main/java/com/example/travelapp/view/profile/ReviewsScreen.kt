@@ -1,13 +1,15 @@
 package com.example.travelapp.view.profile
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -87,16 +89,21 @@ fun ReviewsScreen(
                                 onToggle = { placesExpanded = !placesExpanded }
                             )
                         }
-                        if (placesExpanded) {
-                            items(
-                                items = uiState.placeReviews,
-                                key   = { "place_${it.review.id}" }
-                            ) { item ->
-                                PlaceReviewCard(
-                                    review   = item.review,
-                                    onDelete = { viewModel.deleteReview(userId, item.review) },
-                                    onEdit   = { onEdit(item) }
-                                )
+                        item(key = "anim_places") {
+                            AnimatedVisibility(
+                                visible = placesExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    uiState.placeReviews.forEach { item ->
+                                        PlaceReviewCard(
+                                            review   = item.review,
+                                            onDelete = { viewModel.deleteReview(userId, item.review) },
+                                            onEdit   = { onEdit(item) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -110,16 +117,21 @@ fun ReviewsScreen(
                                 onToggle = { hotelsExpanded = !hotelsExpanded }
                             )
                         }
-                        if (hotelsExpanded) {
-                            items(
-                                items = uiState.hotelReviews,
-                                key   = { "hotel_${it.review.id}" }
-                            ) { item ->
-                                HotelReviewCard(
-                                    review   = item.review,
-                                    onDelete = { viewModel.deleteReview(userId, item.review) },
-                                    onEdit   = { onEdit(item) }
-                                )
+                        item(key = "anim_hotels") {
+                            AnimatedVisibility(
+                                visible = hotelsExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    uiState.hotelReviews.forEach { item ->
+                                        HotelReviewCard(
+                                            review   = item.review,
+                                            onDelete = { viewModel.deleteReview(userId, item.review) },
+                                            onEdit   = { onEdit(item) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -133,16 +145,21 @@ fun ReviewsScreen(
                                 onToggle = { bookingsExpanded = !bookingsExpanded }
                             )
                         }
-                        if (bookingsExpanded) {
-                            items(
-                                items = uiState.bookingReviews,
-                                key   = { "booking_${it.review.id}" }
-                            ) { item ->
-                                FlightReviewCard(
-                                    review   = item.review,
-                                    onDelete = { viewModel.deleteReview(userId, item.review) },
-                                    onEdit   = { onEdit(item) }
-                                )
+                        item(key = "anim_bookings") {
+                            AnimatedVisibility(
+                                visible = bookingsExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    uiState.bookingReviews.forEach { item ->
+                                        FlightReviewCard(
+                                            review   = item.review,
+                                            onDelete = { viewModel.deleteReview(userId, item.review) },
+                                            onEdit   = { onEdit(item) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

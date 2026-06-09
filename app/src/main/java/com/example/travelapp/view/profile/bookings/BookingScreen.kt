@@ -1,13 +1,16 @@
 package com.example.travelapp.view.profile.bookings
 
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -42,7 +45,6 @@ fun BookingScreen(
     val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
     var activeExpanded   by rememberSaveable { mutableStateOf(true) }
     var expiredExpanded  by rememberSaveable { mutableStateOf(true) }
-
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             bookings == null -> Unit
@@ -69,21 +71,29 @@ fun BookingScreen(
                                 onToggle = { activeExpanded = !activeExpanded }
                             )
                         }
-                        if (activeExpanded) {
-                            items(active, key = { "active_${it.booking.id}" }) { item ->
-                                BookingCard(
-                                    booking   = item.booking,
-                                    routeName = item.routeName,
-                                    isExpired = false,
-                                    onClick   = { onOpen(item.booking) },
-                                    onDelete  = {
-                                        viewModel.deleteBooking(
-                                            userId,
-                                            routeId   = item.booking.routeId,
-                                            bookingId = item.booking.id
+                        item(key = "anim_active") {
+                            AnimatedVisibility(
+                                visible = activeExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    active.forEach { item ->
+                                        BookingCard(
+                                            booking   = item.booking,
+                                            routeName = item.routeName,
+                                            isExpired = false,
+                                            onClick   = { onOpen(item.booking) },
+                                            onDelete  = {
+                                                viewModel.deleteBooking(
+                                                    userId,
+                                                    routeId   = item.booking.routeId,
+                                                    bookingId = item.booking.id
+                                                )
+                                            }
                                         )
                                     }
-                                )
+                                }
                             }
                         }
                     }
@@ -97,21 +107,29 @@ fun BookingScreen(
                                 onToggle = { expiredExpanded = !expiredExpanded }
                             )
                         }
-                        if (expiredExpanded) {
-                            items(expired, key = { "expired_${it.booking.id}" }) { item ->
-                                BookingCard(
-                                    booking   = item.booking,
-                                    routeName = item.routeName,
-                                    isExpired = true,
-                                    onClick   = { onOpen(item.booking) },
-                                    onDelete  = {
-                                        viewModel.deleteBooking(
-                                            userId,
-                                            routeId   = item.booking.routeId,
-                                            bookingId = item.booking.id
+                        item(key = "anim_expired") {
+                            AnimatedVisibility(
+                                visible = expiredExpanded,
+                                enter   = expandVertically(animationSpec = tween(durationMillis = 280)),
+                                exit    = shrinkVertically(animationSpec = tween(durationMillis = 220))
+                            ) {
+                                Column {
+                                    expired.forEach { item ->
+                                        BookingCard(
+                                            booking   = item.booking,
+                                            routeName = item.routeName,
+                                            isExpired = true,
+                                            onClick   = { onOpen(item.booking) },
+                                            onDelete  = {
+                                                viewModel.deleteBooking(
+                                                    userId,
+                                                    routeId   = item.booking.routeId,
+                                                    bookingId = item.booking.id
+                                                )
+                                            }
                                         )
                                     }
-                                )
+                                }
                             }
                         }
                     }

@@ -1,38 +1,26 @@
 package com.example.travelapp.view
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -84,58 +72,39 @@ fun HomeScreen(
     }
 
     selectedDestination = when {
-        currentDestination.isInHierarchy(RootRoutes.PROFILE) -> {
+        currentDestination.isInHierarchy(RootRoutes.PROFILE) ->
             AppDestinations.PROFILE
-        }
 
-        currentDestination.isInHierarchy(RootRoutes.CREATE) -> {
+        currentDestination.isInHierarchy(RootRoutes.CREATE) ->
             AppDestinations.CREATE
-        }
 
         else -> selectedDestination
     }
 
-    val currentRoute = currentDestination?.route
-
-    val routeTitles = remember { mutableStateOf(mapOf<String, String>()) }
-    var topBarTitle by remember { mutableStateOf("") }
-
-    val titleForCurrentRoute = currentRoute?.let { routeTitles.value[it] }
-
-    if (titleForCurrentRoute != null && titleForCurrentRoute != topBarTitle) {
-        topBarTitle = titleForCurrentRoute
-    }
-
     val showTopBar = when (selectedDestination) {
+        AppDestinations.PROFILE ->
+            currentDestination?.route != ProfileNavigation.Profile.route
 
-        AppDestinations.PROFILE -> {
-            currentRoute != ProfileNavigation.Profile.route
-        }
-
-        AppDestinations.CREATE -> {
-            currentRoute in CREATE_TOPBAR_ROUTES
-        }
+        AppDestinations.CREATE ->
+            currentDestination?.route in CREATE_TOPBAR_ROUTES
     }
-
-    val canGoBack = currentRoute != null &&
-            currentRoute !in TAB_ROOT_ROUTES
-
-    val strings = LocalAppStrings.current
 
     fun AppDestinations.label(strings: AppStrings) = when (this) {
         AppDestinations.CREATE -> strings.trips
         AppDestinations.PROFILE -> strings.profile
     }
 
+    val canGoBack = currentDestination?.route != null &&
+            currentDestination.route !in TAB_ROOT_ROUTES
+
+    val strings = LocalAppStrings.current
+
     NavigationSuiteScaffold(
         navigationSuiteItems = {
             AppDestinations.entries.forEach { destination ->
                 item(
                     icon = {
-                        Icon(
-                            imageVector = destination.icon,
-                            contentDescription = destination.label(strings)
-                        )
+                        Icon(destination.icon, null)
                     },
                     label = {
                         Text(destination.label(strings))
@@ -165,40 +134,10 @@ fun HomeScreen(
             containerColor = Color(0xFF0D1B2A),
             topBar = {
                 if (showTopBar) {
-                    TopAppBar(
-                        modifier = Modifier.height(80.dp),
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color(0xFF0D1B2A)
-                        ),
-                        title = {
-                            Row(
-                                modifier = Modifier.fillMaxHeight(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = topBarTitle,
-                                    color = Color.White,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            if (canGoBack) {
-                                IconButton(
-                                    modifier = Modifier.fillMaxHeight(),
-                                    onClick = {
-                                        nav.popBackStack()
-                                    }
-                                ) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Back",
-                                        tint = Color.White
-                                    )
-                                }
-                            }
-                        }
+                    AppTopBar(
+                        nav = nav,
+                        canGoBack = canGoBack,
+                        strings = strings
                     )
                 }
             }
@@ -222,18 +161,7 @@ fun HomeScreen(
                     sharedViewModel = sharedViewModel,
                     onSignOut = onSignOut,
                     onLocaleChange = onLocaleChange,
-                    onTitleChange = { title ->
-
-                        val route =
-                            nav.currentBackStackEntry?.destination?.route
-
-                        if (route != null) {
-
-                            routeTitles.value =
-                                routeTitles.value + (route to title)
-
-                            topBarTitle = title
-                        }
+                    onTitleChange = { title -> title
                     }
                 )
             }
@@ -257,12 +185,10 @@ private fun AppNavHost(
     onLocaleChange: (AppLocale) -> Unit,
     onTitleChange: (String) -> Unit,
 ) {
-
     NavHost(
         navController = nav,
         startDestination = RootRoutes.CREATE
     ) {
-
         navigation(
             route = RootRoutes.CREATE,
             startDestination = CreateNavigation.ListOfRoutes.route
@@ -284,7 +210,6 @@ private fun AppNavHost(
                 user = user,
                 sharedViewModel = sharedViewModel,
                 onSignOut = onSignOut,
-                onTitleChange = onTitleChange,
                 onLocaleChange = onLocaleChange
             )
         }

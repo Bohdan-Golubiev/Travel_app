@@ -1,5 +1,6 @@
 package com.example.travelapp.view
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -71,7 +72,6 @@ fun NavGraphBuilder.profileGraph(
     user: FirebaseUser,
     sharedViewModel: SharedViewModel,
     onSignOut: () -> Unit,
-    onTitleChange: (String) -> Unit,
     onLocaleChange: (AppLocale) -> Unit,
 ) {
     composable(ProfileNavigation.Profile.route) {
@@ -88,7 +88,6 @@ fun NavGraphBuilder.profileGraph(
             ?: sharedViewModel.selectedHotel?.let { ReviewTarget.Hotel(it) }
             ?: sharedViewModel.selectedBooking?.let { ReviewTarget.Booking(it) }
 
-        LaunchedEffect(reviewTarget?.name ?: "") { onTitleChange(reviewTarget?.name ?: "") }
         reviewTarget?.let { target ->
             AddReviewScreen(
                 target = target,
@@ -99,8 +98,6 @@ fun NavGraphBuilder.profileGraph(
     }
 
     composable(ProfileNavigation.Booking.route) {
-        val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.myBooking) }
         BookingScreen(
             userId = user.uid,
             onOpen = { booking ->
@@ -116,10 +113,7 @@ fun NavGraphBuilder.profileGraph(
         arguments = ProfileNavigation.BookingDetail.navArguments
     ) { backStack ->
         val bookingId   = backStack.arguments?.getString("bookingId") ?: ""
-        val bookingName = backStack.arguments?.getString("bookingName") ?: ""
         val bookingViewModel: BookingViewModel = viewModel()
-
-        LaunchedEffect(bookingName) { onTitleChange(bookingName) }
 
         val booking by bookingViewModel.getByBookingId(bookingId)
             .collectAsState(initial = null)
@@ -137,8 +131,6 @@ fun NavGraphBuilder.profileGraph(
     }
 
     composable(ProfileNavigation.Hotel.route) {
-        val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.myHotels) }
         HotelScreen(
             userId = user.uid,
             onOpen = { hotel ->
@@ -154,9 +146,7 @@ fun NavGraphBuilder.profileGraph(
         arguments = ProfileNavigation.HotelDetail.navArguments
     ) { backStack ->
         val hotelId   = backStack.arguments?.getString("hotelId") ?: ""
-        val hotelName = backStack.arguments?.getString("hotelName") ?: ""
 
-        LaunchedEffect(hotelName) { onTitleChange(hotelName) }
         HotelDetailScreen(
             hotelId     = hotelId,
             userId      = user.uid,
@@ -168,8 +158,6 @@ fun NavGraphBuilder.profileGraph(
     }
 
     composable(ProfileNavigation.Review.route) {
-        val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.myReviews) }
         ReviewsScreen(
             userId = user.uid,
             onEdit = { item ->
@@ -181,7 +169,6 @@ fun NavGraphBuilder.profileGraph(
 
     composable(ProfileNavigation.EditReview.route) {
         val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.editReview) }
         sharedViewModel.selectedReview?.let { item ->
             val review = item.review
             EditReviewScreen(
@@ -203,14 +190,10 @@ fun NavGraphBuilder.profileGraph(
     }
 
     composable(ProfileNavigation.ActiveTrips.route) {
-        val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.activeTrips) }
         ActiveTripsScreen(userId = user.uid)
     }
 
     composable(ProfileNavigation.SpendingStats.route) {
-        val strings = LocalAppStrings.current
-        LaunchedEffect(Unit) { onTitleChange(strings.statsSpending) }
         SpendingStatsScreen(userId = user.uid)
     }
 }
