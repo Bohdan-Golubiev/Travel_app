@@ -13,14 +13,51 @@ import java.util.*
 
 data class ActiveTripItem(
     val route: RouteEntity,
-    val nextPlace: PlaceEntity?
+    val nextPlace: PlaceEntity?,
+    val progressPercent: Int = 0,
+    val visitedCount: Int = 0,
+    val totalCount: Int = 0
 )
 
 class ActiveTripsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = TravelRepository(TravelDB.getInstance(application), application)
 
+    private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     private val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    private val todayDate: Date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(today) ?: Date()
+
+    private fun parseDmY(dateStr: String): Date? = try {
+        dateFormat.parse(dateStr)
+    } catch (e: Exception) { null }
+
+    private fun calculateProgress(places: List<PlaceEntity>): Int {
+        if (places.isEmpty()) return 0
+        val sorted = places.mapNotNull { p ->
+            parseDmY(p.visitDate)?.let { Pair(it, p) }
+        }.sortedBy { it.first }
+        if (sorted.isEmpty()) return 0
+
+        val firstDate = sorted.first().first
+        val lastDate = sorted.last().first
+
+        if (firstDate == lastDate) {
+            return if (!todayDate.before(firstDate)) 100 else 0
+        }
+
+        return when {
+            todayDate.before(firstDate) -> 0
+            !todayDate.before(lastDate) -> 100
+            else -> {
+                val total = lastDate.time - firstDate.time
+                val elapsed = todayDate.time - firstDate.time
+                ((elapsed.toDouble() / total) * 100).toInt().coerceIn(0, 100)
+            }
+        }
+    }
+
+    private fun countVisited(places: List<PlaceEntity>): Int =
+        places.count { p -> parseDmY(p.visitDate)?.let { !todayDate.before(it) } ?: false }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getActiveTrips(userId: String): Flow<List<ActiveTripItem>> =
@@ -30,8 +67,20 @@ class ActiveTripsViewModel(application: Application) : AndroidViewModel(applicat
                     flowOf(emptyList())
                 } else {
                     val perRoute = routes.map { route ->
-                        repository.getNextPlaceForRoute(route.id, today)
-                            .map { nextPlace -> ActiveTripItem(route, nextPlace) }
+                        combine(
+                            repository.getNextPlaceForRoute(route.id, today),
+                            repository.getPlaces(route.id)
+                        ) { nextPlace, allPlaces ->
+                            val progress = calculateProgress(allPlaces)
+                            val visited = countVisited(allPlaces)
+                            ActiveTripItem(
+                                route = route,
+                                nextPlace = nextPlace,
+                                progressPercent = progress,
+                                visitedCount = visited,
+                                totalCount = allPlaces.size
+                            )
+                        }
                     }
                     combine(perRoute) { it.toList() }
                 }

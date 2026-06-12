@@ -107,6 +107,7 @@ data class AppStrings(
     val writeReview: String,
     val submit: String,
     val flyFrom: String,
+    val flyTo: String,
     val saveChange: String,
 
     val createRoute: String,
@@ -167,6 +168,9 @@ data class AppStrings(
     val deleteRouteMes: String,
 
     val activeTrips: String,
+    val noActiveTrips: String,
+    val routeProgress: String,
+    val places: String,
     val nextLocation: String,
     val statsSpending: String,
 
@@ -210,6 +214,20 @@ data class AppStrings(
     val map: String,
     val findVehicle: String,
     val findHotel: String,
+
+    val car: String,
+    val walk: String,
+    val km: String,
+    val meters: String,
+    val hours: String,
+    val minutes: String,
+
+    val ratingBad: String,
+    val ratingSoSo: String,
+    val ratingOk: String,
+    val ratingGood: String,
+    val ratingExcellent: String,
+    val ratingPrompt: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -308,6 +326,7 @@ val EnglishStrings = AppStrings(
     writeReview = "Write your review here...",
     submit = "Submit",
     flyFrom = "Fly from ",
+    flyTo = " to ",
     saveChange = "Save changes",
 
     createRoute = "Create route",
@@ -368,6 +387,9 @@ val EnglishStrings = AppStrings(
     deleteRouteMes = " will be permanently deleted.",
 
     activeTrips = "Active trips",
+    noActiveTrips = "No active trips",
+    routeProgress = "Route progress",
+    places = " places",
     nextLocation = "Next location",
     statsSpending = "Expense statistics",
 
@@ -411,6 +433,20 @@ val EnglishStrings = AppStrings(
     map = "Map",
     findVehicle = "Find vehicle",
     findHotel = "Find hotel",
+
+    car = "Car",
+    walk = "Walk",
+    km = "km.",
+    meters = "m.",
+    hours = "h.",
+    minutes = "min.",
+
+    ratingBad = "Bad",
+    ratingSoSo = "So so",
+    ratingOk = "Ok",
+    ratingGood = "Good",
+    ratingExcellent = "Excellent",
+    ratingPrompt = "Rate experience",
 )
 
 val UkrainianStrings = AppStrings(
@@ -507,6 +543,7 @@ val UkrainianStrings = AppStrings(
     writeReview = "Напишіть свій відгук...",
     submit = "Надіслати",
     flyFrom = "Виліт з ",
+    flyTo = " до ",
     saveChange = "Зберегти зміни",
 
     createRoute = "Створити маршрут",
@@ -567,6 +604,9 @@ val UkrainianStrings = AppStrings(
     deleteRouteMes = " буде видалено назавжди.",
 
     activeTrips = "Активні подорожі",
+    noActiveTrips = "Немає активних подорожей",
+    routeProgress = "Прогрес маршруту",
+    places = " місць",
     nextLocation = "Наступна локація",
     statsSpending = "Статистика витрат",
 
@@ -610,6 +650,20 @@ val UkrainianStrings = AppStrings(
     map = "Карта",
     findVehicle = "Знайти транспорт",
     findHotel = "Знайти готелі",
+
+    car = "Авто",
+    walk = "Пішки",
+    km = "км.",
+    meters = "м.",
+    hours = "год.",
+    minutes = "хв.",
+
+    ratingBad = "Погано",
+    ratingSoSo = "Так собі",
+    ratingOk = "Нормально",
+    ratingGood = "Добре",
+    ratingExcellent = "Відмінно",
+    ratingPrompt = "Оцініть враження",
     )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

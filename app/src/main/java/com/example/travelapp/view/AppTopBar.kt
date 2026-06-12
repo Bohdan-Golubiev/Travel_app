@@ -13,21 +13,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.savedstate.SavedState
 import com.example.travelapp.utils.AppStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
+    route: String?,
+    args: SavedState?,
     nav: NavHostController,
     canGoBack: Boolean,
     strings: AppStrings
 ) {
-    val backStackEntry by nav.currentBackStackEntryAsState()
-
-    val route = backStackEntry?.destination?.route
-    val args = backStackEntry?.arguments
-
     val title = when (route) {
         CreateNavigation.ListOfRoutes.route ->
             strings.myRoutes

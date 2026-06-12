@@ -135,6 +135,8 @@ fun HomeScreen(
             topBar = {
                 if (showTopBar) {
                     AppTopBar(
+                        route = backStackEntry?.destination?.route,
+                        args = backStackEntry?.arguments,
                         nav = nav,
                         canGoBack = canGoBack,
                         strings = strings

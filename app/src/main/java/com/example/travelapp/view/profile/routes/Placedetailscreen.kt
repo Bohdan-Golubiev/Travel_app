@@ -13,13 +13,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.data.repository.WeatherInfo
+import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.view.ReviewItem
 import com.example.travelapp.viewmodel.create.routes.PlaceDetailViewModel
@@ -64,20 +70,7 @@ fun PlaceDetailScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Text(text = place?.name ?: "", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White)
-                    Text(text = place?.location ?: "", fontSize = 14.sp, color = Color(0xFFB0BEC5))
-                    if (!place?.visitDate.isNullOrEmpty()) {
-                        Text(text = strings.visitDate + place?.visitDate, fontSize = 14.sp, color = Color(0xFFB0BEC5))
-                    }
-                    Text(text = (strings.orderInRoute + (place?.orderInRoute?.plus(1))), fontSize = 14.sp, color = Color(0xFFB0BEC5))
-                }
-                HorizontalDivider(color = Color(0xFF2A4A5E))
+                PlaceHeaderSection(place = place, strings = strings)
             }
 
             if (isLoadingPhotos || photos.isNotEmpty()) {
@@ -158,7 +151,103 @@ fun PlaceDetailScreen(
     }
 }
 
-// ── Допоміжні функції (без змін) ─────────────────────────────────────────────
+@Composable
+private fun PlaceHeaderSection(place: PlaceEntity?, strings: AppStrings) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF219EBC), Color(0xFF023047))
+                    )
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF0D1F2D))
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text       = place?.name ?: "",
+                fontSize   = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color      = Color.White,
+                lineHeight = 24.sp
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                PlaceInfoChip(
+                    icon  = Icons.Default.LocationOn,
+                    label = place?.location ?: "",
+                    tint  = Color(0xFF219EBC)
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (!place?.visitDate.isNullOrEmpty()) {
+                    PlaceInfoChip(
+                        icon  = Icons.Default.DateRange,
+                        label = place.visitDate,
+                        tint  = Color(0xFF4CAF50)
+                    )
+                }
+
+                val order = place?.orderInRoute?.plus(1)
+                if (order != null) {
+                    PlaceInfoChip(
+                        icon  = Icons.Default.List,
+                        label = strings.orderInRoute + order,
+                        tint  = Color(0xFFFFB703)
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = Color(0xFF2A4A5E))
+    }
+}
+
+@Composable
+private fun PlaceInfoChip(
+    icon:  ImageVector,
+    label: String,
+    tint:  Color
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = tint.copy(alpha = 0.12f)
+    ) {
+        Row(
+            modifier          = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            Icon(
+                imageVector        = icon,
+                contentDescription = null,
+                tint               = tint,
+                modifier           = Modifier.size(13.dp)
+            )
+            Text(
+                text     = label,
+                fontSize = 12.sp,
+                color    = tint,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
 
 private fun isWithinTenDays(visitDate: String): Boolean {
     val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())

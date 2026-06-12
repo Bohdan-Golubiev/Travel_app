@@ -28,7 +28,8 @@ sealed class ReviewTarget {
         override val googlePlaceId = entity.id.removeSuffix(entity.routeId.uppercase())
         override val name          = entity.name
         override val subtitle      = entity.date
-        val fromTo                 = entity.from + " to " + entity.to
+        val from                   = entity.from
+        val to                     = entity.to
         override val targetType    = "booking"
     }
 }
