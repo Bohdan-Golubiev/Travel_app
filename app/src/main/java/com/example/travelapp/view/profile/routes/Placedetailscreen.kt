@@ -75,7 +75,7 @@ fun PlaceDetailScreen(
 
             if (isLoadingPhotos || photos.isNotEmpty()) {
                 item {
-                    PlacePhotosSection(photos = photos, isLoading = isLoadingPhotos)
+                    PlacePhotosSection(photos = photos, isLoading = isLoadingPhotos, strings = strings)
                     HorizontalDivider(color = Color(0xFF2A4A5E))
                 }
             }
@@ -88,7 +88,7 @@ fun PlaceDetailScreen(
                 }
             }
 
-            // ── Заголовок секції відгуків ─────────────────────────────────────
+            //секція відгуків
             item {
                 Row(
                     modifier = Modifier
@@ -115,7 +115,7 @@ fun PlaceDetailScreen(
                 HorizontalDivider(color = Color(0xFF2A4A5E))
             }
 
-            // ── Картки відгуків ───────────────────────────────────────────────
+            // картки
             if (!isLoadingReviews && reviews.isEmpty()) {
                 item {
                     Text(
@@ -127,7 +127,7 @@ fun PlaceDetailScreen(
                 }
             } else {
                 items(reviews, key = { it.id }) { review ->
-                    ReviewItem(                       // ← новий компонент
+                    ReviewItem(
                         review = review,
                         currentUserId = userId,
                         youLabel = strings.you
@@ -257,7 +257,11 @@ private fun isWithinTenDays(visitDate: String): Boolean {
 }
 
 @Composable
-private fun PlacePhotosSection(photos: List<Bitmap>, isLoading: Boolean) {
+private fun PlacePhotosSection(
+    photos: List<Bitmap>,
+    isLoading: Boolean,
+    strings: AppStrings,
+) {
     var selectedPhoto by remember { mutableStateOf<Bitmap?>(null) }
     selectedPhoto?.let { FullScreenPhotoDialog(bitmap = it, onDismiss = { selectedPhoto = null }) }
 
@@ -265,7 +269,7 @@ private fun PlacePhotosSection(photos: List<Bitmap>, isLoading: Boolean) {
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(text = "Фото локації", fontSize = 16.sp, color = Color.White, modifier = Modifier.padding(horizontal = 16.dp))
+        Text(text = strings.photoLocation, fontSize = 16.sp, color = Color.White, modifier = Modifier.padding(horizontal = 16.dp))
         if (isLoading) {
             Box(modifier = Modifier.fillMaxWidth().height(160.dp), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color(0xFF219EBC))
@@ -289,7 +293,7 @@ private fun PlacePhotosSection(photos: List<Bitmap>, isLoading: Boolean) {
 private fun FullScreenPhotoDialog(bitmap: Bitmap, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = true)) {
         Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.9f))
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f))
                 .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
@@ -331,7 +335,7 @@ private fun WeatherCard(weather: WeatherInfo) {
             Text(text = strings.avgTemp + " •  ${"%.0f".format(weather.tempC)}°C", fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Color.White)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(text = "💧 ${weather.humidity}%", fontSize = 12.sp, color = Color(0xFFB0BEC5))
-                Text(text = "💨 ${"%.0f".format(weather.windKph)} км/г", fontSize = 12.sp, color = Color(0xFFB0BEC5))
+                Text(text = "💨 ${"%.0f".format(weather.windKph)} " + strings.speed, fontSize = 12.sp, color = Color(0xFFB0BEC5))
             }
         }
     }

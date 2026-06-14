@@ -38,6 +38,7 @@ interface BookingDao {
     FROM bookings b
     INNER JOIN routes r ON b.routeId = r.id
     WHERE b.userId = :userId
+    ORDER by createdAt DESC
 """)
     fun getBookingsWithRoute(userId: String): Flow<List<BookingWithRoute>>
 }

@@ -59,6 +59,7 @@ data class AppStrings(
     val noReviews: String,
     val addReview: String,
     val you: String,
+    val photoLocation: String,
 
     //Booking
     val route: String,
@@ -122,6 +123,11 @@ data class AppStrings(
     val toRoutes: String,
     val addBookings: String,
     val aboutRoute: String,
+    val wishes: String,
+    val wishesRoute: String,
+    val wishesTravel: String,
+    val wishesTravelText: String,
+    val addBookingsText: String,
 
     val startPlace: String,
     val endPlace: String,
@@ -284,6 +290,7 @@ val EnglishStrings = AppStrings(
     noReviews = "No reviews yet. Be the first!",
     addReview = "Add review",
     you = "You",
+    photoLocation = "Photos of location",
 
     route = "Route: ",
 
@@ -336,11 +343,16 @@ val EnglishStrings = AppStrings(
     date = "Date",
     remove = "Remove",
 
-    createdSuccessful = "created successful",
+    createdSuccessful = "Travel route created",
     makeBooking = "Make booking for trip",
     toRoutes = "To list of routes",
     addBookings = "Add bookings",
     aboutRoute = "About route",
+    wishes = "Have a safe journey!",
+    wishesRoute = "May every stop provide you with unforgettable memories",
+    wishesTravel = "Have a great trip! ✈️",
+    wishesTravelText = "May this trip leave you with unforgettable memories",
+    addBookingsText = "You can add hotels and transport\nwhen planning your next trip\nor when editing your current one",
 
     startPlace = "Start place (city)",
     endPlace = "End place (city)",
@@ -359,7 +371,7 @@ val EnglishStrings = AppStrings(
     selectedDates = "Select dates",
     fromHotelSearch = "From: ",
     toHotelSearch = "To: ",
-    totalCost = "Total cost: ",
+    totalCost = "Total: ",
     update = "Update",
     addToTrip = "Add to trip",
 
@@ -501,6 +513,7 @@ val UkrainianStrings = AppStrings(
     noReviews = "Відгуків ще немає. Будьте першими!",
     addReview = "Додати відгук",
     you = "Ви",
+    photoLocation = "Фото локації",
 
     route = "Маршрут: ",
 
@@ -553,11 +566,16 @@ val UkrainianStrings = AppStrings(
     date = "Дата",
     remove = "Видалити",
 
-    createdSuccessful = "успішно збережено",
+    createdSuccessful = "Маршрут подорожі створено",
     makeBooking = "Створити бронювання для подорожі",
     toRoutes = "До списку маршрутів",
     addBookings = "Додати бронювання",
     aboutRoute = "Про маршрут",
+    wishes = "Вдалої дороги!",
+    wishesRoute = "Нехай кожна зупинка подарує незабутні враження",
+    wishesTravel = "Вдалої подорожі! ✈️",
+    wishesTravelText = "Нехай ця поїздка залишить незабутні враження",
+    addBookingsText = "Ви зможете додати готелі та транспорт\nпри наступному плануванні поїздки\nабо при редагуванні поточної",
 
     startPlace = "Початкове місце (місто)",
     endPlace = "Кінцеве місце (місто)",
@@ -576,7 +594,7 @@ val UkrainianStrings = AppStrings(
     selectedDates = "Оберіть дати",
     fromHotelSearch = "З: ",
     toHotelSearch = "До: ",
-    totalCost = "Загальна вартість: ",
+    totalCost = "Загалом: ",
     update = "Оновити",
     addToTrip = "Додати до подорожі",
 

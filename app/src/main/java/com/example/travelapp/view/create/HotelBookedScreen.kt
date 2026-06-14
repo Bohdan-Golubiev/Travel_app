@@ -2,7 +2,6 @@ package com.example.travelapp.view.create
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,12 +29,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.create.SelectedHotelEntry
 
-private val CardBg    = Color(0xFFCED4DA)
-private val GreenOk   = Color(0xFF388E3C)
-private val BtnColor  = Color(0xFFD9D9D9)
+private val CardBg = Color(0xFFCED4DA)
+private val GreenOk = Color(0xFF388E3C)
+private val BtnColor = Color(0xFFD9D9D9)
+private val TravelBg = Color(0xFF1B4332)
+private val TravelAccent = Color(0xFF52B788)
 
 @Composable
 fun HotelBookedScreen(
@@ -44,6 +46,8 @@ fun HotelBookedScreen(
     onDoneClick      : () -> Unit
 ) {
     val strings = LocalAppStrings.current
+    val hasBookings = selectedHotels.isNotEmpty() || selectedVehicles.isNotEmpty()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -54,80 +58,83 @@ fun HotelBookedScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                Icon(
-                    imageVector        = Icons.Filled.CheckCircle,
-                    contentDescription = strings.done,
-                    tint               = GreenOk,
-                    modifier           = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .size(64.dp)
-                )
+            if(hasBookings)
+            {
+                item {
+                    Icon(
+                        imageVector        = Icons.Filled.CheckCircle,
+                        contentDescription = strings.done,
+                        tint               = GreenOk,
+                        modifier           = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                            .size(64.dp)
+                    )
+                }
+                item {
+                    Text(
+                        text       = strings.servicesBooked,
+                        fontSize   = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color      = Color.White,
+                        textAlign  = TextAlign.Center,
+                        modifier   = Modifier.fillMaxWidth()
+                    )
+                }
+                item {
+                    Text(
+                        text      = strings.savedSuccessful,
+                        fontSize  = 14.sp,
+                        color     = Color.LightGray,
+                        textAlign = TextAlign.Center,
+                        modifier  = Modifier.fillMaxWidth()
+                    )
+                }
             }
+
             item {
-                Text(
-                    text       = strings.servicesBooked,
-                    fontSize   = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color      = Color.White,
-                    textAlign  = TextAlign.Center,
-                    modifier   = Modifier.fillMaxWidth()
-                )
+                Spacer(modifier = Modifier.height(4.dp))
+                TravelWishBanner(strings)
+                Spacer(modifier = Modifier.height(4.dp))
             }
-            item {
-                Text(
-                    text      = strings.savedSuccessful,
-                    fontSize  = 14.sp,
-                    color     = Color.LightGray,
-                    textAlign = TextAlign.Center,
-                    modifier  = Modifier.fillMaxWidth()
-                )
-            }
+
             item {
                 HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f))
             }
 
-            if (selectedVehicles.isNotEmpty()) {
-                item {
-                    Text(
-                        text       = strings.yourTransport,
-                        fontSize   = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = Color.White,
-                        modifier   = Modifier.fillMaxWidth()
-                    )
-                }
-                items(selectedVehicles) { vehicle ->
-                    BookedVehicleCard(vehicle)
-                }
-            }
-
-            if (selectedHotels.isNotEmpty()) {
-                item {
-                    Text(
-                        text       = strings.yourHotels,
-                        fontSize   = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = Color.White,
-                        modifier   = Modifier.fillMaxWidth()
-                    )
-                }
-                items(selectedHotels, key = { it.hotel.hotelKey }) { entry ->
-                    BookedHotelCard(entry)
-                }
-            }
-
-            if (selectedHotels.isEmpty() && selectedVehicles.isEmpty()) {
-                item {
-                    Box(
-                        modifier         = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(strings.noServices, color = Color.Gray, fontSize = 14.sp)
+            if (hasBookings) {
+                if (selectedVehicles.isNotEmpty()) {
+                    item {
+                        Text(
+                            text       = strings.yourTransport,
+                            fontSize   = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color      = Color.White,
+                            modifier   = Modifier.fillMaxWidth()
+                        )
                     }
+                    items(selectedVehicles) { vehicle ->
+                        BookedVehicleCard(vehicle)
+                    }
+                }
+
+                if (selectedHotels.isNotEmpty()) {
+                    item {
+                        Text(
+                            text       = strings.yourHotels,
+                            fontSize   = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color      = Color.White,
+                            modifier   = Modifier.fillMaxWidth()
+                        )
+                    }
+                    items(selectedHotels, key = { it.hotel.hotelKey }) { entry ->
+                        BookedHotelCard(entry)
+                    }
+                }
+            } else {
+                item {
+                    EmptyBookingsCard( strings)
                 }
             }
         }
@@ -150,6 +157,58 @@ fun HotelBookedScreen(
     }
 }
 
+@Composable
+private fun TravelWishBanner(strings: AppStrings) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(TravelBg, RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment     = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text       = strings.wishesTravel,
+                fontSize   = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color      = TravelAccent
+            )
+            Text(
+                text     = strings.wishesTravelText,
+                fontSize = 12.sp,
+                color    = Color(0xFF95D5B2)
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyBookingsCard(
+    strings: AppStrings
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text      = strings.noServices,
+            fontSize  = 15.sp,
+            color     = Color.Gray,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text      = strings.addBookingsText,
+            fontSize  = 12.sp,
+            color     = Color.Gray.copy(alpha = 0.8f),
+            textAlign = TextAlign.Center,
+            lineHeight = 18.sp
+        )
+    }
+}
 @Composable
 private fun BookedHotelCard(entry: SelectedHotelEntry) {
     val strings = LocalAppStrings.current

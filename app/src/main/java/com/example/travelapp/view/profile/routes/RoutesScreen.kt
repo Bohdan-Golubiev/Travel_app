@@ -174,7 +174,7 @@ private fun RouteItem(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(strings.cancel)
+                    Text(strings.cancel, color = Color(0xFF219EBC))
                 }
             },
             containerColor = Color(0xFF1B3A4B),

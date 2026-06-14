@@ -11,10 +11,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,10 +33,19 @@ import com.example.travelapp.viewmodel.create.SaveState
 import com.example.travelapp.viewmodel.create.SearchState
 import com.example.travelapp.viewmodel.create.SelectedHotelEntry
 
-private val CardBackground    = Color(0xFFCED4DA)
-private val SelectedCardColor = Color(0xFFD6EAD6)
-private val ButtonBackground  = Color(0xFFD9D9D9)
-private val FieldBackground   = Color(0xFFE8E8E8)
+private val CardBackground    = Color(0xFFF5F5F5)
+private val CardBorder        = Color(0xFFE0E0E0)
+private val SelectedCardBg    = Color(0xFFF4FAF0)
+private val SelectedBorder    = Color(0xFF3B6D11)
+private val SelectedChipBg    = Color(0xFFEAF3DE)
+private val SelectedChipFg    = Color(0xFF3B6D11)
+private val SelectedChipBorder = Color(0xFFC0DD97)
+private val ExpandedBg        = Color(0xFFEEEEEE)
+private val ExpandedSelectedBg = Color(0xFFF0F9E8)
+private val ButtonBackground  = Color(0xFFEEEEEE)
+private val AddGreen          = Color(0xFF639922)
+private val AddGreenDark      = Color(0xFF3B6D11)
+private val FieldBackground   = Color(0xFFFFFFFF)
 private val ErrorColor        = Color(0xFFB00020)
 
 @Composable
@@ -97,12 +110,9 @@ fun FindHotelScreen(
             }
 
             Button(
-                onClick  = {
-                    if (state.selectedHotels.isEmpty()) {
-                        onNextClick(emptyList())
-                    } else {
-                        viewModel.saveHotels(userId, routeId)
-                    }
+                onClick = {
+                    if (state.selectedHotels.isEmpty()) onNextClick(emptyList())
+                    else viewModel.saveHotels(userId, routeId)
                 },
                 modifier = Modifier.weight(1f).height(52.dp),
                 shape    = RoundedCornerShape(10.dp),
@@ -120,7 +130,7 @@ fun FindHotelScreen(
                         color       = Color.Black
                     )
                 } else {
-                    Text(strings.next + "->", fontSize = 16.sp)
+                    Text(strings.next + " →", fontSize = 16.sp)
                 }
             }
         }
@@ -147,17 +157,11 @@ fun FindHotelScreen(
 
             if (state.selectedHotels.isNotEmpty()) {
                 item(key = "selected_header") {
-                    Text(
-                        text       = strings.selectedHotels,
-                        fontSize   = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = Color.White,
-                        modifier   = Modifier.padding(top = 4.dp, bottom = 2.dp)
-                    )
+                    HotelSectionLabel(text = strings.selectedHotels)
                 }
 
                 items(state.selectedHotels, key = { "sel_${it.hotel.hotelKey}" }) { entry ->
-                    SelectedHotelItem(
+                    SelectedHotelChip(
                         entry    = entry,
                         onRemove = { viewModel.onRemoveSelected(entry.hotel.hotelKey) }
                     )
@@ -165,8 +169,8 @@ fun FindHotelScreen(
 
                 item(key = "selected_divider") {
                     HorizontalDivider(
-                        color    = Color.Gray.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        color    = Color.Gray.copy(alpha = 0.4f),
+                        modifier = Modifier.padding(vertical = 6.dp)
                     )
                 }
             }
@@ -178,16 +182,12 @@ fun FindHotelScreen(
                         modifier         = Modifier.fillMaxWidth().padding(top = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text     = strings.enterCityAndTap,
-                            color    = Color.Gray,
-                            fontSize = 14.sp
-                        )
+                        Text(strings.enterCityAndTap, color = Color.Gray, fontSize = 14.sp)
                     }
                 }
 
                 is SearchState.Loading -> item(key = "loading") {
-                    LoadingState(message = strings.searchingHotels)
+                    HotelLoadingState(message = strings.searchingHotels)
                 }
 
                 is SearchState.Error -> item(key = "error") {
@@ -197,11 +197,7 @@ fun FindHotelScreen(
                             .background(Color(0xFFFFEDED), RoundedCornerShape(10.dp))
                             .padding(16.dp)
                     ) {
-                        Text(
-                            text     = "Error: ${s.message}",
-                            color    = ErrorColor,
-                            fontSize = 13.sp
-                        )
+                        Text("Error: ${s.message}", color = ErrorColor, fontSize = 13.sp)
                     }
                 }
 
@@ -212,27 +208,17 @@ fun FindHotelScreen(
                                 modifier         = Modifier.fillMaxWidth().padding(top = 32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text     = strings.noHotels,
-                                    color    = Color.Gray,
-                                    fontSize = 14.sp
-                                )
+                                Text(strings.noHotels, color = Color.Gray, fontSize = 14.sp)
                             }
                         }
                     } else {
                         if (state.selectedHotels.isNotEmpty()) {
                             item(key = "results_header") {
-                                Text(
-                                    text       = strings.searchResult,
-                                    fontSize   = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color      = Color.White,
-                                    modifier   = Modifier.padding(bottom = 2.dp)
-                                )
+                                HotelSectionLabel(text = strings.searchResult)
                             }
                         }
                         items(s.hotels, key = { it.hotelKey }) { hotel ->
-                            HotelOptionItem(
+                            HotelOptionCard(
                                 hotel              = hotel,
                                 itemState          = state.itemStates[hotel.hotelKey] ?: HotelItemState(),
                                 isAlreadySelected  = state.selectedHotels.any { it.hotel.hotelKey == hotel.hotelKey },
@@ -250,7 +236,7 @@ fun FindHotelScreen(
 }
 
 @Composable
-private fun SelectedHotelItem(
+private fun SelectedHotelChip(
     entry   : SelectedHotelEntry,
     onRemove: () -> Unit
 ) {
@@ -258,7 +244,9 @@ private fun SelectedHotelItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SelectedCardColor, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(SelectedChipBg)
+            .border(1.dp, SelectedChipBorder, RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -267,32 +255,42 @@ private fun SelectedHotelItem(
             Text(
                 text       = entry.hotel.name,
                 fontSize   = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color      = Color.Black
+                fontWeight = FontWeight.Medium,
+                color      = SelectedChipFg
             )
             Text(
-                text     = "${entry.dateFrom} – ${entry.dateTo}  •  ${entry.days} days",
+                text     = "${entry.dateFrom} – ${entry.dateTo}  •  ${entry.days} ${strings.days}",
                 fontSize = 12.sp,
-                color    = Color.DarkGray
+                color    = Color(0xFF639922)
             )
             Text(
-                text     = strings.total + ": ${entry.totalCost} ₴",
+                text     = "${strings.total}: ${entry.totalCost} ₴",
                 fontSize = 12.sp,
-                color    = Color.Black
+                fontWeight = FontWeight.Medium,
+                color    = SelectedBorder
             )
         }
-        IconButton(onClick = onRemove) {
-            Icon(
-                imageVector        = Icons.Filled.Close,
-                contentDescription = strings.remove,
-                tint               = Color.DarkGray
-            )
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .background(Color.Transparent, RoundedCornerShape(6.dp))
+                .border(0.5.dp, SelectedChipBorder, RoundedCornerShape(6.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onRemove, modifier = Modifier.fillMaxSize()) {
+                Icon(
+                    imageVector        = Icons.Filled.Close,
+                    contentDescription = strings.remove,
+                    tint               = SelectedChipFg,
+                    modifier           = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun HotelOptionItem(
+private fun HotelOptionCard(
     hotel             : HotelResult,
     itemState         : HotelItemState,
     isAlreadySelected : Boolean,
@@ -317,42 +315,98 @@ private fun HotelOptionItem(
             onDismiss      = { showToPicker = false }
         )
     }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                if (isAlreadySelected) SelectedCardColor else CardBackground,
-                RoundedCornerShape(10.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isAlreadySelected) SelectedCardBg else CardBackground)
+            .border(
+                width = if (isAlreadySelected) 1.5.dp else 0.5.dp,
+                color = if (isAlreadySelected) SelectedBorder else CardBorder,
+                shape = RoundedCornerShape(12.dp)
             )
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text       = hotel.name,
-                    fontSize   = 15.sp,
-                    color      = Color.Black,
-                    fontWeight = FontWeight.SemiBold
-                )
-                if (hotel.address.isNotEmpty()) {
-                    Text(text = hotel.address, fontSize = 12.sp, color = Color.DarkGray)
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        text = hotel.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                    if (hotel.address.isNotEmpty()) {
+                        Row(
+                            verticalAlignment     = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.LocationOn,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(text = hotel.address, fontSize = 12.sp, color = Color.Gray)
+                        }
+                    }
+                }
+
+                if (isAlreadySelected) {
+                    Box(
+                        modifier = Modifier
+                            .background(SelectedChipBg, RoundedCornerShape(20.dp))
+                            .border(0.5.dp, SelectedChipBorder, RoundedCornerShape(20.dp))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = strings.selected,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = SelectedChipFg
+                        )
+                    }
                 }
             }
-        }
 
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text     = strings.costPerDay + "${hotel.cost} ₴",
-                fontSize = 14.sp,
-                color    = Color.Black,
-                modifier = Modifier.weight(1f)
-            )
-            SmallSquareButton(
-                label   = if (itemState.isExpanded) "∧" else "V",
-                onClick = onToggleExpand
-            )
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                verticalAlignment     = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(text = strings.costPerDay, fontSize = 12.sp, color = Color.Gray)
+                    Text(
+                        text = "${hotel.cost} ₴",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .background(ButtonBackground, RoundedCornerShape(8.dp))
+                        .border(0.5.dp, CardBorder, RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = onToggleExpand, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = if (itemState.isExpanded) Icons.Filled.KeyboardArrowUp
+                            else Icons.Filled.KeyboardArrowDown,
+                            contentDescription = if (itemState.isExpanded) "Згорнути" else "Розгорнути",
+                            tint = Color.DarkGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
         }
 
         AnimatedVisibility(
@@ -361,13 +415,34 @@ private fun HotelOptionItem(
             exit    = fadeOut() + shrinkVertically()
         ) {
             Column(
-                modifier            = Modifier.fillMaxWidth().padding(top = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(if (isAlreadySelected) ExpandedSelectedBg else ExpandedBg)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                HorizontalDivider(color = Color.Gray.copy(alpha = 0.4f))
-                Text(strings.selectedDates, fontSize = 13.sp, color = Color.DarkGray, fontWeight = FontWeight.Medium)
-                DateRow(label = strings.fromHotelSearch, value = itemState.dateFrom, onClick = { showFromPicker = true })
-                DateRow(label = strings.toHotelSearch,   value = itemState.dateTo,   onClick = { showToPicker = true })
+                HorizontalDivider(
+                    color    = if (isAlreadySelected) SelectedChipBorder else CardBorder,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+
+                Text(
+                    text       = strings.selectedDates,
+                    fontSize   = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color      = Color.DarkGray
+                )
+
+                HotelDateRow(
+                    label   = strings.fromHotelSearch,
+                    value   = itemState.dateFrom,
+                    onClick = { showFromPicker = true  }
+                )
+                HotelDateRow(
+                    label   = strings.toHotelSearch,
+                    value   = itemState.dateTo,
+                    onClick = { showToPicker = true }
+                )
 
                 Row(
                     modifier              = Modifier.fillMaxWidth(),
@@ -376,33 +451,33 @@ private fun HotelOptionItem(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text     = strings.duration + ": ${if (itemState.days > 0) "${itemState.days} " + strings.days else "—"}",
-                            fontSize = 13.sp,
-                            color    = Color.Black
+                            text     = "${strings.duration}: ${if (itemState.days > 0) "${itemState.days} ${strings.days}" else "—"}",
+                            fontSize = 12.sp,
+                            color    = Color.Gray
                         )
                         Text(
-                            text     = strings.totalCost +"${itemState.days * hotel.cost} ₴",
-                            fontSize = 13.sp,
-                            color    = Color.Black
+                            text       = "${strings.totalCost}${itemState.days * hotel.cost} ₴",
+                            fontSize   = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.Black
                         )
                     }
                     if (itemState.days > 0) {
                         Button(
-                            onClick         = onAddClick,
-                            shape           = RoundedCornerShape(8.dp),
-                            colors          = ButtonDefaults.buttonColors(
-                                containerColor = if (isAlreadySelected) Color(0xFF388E3C) else Color(0xFF4CAF50),
+                            onClick = onAddClick,
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isAlreadySelected) AddGreenDark else AddGreen,
                                 contentColor   = Color.White
                             ),
-                            contentPadding  = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                            modifier        = Modifier.height(36.dp)
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            modifier       = Modifier.height(36.dp)
                         ) {
                             Text(
                                 text     = if (isAlreadySelected) strings.update else strings.addToTrip,
                                 fontSize = 13.sp,
                                 maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Ellipsis,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -413,19 +488,27 @@ private fun HotelOptionItem(
 }
 
 @Composable
-private fun DateRow(label: String, value: String, onClick: () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, fontSize = 13.sp, color = Color.Black, modifier = Modifier.width(48.dp))
+private fun HotelDateRow(label: String, value: String, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier          = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text     = label,
+            fontSize = 12.sp,
+            color    = Color.DarkGray,
+            modifier = Modifier.width(48.dp)
+        )
         OutlinedButton(
-            onClick         = onClick,
-            modifier        = Modifier.fillMaxWidth().height(44.dp),
-            shape           = RoundedCornerShape(6.dp),
-            colors          = ButtonDefaults.outlinedButtonColors(
+            onClick        = onClick,
+            modifier       = Modifier.fillMaxWidth().height(40.dp),
+            shape          = RoundedCornerShape(8.dp),
+            colors         = ButtonDefaults.outlinedButtonColors(
                 containerColor = FieldBackground,
                 contentColor   = Color.Black
             ),
-            border          = BorderStroke(0.dp, Color.Transparent),
-            contentPadding  = PaddingValues(horizontal = 12.dp)
+            border         = BorderStroke(0.5.dp, CardBorder),
+            contentPadding = PaddingValues(horizontal = 12.dp)
         ) {
             Text(
                 text     = value.ifEmpty { "00.00.0000" },
@@ -434,6 +517,30 @@ private fun DateRow(label: String, value: String, onClick: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@Composable
+private fun HotelSectionLabel(text: String) {
+    Text(
+        text          = text,
+        fontSize      = 14.sp,
+        fontWeight    = FontWeight.Medium,
+        color         = Color.White,
+        letterSpacing = 0.5.sp,
+        modifier      = Modifier.padding(top = 4.dp, bottom = 2.dp)
+    )
+}
+
+@Composable
+private fun HotelLoadingState(message: String) {
+    Column(
+        modifier            = Modifier.fillMaxWidth().padding(top = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        CircularProgressIndicator(color = Color.DarkGray)
+        Text(text = message, color = Color.Gray, fontSize = 14.sp)
     }
 }
 
@@ -458,33 +565,6 @@ private fun DatePickerModal(
         }
     ) {
         DatePicker(state = datePickerState)
-    }
-}
-
-@Composable
-private fun SmallSquareButton(label: String, onClick: () -> Unit, tint: Color = Color.Black) {
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .background(ButtonBackground, RoundedCornerShape(8.dp))
-            .border(1.dp, Color.Gray.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(onClick = onClick, modifier = Modifier.fillMaxSize()) {
-            Text(text = label, fontSize = 16.sp, color = tint, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-private fun LoadingState(message: String) {
-    Column(
-        modifier            = Modifier.fillMaxWidth().padding(top = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        CircularProgressIndicator(color = Color.DarkGray)
-        Text(text = message, color = Color.Gray, fontSize = 14.sp)
     }
 }
 

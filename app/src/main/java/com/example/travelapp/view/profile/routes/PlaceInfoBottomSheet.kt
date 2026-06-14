@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.travelapp.data.entity.ReviewEntity
 import com.example.travelapp.data.repository.WeatherInfo
+import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
 import com.example.travelapp.viewmodel.create.PlaceItem
 import com.example.travelapp.viewmodel.create.routes.PlaceInfoViewModel
@@ -62,6 +63,7 @@ fun PlaceInfoBottomSheet(
     val avgRating       by viewModel.avgRating.collectAsState()
     val photos by viewModel.photos.collectAsState()
     val isLoadingPhotos by viewModel.isLoadingPhotos.collectAsState()
+    val strings = LocalAppStrings.current
 
     LaunchedEffect(place.id) {
         viewModel.load(place)
@@ -123,7 +125,8 @@ fun PlaceInfoBottomSheet(
                 item {
                     PlacePhotosSection(
                         photos = photos,
-                        isLoading = isLoadingPhotos
+                        isLoading = isLoadingPhotos,
+                        strings
                     )
                     HorizontalDivider(color = Color(0xFF2A4A5E))
                 }
@@ -147,7 +150,6 @@ fun PlaceInfoBottomSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val strings = LocalAppStrings.current
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -232,7 +234,8 @@ fun PlaceInfoBottomSheet(
 @Composable
 private fun PlacePhotosSection(
     photos: List<Bitmap>,
-    isLoading: Boolean
+    isLoading: Boolean,
+    strings: AppStrings,
 ) {
     var selectedPhoto by remember { mutableStateOf<Bitmap?>(null) }
 
@@ -250,7 +253,7 @@ private fun PlacePhotosSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Фото локації",
+            text = strings.photoLocation,
             fontSize = 16.sp,
             color = Color.White,
         )
@@ -303,7 +306,7 @@ private fun FullScreenPhotoDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.9f))
+                .background(Color.Black.copy(alpha = 0.5f))
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() }
@@ -318,7 +321,7 @@ private fun FullScreenPhotoDialog(
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
-                    ) { /* не закривати при кліку на фото */ },
+                    ) { },
                 contentScale = ContentScale.FillWidth
             )
 
