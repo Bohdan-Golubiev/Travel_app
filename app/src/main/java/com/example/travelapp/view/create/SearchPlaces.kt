@@ -2,6 +2,7 @@ package com.example.travelapp.view.create
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,15 +18,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.utils.toMessage
 import com.example.travelapp.view.profile.routes.PlaceInfoBottomSheet
 import com.example.travelapp.viewmodel.create.PlaceItem
+import com.example.travelapp.viewmodel.create.SearchError
 import com.example.travelapp.viewmodel.create.SearchPlacesViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -235,18 +240,71 @@ fun SearchPlaces(
                 }
             }
 
-            state.errorMessage?.let { error ->
-                Text(
-                    text = error,
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+            state.searchError?.let { error ->
+                SearchErrorCard(
+                    error = error,
+                    onDismiss = { viewModel.clearError() }
                 )
             }
         }
     }
 }
+@Composable
+private fun SearchErrorCard(
+    error: SearchError,
+    onDismiss: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFE8E8E8))
+            .border(
+                0.5.dp,
+                Color(0xFFE0E0E0),
+                RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(
+                    Color(0xFFFBEAEA),
+                    RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "!",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFB3261E)
+            )
+        }
+
+        Spacer(Modifier.width(10.dp))
+
+        Text(
+            text = error.toMessage(),
+            modifier = Modifier.weight(1f),
+            fontSize = 13.sp,
+            color = Color(0xFFB3261E)
+        )
+
+        onDismiss?.let {
+            IconButton(onClick = it) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    tint = Color.Gray
+                )
+            }
+        }
+    }
+}
 @Composable
 private fun PlaceListItem(
     number: Int,

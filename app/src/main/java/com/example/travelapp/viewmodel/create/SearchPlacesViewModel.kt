@@ -51,7 +51,8 @@ data class SearchPlacesUiState(
     val suggestions: List<AutocompletePrediction> = emptyList(),
     val isSearching: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val searchError: SearchError? = null,
+    val saveErrorMessage: String? = null
 )
 
 class SearchPlacesViewModel(application: Application) : AndroidViewModel(application) {
@@ -82,9 +83,11 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
     fun onRouteDescriptionChange(description: String) {
         _uiState.update { it.copy(routeDescription = description) }
     }
-
+    fun clearError() {
+        _uiState.update { it.copy(searchError = null) }
+    }
     fun onSearchQueryChange(query: String) {
-        _uiState.update { it.copy(searchQuery = query, errorMessage = null) }
+        _uiState.update { it.copy(searchQuery = query, searchError = null) }
 
         searchJob?.cancel()
 
@@ -101,7 +104,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                     it.copy(
                         suggestions = emptyList(),
                         isSearching = false,
-                        errorMessage = "Немає підключення до інтернету"
+                        searchError = SearchError.NO_INTERNET
                     )
                 }
                 return@launch
@@ -120,7 +123,8 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                 _uiState.update {
                     it.copy(
                         suggestions = response.autocompletePredictions,
-                        isSearching = false
+                        isSearching = false,
+                        searchError = null
                     )
                 }
             } catch (e: Exception) {
@@ -129,7 +133,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                     it.copy(
                         suggestions = emptyList(),
                         isSearching = false,
-                        errorMessage = "Помилка пошуку: ${e.localizedMessage}"
+                        searchError = SearchError.INVALID_REQUEST
                     )
                 }
             }
@@ -219,7 +223,7 @@ class SearchPlacesViewModel(application: Application) : AndroidViewModel(applica
                 }
                 onSuccess(route.id)
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Помилка збереження: ${e.localizedMessage}") }
+                _uiState.update { it.copy(saveErrorMessage = "Помилка збереження: ${e.localizedMessage}") }
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
             }

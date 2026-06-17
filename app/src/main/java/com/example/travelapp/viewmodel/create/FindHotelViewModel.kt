@@ -2,6 +2,8 @@ package com.example.travelapp.viewmodel.create
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,7 +22,9 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.net.SocketTimeoutException
 import java.net.URLEncoder
+import java.net.UnknownHostException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -29,6 +33,7 @@ import java.util.concurrent.TimeUnit
 private const val RAPIDAPI_HOST = "xotelo-hotel-prices.p.rapidapi.com"
 private const val BASE_URL      = "https://xotelo-hotel-prices.p.rapidapi.com"
 
+private const val MAX_IMAGE_DIMENSION_PX = 1080
 data class HotelResult(
     val hotelKey : String,
     val name     : String,
@@ -60,10 +65,13 @@ data class HotelItemState(
 sealed class SearchState {
     object Idle    : SearchState()
     object Loading : SearchState()
-    data class Error(val message: String) : SearchState()
+    data class Error(val error: SearchError) : SearchState()
     data class Success(val hotels: List<HotelResult>) : SearchState()
 }
-
+enum class SearchError {
+    NO_INTERNET,
+    INVALID_REQUEST,
+}
 sealed class SaveState {
     object Idle    : SaveState()
     object Loading : SaveState()
@@ -77,6 +85,7 @@ data class FindHotelUiState(
     val itemStates     : Map<String, HotelItemState> = emptyMap(),
     val selectedHotels : List<SelectedHotelEntry>    = emptyList(),
     val saveState      : SaveState                   = SaveState.Idle,
+    val hotelImages    : Map<String, Bitmap>         = emptyMap(),
 )
 
 private val httpClient = OkHttpClient.Builder()
@@ -103,7 +112,8 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
         if (query.isBlank()) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(searchState = SearchState.Loading) }
+            loadingImageKeys.clear()
+            _uiState.update { it.copy(searchState = SearchState.Loading, hotelImages = emptyMap()) }
             try {
                 val hotels = withContext(Dispatchers.IO) { fetchHotelList(query) }
                 val itemStates = hotels.associate { it.hotelKey to HotelItemState() }
@@ -113,18 +123,46 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
                         itemStates  = itemStates
                     )
                 }
+            } catch (e: UnknownHostException) {
+                _uiState.update {
+                    it.copy(
+                        searchState = SearchState.Error(SearchError.NO_INTERNET)
+                    )
+                }
+            } catch (e: SocketTimeoutException) {
+                _uiState.update {
+                    it.copy(
+                        searchState = SearchState.Error(SearchError.NO_INTERNET)
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(searchState = SearchState.Error(e.message ?: "Unknown error"))
+                    it.copy(
+                        searchState = SearchState.Error(SearchError.INVALID_REQUEST)
+                    )
                 }
             }
         }
     }
 
     private fun fetchHotelList(location: String): List<HotelResult> {
-        val encoded = URLEncoder.encode(location, "UTF-8")
-        val url = "$BASE_URL/api/search?location_type=accommodation&query=$encoded"
+        val locationInfo = fetchLocationInfo(location)
+            ?: throw Exception("Не вдалось знайти локацію \"$location\"")
 
+        val url = "$BASE_URL/api/list?location_key=${locationInfo.key}&sort=best_value"
+        val body = executeXoteloRequest(url)
+        return parseHotelList(body, locationInfo.address)
+    }
+
+    private fun fetchLocationInfo(location: String): LocationInfo? {
+        val encoded = URLEncoder.encode(location, "UTF-8")
+        val url = "$BASE_URL/api/search?location_type=geo&query=$encoded"
+        Log.d("HOTEL", url)
+        val body = executeXoteloRequest(url)
+        return parseLocationInfo(body, location)
+    }
+
+    private fun executeXoteloRequest(url: String): String {
         val request = Request.Builder()
             .url(url)
             .get()
@@ -133,7 +171,7 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
             .addHeader("Content-Type", "application/json")
             .build()
 
-        val body = httpClient.newCall(request).execute().use { response ->
+        return httpClient.newCall(request).execute().use { response ->
             val text = response.body?.string()
                 ?: throw Exception("Empty response from server")
             if (!response.isSuccessful) {
@@ -144,13 +182,51 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
             }
             text
         }
+    }
+    private val loadingImageKeys = mutableSetOf<String>()
 
-        val parsed = parseHotelList(body)
-        return parsed.filter {
-            val city = it.address.substringBefore(",").trim()
-            city.equals(location, ignoreCase = true) ||
-                    it.address.contains(location, ignoreCase = true)
+    fun loadHotelImage(hotel: HotelResult) {
+        if (hotel.imageUrl.isBlank()) return
+        if (_uiState.value.hotelImages.containsKey(hotel.hotelKey)) return
+        if (!loadingImageKeys.add(hotel.hotelKey)) return
+
+        viewModelScope.launch {
+            val bitmap = withContext(Dispatchers.IO) { downloadBitmap(hotel.imageUrl) }
+            if (bitmap != null) {
+                _uiState.update { state ->
+                    state.copy(hotelImages = state.hotelImages + (hotel.hotelKey to bitmap))
+                }
+            }
+            loadingImageKeys.remove(hotel.hotelKey)
         }
+    }
+
+    private fun downloadBitmap(url: String): Bitmap? = runCatching {
+        val request = Request.Builder().url(url).get().build()
+        val bytes = httpClient.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) null else response.body?.bytes()
+        } ?: return@runCatching null
+
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@runCatching null
+
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, MAX_IMAGE_DIMENSION_PX)
+        }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+    }.getOrNull()
+
+    private fun calculateInSampleSize(width: Int, height: Int, maxDimension: Int): Int {
+        var sampleSize = 1
+        if (width > maxDimension || height > maxDimension) {
+            val halfWidth  = width / 2
+            val halfHeight = height / 2
+            while ((halfWidth / sampleSize) >= maxDimension || (halfHeight / sampleSize) >= maxDimension) {
+                sampleSize *= 2
+            }
+        }
+        return sampleSize
     }
 
     fun toggleExpand(hotelKey: String) {
@@ -269,7 +345,38 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
 }
 
 
-private fun parseHotelList(json: String): List<HotelResult> {
+private data class LocationInfo(val key: String, val address: String)
+private fun parseLocationInfo(json: String, query: String): LocationInfo? {
+    val root = JSONObject(json)
+
+    val array = when {
+        root.has("result") -> {
+            val result = root.getJSONObject("result")
+            when {
+                result.has("list") -> result.getJSONArray("list")
+                result.has("data") -> result.getJSONArray("data")
+                else -> return null
+            }
+        }
+        root.has("data") -> root.getJSONArray("data")
+        else -> return null
+    }
+
+    var fallback: LocationInfo? = null
+    for (i in 0 until array.length()) {
+        val item = array.getJSONObject(i)
+        val key = item.optString("location_key", "")
+        if (key.isBlank()) continue
+
+        val info = LocationInfo(key = key, address = buildLocationAddress(item))
+        if (fallback == null) fallback = info
+
+        val name = item.optString("name", "")
+        if (name.equals(query.trim(), ignoreCase = true)) return info
+    }
+    return fallback
+}
+private fun parseHotelList(json: String, address: String): List<HotelResult> {
     val root = JSONObject(json)
 
     val array = when {
@@ -294,16 +401,22 @@ private fun parseHotelList(json: String): List<HotelResult> {
                 HotelResult(
                     hotelKey = key,
                     name     = item.optString("name", "Hotel"),
-                    address  = item.optString("place_name", ""),
+                    address  = address,
                     imageUrl = item.optString("image", item.optString("photo", "")),
                     cost     = if (item.optString("name", "Hotel").length < 12)
-                            (item.optString("name", "Hotel").length * 65.0) else item.optString("name", "Hotel").length * 35.0
+                        (item.optString("name", "Hotel").length * 65.0) else item.optString("name", "Hotel").length * 35.0
                 )
             )
         }
     }
 }
-
+private fun buildLocationAddress(item: JSONObject): String {
+    val placeName      = item.optString("name", "")
+    val shortPlaceName = item.optString("short_place_name", "")
+    return listOf(placeName, shortPlaceName)
+        .filter { it.isNotBlank() }
+        .joinToString(", ")
+}
 fun formatDate(millis: Long): String =
     SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(millis))
 

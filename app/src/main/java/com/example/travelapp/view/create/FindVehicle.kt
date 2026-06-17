@@ -24,6 +24,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.model.dataclasses.Airport
 import com.example.travelapp.viewmodel.create.FindVehicleViewModel
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.utils.toMessage
+import com.example.travelapp.viewmodel.create.SearchError
 
 data class BookingOption(
     val name: String,
@@ -146,6 +148,9 @@ fun FindVehicleScreen(
                     }
                 }
             } else {
+                state.error?.let { error ->
+                    item { SearchErrorCard(error = error) }
+                }
                 if (state.results.isNotEmpty()) {
                     item { SectionLabel(text = strings.searchResult) }
                 }
@@ -242,6 +247,34 @@ private fun BookingOptionCard(
             }
             StatusBadge(status = option.status, isSelected = isSelected)
         }
+    }
+}
+
+@Composable
+private fun SearchErrorCard(error: SearchError) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CardBackground)
+            .border(0.5.dp, CardBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(Color(0xFFFBEAEA), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "!", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB3261E))
+        }
+        Text(
+            text = error.toMessage(),
+            fontSize = 13.sp,
+            color = Color(0xFFB3261E)
+        )
     }
 }
 

@@ -1,35 +1,48 @@
 package com.example.travelapp.view.create
 
+import android.graphics.Bitmap
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.utils.toMessage
 import com.example.travelapp.viewmodel.create.FindHotelViewModel
 import com.example.travelapp.viewmodel.create.HotelItemState
 import com.example.travelapp.viewmodel.create.HotelResult
 import com.example.travelapp.viewmodel.create.SaveState
+import com.example.travelapp.viewmodel.create.SearchError
 import com.example.travelapp.viewmodel.create.SearchState
 import com.example.travelapp.viewmodel.create.SelectedHotelEntry
 
@@ -57,12 +70,17 @@ fun FindHotelScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val strings = LocalAppStrings.current
+    var fullScreenBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     LaunchedEffect(state.saveState) {
         if (state.saveState is SaveState.Success) {
             onNextClick(state.selectedHotels)
             viewModel.resetSaveState()
         }
+    }
+
+    fullScreenBitmap?.let { bitmap ->
+        FullScreenPhotoDialog(bitmap = bitmap, onDismiss = { fullScreenBitmap = null })
     }
 
     Column(
@@ -190,14 +208,9 @@ fun FindHotelScreen(
                     HotelLoadingState(message = strings.searchingHotels)
                 }
 
-                is SearchState.Error -> item(key = "error") {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color(0xFFFFEDED), RoundedCornerShape(10.dp))
-                            .padding(16.dp)
-                    ) {
-                        Text("Error: ${s.message}", color = ErrorColor, fontSize = 13.sp)
+                is SearchState.Error -> {
+                    item(key = "error") {
+                        SearchErrorCard(s.error, strings)
                     }
                 }
 
@@ -222,6 +235,9 @@ fun FindHotelScreen(
                                 hotel              = hotel,
                                 itemState          = state.itemStates[hotel.hotelKey] ?: HotelItemState(),
                                 isAlreadySelected  = state.selectedHotels.any { it.hotel.hotelKey == hotel.hotelKey },
+                                imageBitmap        = state.hotelImages[hotel.hotelKey],
+                                onRequestImage     = { viewModel.loadHotelImage(hotel) },
+                                onImageClick       = { bitmap -> fullScreenBitmap = bitmap },
                                 onToggleExpand     = { viewModel.toggleExpand(hotel.hotelKey) },
                                 onDateFromSelected = { millis -> viewModel.onDateFromSelected(hotel.hotelKey, millis) },
                                 onDateToSelected   = { millis -> viewModel.onDateToSelected(hotel.hotelKey, millis) },
@@ -234,7 +250,6 @@ fun FindHotelScreen(
         }
     }
 }
-
 @Composable
 private fun SelectedHotelChip(
     entry   : SelectedHotelEntry,
@@ -288,12 +303,78 @@ private fun SelectedHotelChip(
         }
     }
 }
+@Composable
+private fun SearchErrorCard(
+    error: SearchError,
+    strings: AppStrings,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFE8E8E8))
+            .border(
+                0.5.dp,
+                Color(0xFFE0E0E0),
+                RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
 
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(
+                    Color(0xFFFBEAEA),
+                    RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "!",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFB3261E)
+            )
+        }
+
+        Spacer(Modifier.width(10.dp))
+
+        if (error == SearchError.INVALID_REQUEST) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = error.toMessage(),
+                    fontSize = 13.sp,
+                    color = Color(0xFFB3261E)
+                )
+
+                Text(
+                    text = strings.clarify,
+                    fontSize = 13.sp,
+                    color = Color(0xFFB3261E)
+                )
+            }
+        } else {
+            Text(
+                text = error.toMessage(),
+                modifier = Modifier.weight(1f),
+                fontSize = 13.sp,
+                color = Color(0xFFB3261E)
+            )
+        }
+    }
+}
 @Composable
 private fun HotelOptionCard(
     hotel             : HotelResult,
     itemState         : HotelItemState,
     isAlreadySelected : Boolean,
+    imageBitmap       : Bitmap?,
+    onRequestImage    : () -> Unit,
+    onImageClick      : (Bitmap) -> Unit,
     onToggleExpand    : () -> Unit,
     onDateFromSelected: (Long) -> Unit,
     onDateToSelected  : (Long) -> Unit,
@@ -303,6 +384,9 @@ private fun HotelOptionCard(
     var showToPicker   by remember { mutableStateOf(false) }
     val strings = LocalAppStrings.current
 
+    LaunchedEffect(hotel.hotelKey, hotel.imageUrl) {
+        onRequestImage()
+    }
     if (showFromPicker) {
         DatePickerModal(
             onDateSelected = { it?.let(onDateFromSelected) },
@@ -335,6 +419,11 @@ private fun HotelOptionCard(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                HotelThumbnail(
+                    bitmap  = imageBitmap,
+                    onClick = { imageBitmap?.let(onImageClick) }
+                )
+
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = hotel.name,
@@ -530,6 +619,55 @@ private fun HotelSectionLabel(text: String) {
         letterSpacing = 0.5.sp,
         modifier      = Modifier.padding(top = 4.dp, bottom = 2.dp)
     )
+}
+@Composable
+private fun HotelThumbnail(bitmap: Bitmap?, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(CardBorder)
+            .clickable(enabled = bitmap != null, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (bitmap != null) {
+            Image(
+                bitmap             = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier           = Modifier.fillMaxSize(),
+                contentScale       = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector        = Icons.Default.Place,
+                contentDescription = null,
+                tint               = Color.Gray,
+                modifier           = Modifier.size(22.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun FullScreenPhotoDialog(bitmap: Bitmap, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = true)) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f))
+                .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            Image(bitmap = bitmap.asImageBitmap(), contentDescription = null,
+                modifier = Modifier.fillMaxWidth().clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {},
+                contentScale = ContentScale.FillWidth)
+            Box(
+                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp).size(36.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape).clickable { onDismiss() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Закрити", tint = Color.White, modifier = Modifier.size(20.dp))
+            }
+        }
+    }
 }
 
 @Composable
