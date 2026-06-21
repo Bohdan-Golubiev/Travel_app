@@ -17,6 +17,7 @@ import com.example.travelapp.view.profile.routes.PlaceDetailScreen
 import com.example.travelapp.view.profile.routes.RouteDetailScreen
 import com.example.travelapp.view.profile.routes.RouteMapScreen
 import com.example.travelapp.view.profile.routes.RoutesScreen
+import com.example.travelapp.viewmodel.profile.SharedViewModel
 import com.google.firebase.auth.FirebaseUser
 
 sealed class CreateNavigation(val route: String) {

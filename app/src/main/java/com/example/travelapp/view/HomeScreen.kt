@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.travelapp.utils.AppLocale
 import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.viewmodel.profile.SharedViewModel
 import com.google.firebase.auth.FirebaseUser
 
 object RootRoutes {

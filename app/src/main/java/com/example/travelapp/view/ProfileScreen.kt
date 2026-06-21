@@ -3,7 +3,9 @@ package com.example.travelapp.view
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
@@ -15,20 +17,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.example.travelapp.data.entity.BookingEntity
-import com.example.travelapp.data.entity.HotelEntity
-import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.model.ReviewItem
 import com.example.travelapp.model.ReviewTarget
 import com.example.travelapp.utils.AppLocale
 import com.example.travelapp.utils.LocalAppLocale
 import com.example.travelapp.utils.LocalAppStrings
-import com.example.travelapp.view.create.BookingOption
 import com.example.travelapp.view.profile.ActiveTripsScreen
 import com.example.travelapp.view.profile.EditReviewScreen
 import com.example.travelapp.view.profile.ReviewsScreen
@@ -38,33 +35,10 @@ import com.example.travelapp.view.profile.bookings.BookingScreen
 import com.example.travelapp.view.profile.bookings.HotelDetailScreen
 import com.example.travelapp.view.profile.bookings.HotelScreen
 import com.example.travelapp.view.profile.routes.AddReviewScreen
-import com.example.travelapp.viewmodel.create.SelectedHotelEntry
 import com.example.travelapp.viewmodel.profile.BookingViewModel
 import com.example.travelapp.viewmodel.profile.ProfileViewModel
+import com.example.travelapp.viewmodel.profile.SharedViewModel
 import com.google.firebase.auth.FirebaseUser
-
-class SharedViewModel : ViewModel() {
-    var selectedPlace: PlaceEntity? = null
-    var selectedBooking: BookingEntity? = null
-    var selectedHotel: HotelEntity? = null
-    var selectedReview: ReviewItem? = null
-
-    var pendingRouteId: String = ""
-    var pendingBookedVehicles: List<BookingOption> = emptyList()
-    var pendingBookedHotels: List<SelectedHotelEntry> = emptyList()
-
-    fun setReviewTarget(target: ReviewTarget) {
-        selectedPlace = null
-        selectedHotel = null
-        selectedBooking = null
-
-        when (target) {
-            is ReviewTarget.Place   -> selectedPlace = target.entity
-            is ReviewTarget.Hotel   -> selectedHotel = target.entity
-            is ReviewTarget.Booking -> selectedBooking = target.entity
-        }
-    }
-}
 
 fun NavGraphBuilder.profileGraph(
     nav: NavHostController,
@@ -206,10 +180,12 @@ fun ProfileContent(
 ) {
     val strings = LocalAppStrings.current
     val profileViewModel: ProfileViewModel = viewModel()
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
     ) {
         Box(
             modifier = Modifier
