@@ -157,7 +157,6 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
     private fun fetchLocationInfo(location: String): LocationInfo? {
         val encoded = URLEncoder.encode(location, "UTF-8")
         val url = "$BASE_URL/api/search?location_type=geo&query=$encoded"
-        Log.d("HOTEL", url)
         val body = executeXoteloRequest(url)
         return parseLocationInfo(body, location)
     }
@@ -219,12 +218,8 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
 
     private fun calculateInSampleSize(width: Int, height: Int, maxDimension: Int): Int {
         var sampleSize = 1
-        if (width > maxDimension || height > maxDimension) {
-            val halfWidth  = width / 2
-            val halfHeight = height / 2
-            while ((halfWidth / sampleSize) >= maxDimension || (halfHeight / sampleSize) >= maxDimension) {
-                sampleSize *= 2
-            }
+        while ((width / sampleSize) > maxDimension || (height / sampleSize) > maxDimension) {
+            sampleSize *= 2
         }
         return sampleSize
     }

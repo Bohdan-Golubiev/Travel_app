@@ -25,7 +25,6 @@ class AirTransportRepository {
         .build()
 
     private val service = retrofit.create(AviationstackService::class.java)
-
     suspend fun searchFlights(
         from: String,
         to: String,

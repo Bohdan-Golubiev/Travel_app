@@ -6,6 +6,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.platform.LocalDensity
@@ -39,6 +41,8 @@ import com.example.travelapp.data.entity.HotelEntity
 import com.example.travelapp.data.entity.PlaceEntity
 import com.example.travelapp.utils.AppStrings
 import com.example.travelapp.utils.LocalAppStrings
+import com.example.travelapp.utils.toMessage
+import com.example.travelapp.viewmodel.create.SearchError
 import com.example.travelapp.viewmodel.create.routes.RouteDetailViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -311,12 +315,12 @@ fun RouteDetailScreen(
                             }
                         )
                         searchError?.let { error ->
-                            Text(
-                                text = error,
-                                color = Color.Red,
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(start = 20.dp, top = 2.dp, bottom = 4.dp)
-                            )
+                            Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                                SearchErrorCard(
+                                    error = error,
+                                    onDismiss = { viewModel.clearError() }
+                                )
+                            }
                         }
                     }
                     HorizontalDivider(color = Color(0xFF2A4A5E))
@@ -955,6 +959,63 @@ private fun HotelItem(hotel: HotelEntity, strings: AppStrings) {
         }
     }
 }
+@Composable
+private fun SearchErrorCard(
+    error: SearchError,
+    onDismiss: (() -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFE8E8E8))
+            .border(
+                0.5.dp,
+                Color(0xFFE0E0E0),
+                RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(
+                    Color(0xFFFBEAEA),
+                    RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "!",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFB3261E)
+            )
+        }
+
+        Spacer(Modifier.width(10.dp))
+
+        Text(
+            text = error.toMessage(),
+            modifier = Modifier.weight(1f),
+            fontSize = 13.sp,
+            color = Color(0xFFB3261E)
+        )
+
+        onDismiss?.let {
+            IconButton(onClick = it) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = null,
+                    tint = Color.Gray
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun DateRow(value: String, onClick: () -> Unit) {
     OutlinedButton(

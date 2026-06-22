@@ -17,6 +17,7 @@ import com.example.travelapp.data.repository.HotelRepository
 import com.example.travelapp.data.repository.TravelRepository
 import com.example.travelapp.db.TravelDB
 import kotlinx.coroutines.flow.map
+import com.example.travelapp.viewmodel.create.SearchError
 import com.example.travelapp.notification.TravelAlarmManager
 import com.example.travelapp.notification.removeAlarm
 import com.google.android.libraries.places.api.Places
@@ -83,8 +84,8 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
-    private val _searchError = MutableStateFlow<String?>(null)
-    val searchError: StateFlow<String?> = _searchError.asStateFlow()
+    private val _searchError = MutableStateFlow<SearchError?>(null)
+    val searchError: StateFlow<SearchError?> = _searchError.asStateFlow()
 
     private var searchJob: Job? = null
 
@@ -161,7 +162,7 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
             if (!isNetworkAvailable()) {
                 _suggestions.value = emptyList()
                 _isSearching.value = false
-                _searchError.value = "Немає підключення до інтернету"
+                _searchError.value = SearchError.NO_INTERNET
                 return@launch
             }
             _isSearching.value = true
@@ -176,7 +177,7 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
                 if (e is CancellationException) return@launch
                 _suggestions.value = emptyList()
                 _isSearching.value = false
-                _searchError.value = "Помилка пошуку: ${e.localizedMessage}"
+                _searchError.value = SearchError.INVALID_REQUEST
             }
         }
     }
@@ -211,6 +212,10 @@ class RouteDetailViewModel(application: Application) : AndroidViewModel(applicat
         _isSearching.value = false
         _searchError.value = null
         searchJob?.cancel()
+    }
+
+    fun clearError() {
+        _searchError.value = null
     }
 
     private fun isNetworkAvailable(): Boolean {

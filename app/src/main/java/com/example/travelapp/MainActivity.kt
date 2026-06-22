@@ -79,7 +79,7 @@ fun TravelAuthApp() {
                 )
                 .setInputData(workDataOf("userId" to user.uid))
                 .build()
-            WorkManager.getInstance(context).enqueueUniqueWork( // юник для одной на юзера + киип
+            WorkManager.getInstance(context).enqueueUniqueWork(
                 "sync_${user.uid}",
                 ExistingWorkPolicy.KEEP,
                 syncRequest
