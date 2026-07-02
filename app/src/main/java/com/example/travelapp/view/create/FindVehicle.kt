@@ -153,6 +153,8 @@ fun FindVehicleScreen(
                 }
                 if (state.results.isNotEmpty()) {
                     item { SectionLabel(text = strings.searchResult) }
+                } else if (state.hasSearched && state.error == null) {
+                    item { EmptyResultsCard() }
                 }
                 items(state.results) { option ->
                     BookingOptionCard(
@@ -247,6 +249,41 @@ private fun BookingOptionCard(
             }
             StatusBadge(status = option.status, isSelected = isSelected)
         }
+    }
+}
+@Composable
+private fun EmptyResultsCard() {
+    val strings = LocalAppStrings.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CardBackground)
+            .border(0.5.dp, CardBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .background(IconBg, RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "✈", fontSize = 18.sp)
+        }
+        Text(
+            text = strings.noResults,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.DarkGray
+        )
+        Text(
+            text = strings.noResultsHint,
+            fontSize = 12.sp,
+            color = Color.Gray
+        )
     }
 }
 

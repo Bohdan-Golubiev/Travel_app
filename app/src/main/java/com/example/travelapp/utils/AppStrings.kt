@@ -238,6 +238,9 @@ data class AppStrings(
     val ratingGood: String,
     val ratingExcellent: String,
     val ratingPrompt: String,
+
+    val noResults: String,
+    val noResultsHint: String,
 )
 
 val EnglishStrings = AppStrings(
@@ -467,6 +470,9 @@ val EnglishStrings = AppStrings(
     ratingGood = "Good",
     ratingExcellent = "Excellent",
     ratingPrompt = "Rate experience",
+
+    noResults = "No flights found",
+    noResultsHint = "Try changing the destination"
 )
 
 val UkrainianStrings = AppStrings(
@@ -694,6 +700,9 @@ val UkrainianStrings = AppStrings(
     ratingGood = "Добре",
     ratingExcellent = "Відмінно",
     ratingPrompt = "Оцініть враження",
+
+    noResults = "Рейсів не знайдено",
+    noResultsHint = "Спробуйте змінити напрямок пошуку"
     )
 
 fun AppLocale.toStrings(): AppStrings = when (this) {

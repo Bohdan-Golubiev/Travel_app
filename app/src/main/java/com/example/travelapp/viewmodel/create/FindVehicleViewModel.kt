@@ -33,7 +33,8 @@ data class FindVehicleUiState(
     val results: List<BookingOption> = emptyList(),
     val selectedServices: List<BookingOption> = emptyList(),
     val isLoading: Boolean = false,
-    val error: SearchError? = null
+    val error: SearchError? = null,
+    val hasSearched: Boolean = false
 )
 
 class FindVehicleViewModel(application: Application) : AndroidViewModel(application) {
@@ -95,10 +96,10 @@ class FindVehicleViewModel(application: Application) : AndroidViewModel(applicat
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val results = airTransportRepository.searchFlights(from, to)
-                _uiState.update { it.copy(results = results, isLoading = false, error = null) }
+                _uiState.update { it.copy(results = results, isLoading = false, error = null, hasSearched = true) }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(error = SearchError.INVALID_REQUEST, isLoading = false, results = emptyList())
+                    it.copy(error = SearchError.INVALID_REQUEST, isLoading = false, results = emptyList(), hasSearched = true)
                 }
             }
         }
