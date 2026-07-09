@@ -44,6 +44,12 @@ class FindVehicleViewModel(application: Application) : AndroidViewModel(applicat
     private val airTransportRepository = AirTransportRepository()
     private val airportRepository = AirportRepository(application, TravelDB.getInstance(application))
     private val bookingRepository = BookingRepository(TravelDB.getInstance(application), application)
+
+    init {
+        viewModelScope.launch {
+            airportRepository.initialize()
+        }
+    }
     private val _uiState = MutableStateFlow(FindVehicleUiState())
     val uiState: StateFlow<FindVehicleUiState> = _uiState.asStateFlow()
     private var startSearchJob: Job? = null

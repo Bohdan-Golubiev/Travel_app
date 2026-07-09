@@ -12,6 +12,9 @@ interface AirportDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(airports: List<AirportEntity>)
 
+    @Query("SELECT * FROM airport")
+    suspend fun getAll(): List<AirportEntity>
+
     @Query("SELECT COUNT(*) FROM airport")
     suspend fun count(): Int
 

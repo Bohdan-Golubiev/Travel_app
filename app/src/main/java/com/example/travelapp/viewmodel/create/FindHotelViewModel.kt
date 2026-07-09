@@ -149,7 +149,7 @@ class FindHotelViewModel(application: Application) : AndroidViewModel(applicatio
         val locationInfo = fetchLocationInfo(location)
             ?: throw Exception("Не вдалось знайти локацію \"$location\"")
 
-        val url = "$BASE_URL/api/list?location_key=${locationInfo.key}&sort=best_value"
+        val url = "$BASE_URL/api/list?location_key=${locationInfo.key}&limit=30&offset=0&sort=best_value"
         val body = executeXoteloRequest(url)
         return parseHotelList(body, locationInfo.address)
     }
@@ -375,16 +375,16 @@ private fun parseHotelList(json: String, address: String): List<HotelResult> {
     val root = JSONObject(json)
 
     val array = when {
-        root.has("result") -> {
+        !root.isNull("result") && root.has("result") -> {
             val result = root.getJSONObject("result")
             when {
-                result.has("list") -> result.getJSONArray("list")
-                result.has("data") -> result.getJSONArray("data")
-                else -> throw Exception("Unexpected JSON: $json")
+                !result.isNull("list") && result.has("list") -> result.getJSONArray("list")
+                !result.isNull("data") && result.has("data") -> result.getJSONArray("data")
+                else -> return emptyList()
             }
         }
-        root.has("data") -> root.getJSONArray("data")
-        else -> throw Exception("Unexpected JSON: $json")
+        !root.isNull("data") && root.has("data") -> root.getJSONArray("data")
+        else -> return emptyList()
     }
 
     return buildList {
