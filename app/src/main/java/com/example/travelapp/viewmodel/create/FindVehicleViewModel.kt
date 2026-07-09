@@ -21,6 +21,8 @@ import com.example.travelapp.notification.removeAlarm
 import java.text.SimpleDateFormat
 import java.util.Locale
 import android.util.Log
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 
 data class FindVehicleUiState(
     val selectedTransport: String? = null,
@@ -40,33 +42,39 @@ data class FindVehicleUiState(
 class FindVehicleViewModel(application: Application) : AndroidViewModel(application) {
 
     private val airTransportRepository = AirTransportRepository()
-    private val airportRepository = AirportRepository(application)
+    private val airportRepository = AirportRepository(application, TravelDB.getInstance(application))
     private val bookingRepository = BookingRepository(TravelDB.getInstance(application), application)
     private val _uiState = MutableStateFlow(FindVehicleUiState())
     val uiState: StateFlow<FindVehicleUiState> = _uiState.asStateFlow()
+    private var startSearchJob: Job? = null
+    private var endSearchJob: Job? = null
 
     @SuppressLint("StaticFieldLeak")
     private val ctx = application.applicationContext
     private val departureDateTimeFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+
     fun onStartPlaceChange(value: String) {
-        _uiState.update {
-            it.copy(
-                startPlace = value,
-                startSuggestions = airportRepository.searchByCity(value),
-                selectedStartAirport = null
-            )
+        _uiState.update { it.copy(startPlace = value, selectedStartAirport = null) }
+
+        startSearchJob?.cancel()
+        startSearchJob = viewModelScope.launch {
+            delay(200)
+            val results = airportRepository.searchByCity(value)
+            _uiState.update { it.copy(startSuggestions = results) }
         }
     }
 
     fun onEndPlaceChange(value: String) {
-        _uiState.update {
-            it.copy(
-                endPlace = value,
-                endSuggestions = airportRepository.searchByCity(value),
-                selectedEndAirport = null
-            )
+        _uiState.update { it.copy(endPlace = value, selectedEndAirport = null) }
+
+        endSearchJob?.cancel()
+        endSearchJob = viewModelScope.launch {
+            delay(200)
+            val results = airportRepository.searchByCity(value)
+            _uiState.update { it.copy(endSuggestions = results) }
         }
     }
+
     fun onStartAirportSelected(airport: Airport) {
         _uiState.update {
             it.copy(

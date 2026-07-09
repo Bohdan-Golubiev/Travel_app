@@ -3,6 +3,7 @@ package com.example.travelapp
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.travelapp.data.repository.AirportRepository
 import com.example.travelapp.data.repository.BookingRepository
 import com.example.travelapp.data.repository.HotelRepository
 import com.example.travelapp.data.repository.ReviewRepository
@@ -16,10 +17,19 @@ class SyncWorker(
 
     override suspend fun doWork(): Result {
         val userId = inputData.getString("userId") ?: return Result.failure()
-        val repository = TravelRepository(TravelDB.getInstance(applicationContext), applicationContext)
-        val repositoryBooking = BookingRepository(TravelDB.getInstance(applicationContext), applicationContext)
-        val repositoryHotels = HotelRepository(TravelDB.getInstance(applicationContext), applicationContext)
-        val repositoryReviews = ReviewRepository(TravelDB.getInstance(applicationContext), applicationContext)
+        val db = TravelDB.getInstance(applicationContext)
+
+        val repository = TravelRepository(db, applicationContext)
+        val repositoryBooking = BookingRepository(db, applicationContext)
+        val repositoryHotels = HotelRepository(db, applicationContext)
+        val repositoryReviews = ReviewRepository(db, applicationContext)
+        val repositoryAirports = AirportRepository(applicationContext, db)
+
+        try {
+            repositoryAirports.syncAirportsFromAssetsIfNeeded()
+        } catch (e: Exception) {
+        }
+
         return try {
             repository.pushUnsyncedToCloud(userId)
             repositoryBooking.pushUnsyncedToCloud(userId)

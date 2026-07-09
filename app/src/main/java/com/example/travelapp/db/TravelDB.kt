@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.travelapp.data.dao.AirportDao
 import com.example.travelapp.data.dao.BookingDao
 import com.example.travelapp.data.dao.DeletedBookingDao
 import com.example.travelapp.data.dao.DeletedHotelDao
@@ -14,6 +15,7 @@ import com.example.travelapp.data.dao.PlaceDao
 import com.example.travelapp.data.dao.ReviewDao
 import com.example.travelapp.data.dao.RouteDao
 import com.example.travelapp.data.dao.UserDao
+import com.example.travelapp.data.entity.AirportEntity
 import com.example.travelapp.data.entity.BookingEntity
 import com.example.travelapp.data.entity.DeletedBookingEntity
 import com.example.travelapp.data.entity.DeletedHotelEntity
@@ -36,7 +38,8 @@ import com.example.travelapp.data.entity.UserEntity
         HotelEntity::class,
         DeletedHotelEntity::class,
         ReviewEntity::class,
-        DeletedReviewEntity::class],
+        DeletedReviewEntity::class,
+        AirportEntity::class],
     version = 1,
     exportSchema = true
 )
@@ -51,6 +54,7 @@ abstract class TravelDB : RoomDatabase() {
     abstract fun deletedHotelDao(): DeletedHotelDao
     abstract fun reviewDao(): ReviewDao
     abstract fun deletedReviewDao(): DeletedReviewDao
+    abstract fun airportDao(): AirportDao
 
     companion object {
         @Volatile

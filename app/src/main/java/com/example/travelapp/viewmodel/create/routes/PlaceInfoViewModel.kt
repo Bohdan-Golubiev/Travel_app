@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class PlaceInfoViewModel(application: Application) : AndroidViewModel(application) {
+class   PlaceInfoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val reviewRepository = ReviewRepository(TravelDB.getInstance(application), application)
     private val weatherRepository = WeatherRepository()
