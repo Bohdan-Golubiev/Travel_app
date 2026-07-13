@@ -1,5 +1,6 @@
 package com.example.travelapp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,8 +34,12 @@ import kotlinx.coroutines.launch
 import androidx.core.content.edit
 
 class MainActivity : ComponentActivity() {
+
+    private var deepLinkIntent by mutableStateOf<Intent?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        deepLinkIntent = intent
 
         val prefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
         val isFirstRun = prefs.getBoolean("is_first_run", true)
@@ -49,14 +54,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TravelAppTheme {
-                TravelAuthApp()
+                TravelAuthApp(deepLinkIntent = deepLinkIntent)
             }
         }
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        deepLinkIntent = intent
     }
 }
 
 @Composable
-fun TravelAuthApp() {
+fun TravelAuthApp(deepLinkIntent: Intent? = null) {
     val context = LocalContext.current
     val auth = remember { FirebaseAuth.getInstance() }
     val repository = remember {
@@ -95,7 +105,8 @@ fun TravelAuthApp() {
                 onLocaleChange = { newLocale ->
                     LocaleManager.saveLocale(context, newLocale)
                     currentLocale = newLocale
-                }
+                },
+                deepLinkIntent = deepLinkIntent,
             )
         } else {
             AuthScreen(onAuthSuccess = { firebaseUser ->

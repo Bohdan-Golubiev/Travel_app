@@ -162,7 +162,10 @@ fun NavGraphBuilder.profileGraph(
         }
     }
 
-    composable(ProfileNavigation.ActiveTrips.route) {
+    composable(
+        route     = ProfileNavigation.ActiveTrips.route,
+        deepLinks = ProfileNavigation.ActiveTrips.deepLinks
+    ) { backStack ->
         ActiveTripsScreen(userId = user.uid)
     }
 

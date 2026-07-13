@@ -1,7 +1,9 @@
 package com.example.travelapp.view
 
+import android.net.Uri
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 
 sealed class ProfileNavigation(val route: String) {
 
@@ -39,7 +41,11 @@ sealed class ProfileNavigation(val route: String) {
 
     data object EditReview : ProfileNavigation("edit_review")
 
-    data object ActiveTrips : ProfileNavigation("active_trips")
+    data object ActiveTrips : ProfileNavigation("active_trips") {
+        val deepLinks = listOf(
+            navDeepLink { uriPattern = "travelapp://trips/active_trips" }
+        )
+    }
 
     data object SpendingStats : ProfileNavigation("spending_stats")
 }

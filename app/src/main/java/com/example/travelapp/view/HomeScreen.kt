@@ -1,5 +1,6 @@
 package com.example.travelapp.view
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,10 +62,15 @@ private val CREATE_TOPBAR_ROUTES = setOf(
 fun HomeScreen(
     user: FirebaseUser,
     onSignOut: () -> Unit,
-    onLocaleChange: (AppLocale) -> Unit
+    onLocaleChange: (AppLocale) -> Unit,
+    deepLinkIntent: Intent? = null,
 ) {
     val nav = rememberNavController()
     val sharedViewModel: SharedViewModel = viewModel()
+
+    LaunchedEffect(deepLinkIntent) {
+        deepLinkIntent?.let { nav.handleDeepLink(it) }
+    }
 
     val backStackEntry by nav.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination

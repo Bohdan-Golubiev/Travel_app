@@ -7,10 +7,12 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.travelapp.view.ProfileNavigation
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -24,9 +26,13 @@ class AlarmReceiver : BroadcastReceiver() {
         val title     = intent.getStringExtra(TravelAlarmManager.EXTRA_TITLE)     ?: return
         val message   = intent.getStringExtra(TravelAlarmManager.EXTRA_MESSAGE)   ?: return
         val bookingId = intent.getIntExtra(TravelAlarmManager.EXTRA_BOOKING_ID, 0)
+        val typeName  = intent.getStringExtra(TravelAlarmManager.EXTRA_REMINDER_TYPE)
+        val type      = runCatching {
+            TravelAlarmManager.ReminderType.valueOf(typeName ?: "")
+        }.getOrNull()
 
         createChannelIfNeeded(context)
-        showNotification(context, bookingId, title, message)
+        showNotification(context, bookingId, type, title, message)
     }
 
 
@@ -54,13 +60,12 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun showNotification(
         context: Context,
         bookingId: Int,
+        type: TravelAlarmManager.ReminderType?,
         title: String,
         message: String,
     ) {
 
-        val tapIntent = context.packageManager
-            .getLaunchIntentForPackage(context.packageName)
-            ?.apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK }
+        val tapIntent = buildTapIntent(context, type)
 
         val tapPi = tapIntent?.let {
             PendingIntent.getActivity(
@@ -81,5 +86,27 @@ class AlarmReceiver : BroadcastReceiver() {
             .build()
 
         NotificationManagerCompat.from(context).notify(bookingId, notification)
+    }
+
+    private fun buildTapIntent(
+        context: Context,
+        type: TravelAlarmManager.ReminderType?,
+    ): Intent? {
+        return when (type) {
+            TravelAlarmManager.ReminderType.LOCATION -> {
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("travelapp://trips/active_trips"),
+                ).apply {
+                    setPackage(context.packageName)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+            }
+            else -> {
+                context.packageManager
+                    .getLaunchIntentForPackage(context.packageName)
+                    ?.apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK }
+            }
+        }
     }
 }
